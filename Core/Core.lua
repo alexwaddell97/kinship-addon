@@ -804,7 +804,8 @@ SlashCmdList.KINSHIPRP = function(input)
     K.debug = not K.debug
     K:Print("Debug messages " .. (K.debug and "on" or "off"))
   elseif cmd == "plates" and K.Plates then
-    if rest:lower() == "live" then K.Plates:Demo() else K.Plates:Preview() end
+    local sub = rest:lower()
+    if sub == "live" then K.Plates:Demo() elseif sub == "debug" then K.Plates:Debug() else K.Plates:Preview() end
   elseif cmd == "view" then
     K:ViewUnitProfile("target")
   elseif cmd == "status" and K:Compat() then
