@@ -2,6 +2,11 @@
   <img src=".github/images/banner.jpg" alt="Kinship RP" width="100%">
 </p>
 
+<p align="center">
+  <a href="https://ko-fi.com/vaxorus"><img src="https://img.shields.io/badge/Support%20Kinship-on%20Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Support Kinship on Ko-fi"></a>
+  <a href="https://github.com/alexwaddell97/kinship-addon/releases/latest"><img src="https://img.shields.io/github/v/release/alexwaddell97/kinship-addon?style=for-the-badge&label=Download&color=c9a860" alt="Download the latest release"></a>
+</p>
+
 # Kinship RP
 
 A roleplay addon for World of Warcraft Forever. It keeps your character's profile, your family, the people you've met, what you carry and the stories you're part of in one journal, and tries to fit in with the game's own interface rather than sit on top of it.
