@@ -49,6 +49,9 @@ fully (not just /reload): there are new files.
   "(Name)" in a softer grey, and your Kin and rivals get a small mark after
   their name. Rivals are marked on enemy players' plates too, in combat as
   well. Both can be switched off in Settings > Nameplates.
+- Nameplates no longer need a roleplay name: players who go by their
+  character's name get it in roleplay gold, with any title like "Lord", and
+  their status dot, title and marks.
 - `/kin plates` previews nameplates with your settings, no one else needed.
   `/kin plates live` tries them on real players around you for three
   minutes, with made-up names and marks only you can see. The preview has a

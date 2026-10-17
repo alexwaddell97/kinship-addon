@@ -325,7 +325,9 @@ local function Draw(o, anchor, d, rec)
   o.ring:Show()
   o.dot:Show()
   -- Above the plate's own name (the character name), the title between them.
-  o:SetPoint("BOTTOM", anchor, "TOP", 0, 2)
+  -- The name already holds the character's name: it takes the plate name's
+  -- place rather than sitting above it.
+  if d.sameName then o:SetPoint("BOTTOM", anchor, "BOTTOM", 0, 0) else o:SetPoint("BOTTOM", anchor, "TOP", 0, 2) end
   if hasTitle then
     o.title:SetPoint("BOTTOM", o, "BOTTOM", 0, 0)
     o.name:SetPoint("BOTTOM", o.title, "TOP", shift, 1)
@@ -337,7 +339,12 @@ local function Draw(o, anchor, d, rec)
   -- softer grey, or just as the plate draws it.
   local own = s.platesBrackets ~= false and anchor:GetText()
   own = Safe(own) and type(own) == "string" and Plain(own) or ""
-  if own ~= "" then
+  if d.sameName then
+    o.real:Hide()
+    if rec.hidden ~= anchor then Unfade(rec) end
+    Fade(anchor)
+    rec.hidden = anchor
+  elseif own ~= "" then
     if rec.hidden ~= anchor then Unfade(rec) end
     MatchFont(o.real, anchor, -1)
     o.real:ClearAllPoints()
@@ -460,14 +467,23 @@ local function Paint(unit, rec)
   end
   if not p then return Restore(rec) end
   if p.status == "ooc" and not s.platesOOC then return Restore(rec) end
-  local text = DisplayName(p)
-  if text == "" then return Restore(rec) end
-
   local anchor = FindAnchor(unit, plate)
   if not anchor then return Restore(rec) end
+  -- No roleplay name? Plenty of people play under their character's name
+  -- (Forever's already have two). Then it's that name, with any title like
+  -- "Lord" before it, in roleplay gold where the plate's name was.
+  local text = DisplayName(p)
+  local charName = anchor:GetText()
+  charName = Safe(charName) and type(charName) == "string" and Plain(charName) or ""
+  if charName == "" then charName = Plain(Ambiguate and Ambiguate(name, "none") or name) end
+  if text == "" then
+    local prefix = Plain(p.prefix)
+    text = prefix ~= "" and (prefix .. " " .. charName) or charName
+  end
+  local same = charName ~= "" and text:lower():find(charName:lower(), 1, true) ~= nil
   local kin, rival = Marks(name)
   Draw(Overlay(plate), anchor, {
-    text = text, epithet = Plain(p.epithet), status = p.status,
+    text = text, epithet = Plain(p.epithet), status = p.status, sameName = same,
     ring = { RingColor(K.RelationOf and K:RelationOf(name)) }, kin = kin, rival = rival,
   }, rec)
 end
@@ -758,7 +774,7 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
       set = function(v) S()[key] = v; P:RefreshAll() end,
     }
   end
-  card:Toggle("Roleplay names on nameplates", "Friendly players' profile names in roleplay gold above their character names, with a dot for IC, LFRP or OOC.", opt("plates"))
+  card:Toggle("Roleplay nameplates", "Kinship's touches on players' nameplates: roleplay names in gold (or their character name, with any title, if they don't use one), a dot for IC, LFRP or OOC, and the marks below. Off, every plate is left as the game draws it.", opt("plates"))
   card:Toggle("Character name in brackets", "Under the roleplay name, their character's name as \"(Name)\" in a softer grey, where the plate shows it.", opt("platesBrackets"))
   card:Toggle("Kin and rival marks", "A small icon after their name for your Kin and your rivals, in your relationship's or standing's colour. Rivals are marked on enemy players' plates too.", opt("platesIcons"))
   card:Toggle("Show titles", "Their title in small letters with the name, like \"the Wandering Blade\".", opt("platesTitles"))
