@@ -24,6 +24,8 @@ K.Post = P
 local SUBJECT = "Sealed letter"
 local DOT = " \194\183 "   -- " · "
 local POSTMARK = "~ Sealed in (%a+) wax(.-)" .. DOT .. "Kinship letter (%x+) ~%s*$"
+-- The first test letters carried a code tag instead: {kinship:teal:INV_Shield_05:1/1:6ad3e835064c}
+local OLD_TAG = "{kinship:(%a+):([%w_%-]+):(%d+)/(%d+):(%x+)}%s*$"
 local MAX_PARTS = 9
 
 local function Short(n) return Ambiguate and Ambiguate(n or "?", "none") or (n or "?") end
@@ -115,12 +117,19 @@ end
 -- One part of a letter, read back from a mail's subject and text
 function P.Read(subject, body)
   if type(subject) ~= "string" or subject:sub(1, #SUBJECT) ~= SUBJECT or type(body) ~= "string" then return nil end
+  local title = subject:match("^" .. SUBJECT .. "[^:]*: (.+)$") or ""
   local wax, marks, mid = body:match(POSTMARK)
-  if not wax then return nil end
+  if not wax then
+    local crest, oi, on
+    wax, crest, oi, on, mid = body:match(OLD_TAG)
+    if not wax then return nil end
+    local icon = crest ~= "monogram" and crest ~= "-" and L.ValidCrest("Interface\\Icons\\" .. crest) or nil
+    return { wax = wax, crest = crest == "monogram" and "monogram" or icon, i = tonumber(oi), n = tonumber(on),
+             mid = mid, text = strtrim((body:gsub("\n*" .. OLD_TAG, ""))), title = title }
+  end
   local m = ReadMarks(marks)
   local i, n = subject:match("^" .. SUBJECT .. " %((%d+)/(%d+)%)")
   local text = strtrim((body:gsub("\n*" .. POSTMARK, "")))
-  local title = subject:match("^" .. SUBJECT .. "[^:]*: (.+)$") or ""
   return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, cipher = m.cipher,
            i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = text, title = title }
 end
@@ -142,7 +151,8 @@ end
 
 -- The mail's words without the postmark, for the game's own mail window
 function P.Clean(body)
-  return type(body) == "string" and strtrim((body:gsub("\n*" .. POSTMARK, ""))) or body
+  if type(body) ~= "string" then return body end
+  return strtrim((body:gsub("\n*" .. POSTMARK, ""):gsub("\n*" .. OLD_TAG, "")))
 end
 
 -- The sender's crest, for a letter sealed with their house crest
@@ -526,7 +536,7 @@ local function CleanOpenMail()
   local frame = rawget(_G, "InboxFrame")
   if not (text and frame and frame.openMailID and GetInboxText) then return end
   local body = GetInboxText(frame.openMailID)
-  if type(body) == "string" and body:find(POSTMARK) then pcall(text.SetText, text, P.Clean(body)) end
+  if type(body) == "string" and (body:find(POSTMARK) or body:find(OLD_TAG)) then pcall(text.SetText, text, P.Clean(body)) end
 end
 
 local ev = CreateFrame("Frame")
