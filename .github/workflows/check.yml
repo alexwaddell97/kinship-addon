@@ -1,0 +1,15 @@
+# Runs luacheck (settings in .luacheckrc) on every push to main and every
+# pull request: syntax errors, and names used that aren't defined anywhere.
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lunarmodules/luacheck@v1

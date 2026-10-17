@@ -1325,16 +1325,18 @@ local function BuildEditor(parent)
   m.tabs:SetPoint("TOPLEFT", 20, -60)
 
   -- Where a value lives: "x" on the rule, "w.x" its conditions, "o.x" the objective, "f.x" how it fails.
+  -- Where a key lives. Before an objective is open (the switches repaint with
+  -- the theme even then) there's no draft or options, so reading finds nothing.
   local function Slot(key, make)
     local space, k = key:match("^(%a)%.(%w+)$")
     if not space then return m.draft, key end
     if space == "o" then return m.opts, k end
     if space == "w" then
       if make then m.draft.w = m.draft.w or {} end
-      return m.draft.w, k
+      return m.draft and m.draft.w, k
     end
     if make then m.opts.fl = m.opts.fl or {} end
-    return m.opts.fl, k
+    return m.opts and m.opts.fl, k
   end
   local function Get(key) local t, k = Slot(key); return t and t[k] end
   local function Put(key, v) local t, k = Slot(key, true); t[k] = v end

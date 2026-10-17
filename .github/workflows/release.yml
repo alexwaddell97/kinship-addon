@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check the code
+        uses: lunarmodules/luacheck@v1
+
       - name: Check the version matches the tag
         run: |
           v="${GITHUB_REF_NAME#v}"

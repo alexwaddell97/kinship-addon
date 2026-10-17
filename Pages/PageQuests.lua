@@ -579,7 +579,7 @@ local function BuildWrite(tab)
       end
     end)
   end)
-  ir.pick = UI.Toggle(ir, "They choose one", nil, function() return tab.draft.pick and true or false end,
+  ir.pick = UI.Toggle(ir, "They choose one", nil, function() return tab.draft and tab.draft.pick and true or false end,
     function(v) tab.draft.pick = v or nil; changed() end, 160, true)
   function tab:PaintItems()
     local list = self.draft.items or {}
@@ -614,7 +614,7 @@ local function BuildWrite(tab)
   tab.whereRow:SetSize(IW, 40)
   local wl = UI.Text(tab.whereRow, "Where it happens (optional)", "Label", "subtle")
   wl:SetPoint("TOPLEFT", 1, 0)
-  tab.wherePin = PinButton(tab.whereRow, "Where it happens", function() return tab.draft.marker end, function(mk)
+  tab.wherePin = PinButton(tab.whereRow, "Where it happens", function() return tab.draft and tab.draft.marker end, function(mk)
     tab.draft.marker = mk
     changed()
   end)
@@ -623,14 +623,14 @@ local function BuildWrite(tab)
   tab.whereText:SetPoint("LEFT", tab.wherePin, "RIGHT", 8, 0)
   tab.whereText:SetWordWrap(false)
   tab.st = UI.Toggle(body, "Storyteller mode", "Only you tick objectives. Everyone who accepted sees your progress as it happens.",
-    function() return tab.draft.st ~= false end,
+    function() return tab.draft ~= nil and tab.draft.st ~= false end,
     function(v) tab.draft.st = v; changed() end, IW, true)
   tab.au = UI.Toggle(body, "Let objectives complete themselves",
     "Objectives with a rule tick when a player meets it, for everyone. Off: only you tick them, and you're told when someone meets one.",
-    function() return tab.draft.au ~= false end,
+    function() return tab.draft ~= nil and tab.draft.au ~= false end,
     function(v) tab.draft.au = v; changed() end, IW, true)
   tab.seq = UI.Toggle(body, "In order", "One objective at a time: each opens when the one before is done.",
-    function() return tab.draft.seq and true or false end,
+    function() return tab.draft and tab.draft.seq and true or false end,
     function(v) tab.draft.seq = v or nil; changed() end, IW, true)
 
   -- Live preview
