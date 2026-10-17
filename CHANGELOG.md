@@ -1,5 +1,20 @@
 # Kinship RP changelog
 
+## 1.1.1
+
+**After updating, restart the game fully** (not just /reload): Kinship's
+files have moved into folders, and the game only picks up new files when it
+starts.
+
+### Fixes
+- The quest editor no longer throws errors when the theme changes before a
+  quest is open.
+
+### Behind the scenes
+- Kinship's files are organised into folders, and every release is checked
+  for mistakes before it goes out.
+- New releases go to CurseForge and GitHub at the same time.
+
 ## 1.1.0
 
 ### New
