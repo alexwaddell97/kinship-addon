@@ -181,7 +181,7 @@ function TW:Build()
   f.mine = Slots(f, -44, "You offer")
   for i, s in ipairs(f.mine) do
     s:SetScript("OnClick", function()
-      if TW.mine[i] then TW:Remove(i) elseif K.Satchel then K.Satchel:Open(true) end
+      if TW.mine[i] then TW:Remove(i) elseif K.Satchel then K.Satchel:Open(false) end
     end)
     s:HookScript("OnEnter", function(self)
       if not TW.mine[i] then

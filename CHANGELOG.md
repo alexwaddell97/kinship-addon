@@ -46,6 +46,10 @@ fully (not just /reload): there are new files.
   rest. Only light ones, each toast has Not now to take it off, and each has
   its own switch in Settings > Effects that come on their own.
 
+### Fixed
+- The satchel closes with your bags (B) again after you close and reopen it
+  while the bags are open.
+
 ## 1.1.1
 
 **After updating, restart the game fully** (not just /reload): Kinship's

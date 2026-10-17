@@ -1188,7 +1188,10 @@ function SA:Open(withBags)
   if not On() then K:Print("Kinship items are switched off (Settings > Extended features).") return end
   -- Opened on purpose, it opens in full; with the bags it stays as it was.
   if not withBags and self:Collapsed() then S().satchelMin = nil end
-  if self:Collapsed() then ShowStrip(withBags) else ShowFull(withBags) end
+  -- Opened while the bags are open (closed and opened again, say), it still
+  -- closes with them.
+  local tie = withBags or OpenBags() ~= nil
+  if self:Collapsed() then ShowStrip(tie) else ShowFull(tie) end
 end
 
 function SA:Close()
