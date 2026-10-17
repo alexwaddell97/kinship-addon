@@ -94,8 +94,10 @@ jobs:
 
           meta=$(jq -n --rawfile cl changelog.md --arg name "Kinship RP $v" --argjson gv "$ids" \
             '{changelog: $cl, changelogType: "markdown", displayName: $name, gameVersions: $gv, releaseType: "release"}')
+          # --form-string sends the details as they are: with -F, a ";" in the
+          # notes would cut the JSON short
           curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" \
-            -F "metadata=$meta" -F "file=@build/KinshipRP-$v.zip" \
+            --form-string "metadata=$meta" -F "file=@build/KinshipRP-$v.zip" \
             "$api/projects/$CF_PROJECT_ID/upload-file"
           echo
           echo "Uploaded Kinship RP $v to CurseForge."
