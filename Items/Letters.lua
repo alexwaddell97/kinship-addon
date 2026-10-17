@@ -98,7 +98,8 @@ function L.HandFont(key)
   local h = HAND[key] or HAND.plain
   if not fonts[h.key] then
     local f = CreateFont("KinshipRPHand_" .. h.key)
-    if not f:SetFont(h.file, h.size, "") then f:SetFont(STANDARD_TEXT_FONT, 14, "") end
+    f:SetFont(h.file, h.size, "")
+    if not f:GetFont() then f:SetFont(STANDARD_TEXT_FONT, 14, "") end   -- the face isn't there
     local ink = UI.INK.ink
     f:SetTextColor(ink[1], ink[2], ink[3])
     f:SetShadowOffset(0, 0)
@@ -135,7 +136,8 @@ function L.Stain(paper, cond, seed)
     used = used + 1
     local t = paper.stains[used]
     if not t then
-      t = UI.Circle(paper, 10, "BORDER", 1)
+      t = paper:CreateTexture(nil, "BORDER", nil, 1)
+      t:SetTexture(K.MEDIA .. "StageFloor")   -- soft-edged, so marks soak in rather than sit on top
       paper.stains[used] = t
     end
     t:ClearAllPoints()
@@ -145,23 +147,25 @@ function L.Stain(paper, cond, seed)
     t:Show()
   end
   if cond == "rain" then
-    for _ = 1, 7 do
-      local s = 50 + rnd() * 110
-      blot(rnd() * w, rnd() * h, s, s * (0.7 + rnd() * 0.5), { 0.32, 0.40, 0.48 }, 0.08 + rnd() * 0.07)
+    -- Wide, pale water marks that have dried into the paper
+    for _ = 1, 6 do
+      local s = 90 + rnd() * 120
+      blot(rnd() * w, rnd() * h, s, s * (0.55 + rnd() * 0.35), { 0.36, 0.42, 0.48 }, 0.16 + rnd() * 0.10)
     end
   elseif cond == "tears" then
+    -- A few small round marks below the words, as if they fell while writing
     for _ = 1, 4 do
-      local x, y, s = w * (0.35 + rnd() * 0.5), h * (0.45 + rnd() * 0.4), 12 + rnd() * 14
-      blot(x, y, s * 2.2, s * 2.2, { 0.36, 0.44, 0.52 }, 0.07)
-      blot(x, y, s, s * 1.15, { 0.30, 0.38, 0.48 }, 0.16)
+      local x, y, s = w * (0.3 + rnd() * 0.5), h * (0.5 + rnd() * 0.35), 26 + rnd() * 18
+      blot(x, y, s, s, { 0.40, 0.46, 0.52 }, 0.30)
     end
   elseif cond == "blood" then
-    local x, y = (rnd() < 0.5) and w * 0.18 or w * 0.82, (rnd() < 0.5) and h * 0.2 or h * 0.8
-    blot(x, y, 70 + rnd() * 50, 30 + rnd() * 25, { 0.42, 0.04, 0.04 }, 0.30)
-    blot(x + 12, y + 6, 38, 20, { 0.30, 0.02, 0.02 }, 0.28)
-    for _ = 1, 6 do
-      local s = 4 + rnd() * 9
-      blot(x + (rnd() - 0.5) * 140, y + (rnd() - 0.5) * 90, s, s, { 0.40, 0.03, 0.03 }, 0.45)
+    -- One dried smear near a corner, with a few drops beside it
+    local x, y = (rnd() < 0.5) and w * 0.2 or w * 0.8, (rnd() < 0.5) and h * 0.22 or h * 0.78
+    blot(x, y, 130 + rnd() * 60, 60 + rnd() * 30, { 0.38, 0.06, 0.05 }, 0.32)
+    blot(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 16, 70, 34, { 0.30, 0.04, 0.03 }, 0.30)
+    for _ = 1, 4 do
+      local s = 12 + rnd() * 12
+      blot(x + (rnd() - 0.5) * 170, y + (rnd() - 0.5) * 100, s, s * 0.9, { 0.36, 0.05, 0.04 }, 0.40)
     end
   elseif cond == "singed" then
     -- Scorched edges, darkest at the rim, and a few burnt patches at the corners
@@ -189,8 +193,8 @@ function L.Stain(paper, cond, seed)
     end
     for _, c in ipairs({ { 0, 0 }, { w, 0 }, { 0, h }, { w, h } }) do
       if rnd() < 0.75 then
-        local s = 30 + rnd() * 45
-        blot(c[1], c[2], s, s, { 0.18, 0.09, 0.03 }, 0.35)
+        local s = 60 + rnd() * 60
+        blot(c[1], c[2], s, s * 0.8, { 0.20, 0.10, 0.03 }, 0.45)
       end
     end
   end

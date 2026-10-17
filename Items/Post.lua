@@ -331,7 +331,7 @@ function P:Build()
   if not mf then return nil end
   local f = UI.Panel(mf)
   f:SetSize(220, 172)
-  f:SetPoint("TOPLEFT", mf, "TOPRIGHT", 6, 0)
+  f:SetPoint("TOPLEFT", mf, "BOTTOMLEFT", 0, -6)   -- below: an opened mail appears to the right
   f:SetFrameStrata(mf:GetFrameStrata())
   f:SetFrameLevel(mf:GetFrameLevel() + 5)
   self.card = f
@@ -550,6 +550,12 @@ ev:SetScript("OnEvent", function(_, event, ...)
       P.hooked = true
       if rawget(_G, "InboxFrame_Update") then hooksecurefunc("InboxFrame_Update", function() K.Try("post inbox", MarkInbox) end) end
       if rawget(_G, "OpenMail_Update") then hooksecurefunc("OpenMail_Update", function() K.Try("post open", CleanOpenMail) end) end
+      for _, name in ipairs({ "InboxPrevPageButton", "InboxNextPageButton" }) do
+        local b = rawget(_G, name)
+        if b then b:HookScript("OnClick", function() C_Timer.After(0, function() K.Try("post inbox", MarkInbox) end) end) end
+      end
+      local inbox = rawget(_G, "InboxFrame")
+      if inbox then inbox:HookScript("OnShow", function() C_Timer.After(0, function() K.Try("post inbox", MarkInbox) end) end) end
       local om = rawget(_G, "OpenMailFrame")
       if om then
         om:HookScript("OnShow", function()
@@ -573,8 +579,9 @@ ev:SetScript("OnEvent", function(_, event, ...)
   elseif event == "MAIL_INBOX_UPDATE" then
     K.Try("post scan", P.Scan, P)
     P:Paint()
-    -- After the game has drawn the mail it opened
+    -- After the game has drawn the inbox, and any mail it opened
     C_Timer.After(0, function()
+      K.Try("post inbox", MarkInbox)
       local om = rawget(_G, "OpenMailFrame")
       if om and om:IsShown() then K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P) end
     end)
