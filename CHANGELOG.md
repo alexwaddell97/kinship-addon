@@ -45,6 +45,10 @@ fully (not just /reload): there are new files.
   Exhausted after hours without rest, and Well rested after half an hour's
   rest. Only light ones, each toast has Not now to take it off, and each has
   its own switch in Settings > Effects that come on their own.
+- Nameplates: the character's name now sits under the roleplay name as
+  "(Name)" in a softer grey, and your Kin and rivals get a small mark after
+  their name. Rivals are marked on enemy players' plates too, in combat as
+  well. Both can be switched off in Settings > Nameplates.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it

@@ -73,6 +73,13 @@ function P:Active()
   return true
 end
 
+-- Rival marks on enemy players' plates: in combat too, when it matters most.
+function P:ActiveFoes()
+  local s = S()
+  if not s or not s.plates or not s.platesIcons or self.mode == "standdown" or not self.mode then return false end
+  return not IsInInstance()
+end
+
 ---------------------------------------------------------------------------
 -- Profile requests: one at a time, never the same person twice in a while
 ---------------------------------------------------------------------------
@@ -178,6 +185,42 @@ local function FindAnchor(unit, plate)
   end
 end
 
+-- A small round icon in a coloured ring: Kin, or a rival.
+local BADGE = 14
+local function Badge(o, icon)
+  local b = CreateFrame("Frame", nil, o)
+  b:SetSize(BADGE, BADGE)
+  b.ring = UI.Circle(b, BADGE, "OVERLAY", 1)
+  b.ring:SetPoint("CENTER")
+  b.icon = b:CreateTexture(nil, "OVERLAY", nil, 2)
+  b.icon:SetSize(BADGE - 3, BADGE - 3)
+  b.icon:SetPoint("CENTER")
+  b.icon:SetTexture(icon)
+  b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  UI.Round(b.icon)
+  b:Hide()
+  return b
+end
+
+-- What they are to you: Kin (in your relationship's colour) and a rival (in
+-- your standing's colour). Each is a colour, or nil.
+local KIN_COLOR = { 0.37, 0.77, 0.72 }
+local function Marks(name)
+  local kin, rival
+  local short = Ambiguate and Ambiguate(name, "none") or name
+  if K:KinFor(name) or K:KinFor(short) then
+    local def = K.RelationOf and K:RelationOf(name)
+    kin = def and def.color or KIN_COLOR
+  end
+  local W = K.War
+  local r = W and W:Get(name)
+  if r and W:IsRival(r) then
+    local g = W.Grudge(r.grudge)
+    rival = g and g.color or { 0.85, 0.85, 0.85 }
+  end
+  return kin, rival
+end
+
 local function Overlay(plate)
   local o = P.overlays[plate]
   if o then return o end
@@ -191,6 +234,11 @@ local function Overlay(plate)
   o.title = o:CreateFontString(nil, "OVERLAY")
   o.title:SetFontObject(GameFontNormalSmall)
   o.title:SetWordWrap(false)
+  o.real = o:CreateFontString(nil, "OVERLAY")
+  o.real:SetFontObject(GameFontNormalSmall)
+  o.real:SetWordWrap(false)
+  o.kin = Badge(o, K.Art("IconKin"))
+  o.rival = Badge(o, K.Art("IconDungeon"))
   o.ring = UI.Circle(o, 9, "OVERLAY", 1)
   o.ring:SetVertexColor(0, 0, 0, 0.65)
   o.dot = UI.Circle(o, 6, "OVERLAY", 2)
@@ -200,14 +248,30 @@ local function Overlay(plate)
   return o
 end
 
+-- The plate's own name, faded while "(Name)" stands in for it. A plate that
+-- sets its name's alpha again (EllesmereUI's, say) is faded straight back.
+local function Fade(fs)
+  if not fs.kinHooked then
+    fs.kinHooked = true
+    hooksecurefunc(fs, "SetAlpha", function(self, a) if self.kinHide and a > 0 then self:SetAlpha(0) end end)
+  end
+  fs.kinHide = true
+  pcall(fs.SetAlpha, fs, 0)
+end
+
+local function Unfade(rec)
+  local fs = rec and rec.hidden
+  if not fs then return end
+  fs.kinHide = nil
+  pcall(fs.SetAlpha, fs, 1)
+  rec.hidden = nil
+end
+
 local function Restore(rec)
   if not rec then return end
   local o = rec.plate and P.overlays[rec.plate]
   if o then o:Hide() end
-  if rec.hidden then
-    pcall(rec.hidden.SetAlpha, rec.hidden, 1)
-    rec.hidden = nil
-  end
+  Unfade(rec)
 end
 
 -- The ring round the status dot: your relationship's colour, if you like.
@@ -218,10 +282,11 @@ end
 
 local function Paint(unit, rec)
   local s = S()
-  if not s or not P:Active() then return Restore(rec) end
+  if not s then return Restore(rec) end
   local plate = rec.plate
   if not plate or (plate.IsForbidden and plate:IsForbidden()) then return Restore(rec) end
-  if not FriendlyPlayer(unit) then return Restore(rec) end
+  if not FriendlyPlayer(unit) then return P.PaintFoe(unit, rec) end
+  if not P:Active() then return Restore(rec) end
   local name = GetUnitName(unit, true)
   if not Safe(name) or type(name) ~= "string" or name == "" then return Restore(rec) end
   rec.key = K.NameKey(name)
@@ -257,24 +322,82 @@ local function Paint(unit, rec)
   end
   o.title:SetShown(hasTitle)
 
+  -- Kin and rival marks after the name
+  local kin, rival = nil, nil
+  if s.platesIcons then kin, rival = Marks(name) end
+  local marks = 0
+  for _, m in ipairs({ { o.kin, kin }, { o.rival, rival } }) do
+    local b, c = m[1], m[2]
+    b:ClearAllPoints()
+    if c then
+      b.ring:SetVertexColor(c[1], c[2], c[3], 0.95)
+      b:SetPoint("LEFT", o.name, "RIGHT", 4 + marks * (BADGE + 2), 0)
+      marks = marks + 1
+    end
+    b:SetShown(c ~= nil)
+  end
+  local shift = DOT_SHIFT - (marks > 0 and (marks * (BADGE + 2) + 2) / 2 or 0)
+
   o:ClearAllPoints()
   o.name:ClearAllPoints()
   o.title:ClearAllPoints()
   o.ring:ClearAllPoints()
+  o.name:Show()
+  o.ring:Show()
+  o.dot:Show()
   -- Above the plate's own name (the character name), the title between them.
   o:SetPoint("BOTTOM", anchor, "TOP", 0, 2)
   if hasTitle then
     o.title:SetPoint("BOTTOM", o, "BOTTOM", 0, 0)
-    o.name:SetPoint("BOTTOM", o.title, "TOP", DOT_SHIFT, 1)
+    o.name:SetPoint("BOTTOM", o.title, "TOP", shift, 1)
   else
-    o.name:SetPoint("BOTTOM", o, "BOTTOM", DOT_SHIFT, 0)
+    o.name:SetPoint("BOTTOM", o, "BOTTOM", shift, 0)
   end
   o.ring:SetPoint("RIGHT", o.name, "LEFT", -3, 0)
-  -- Plates from before this version faded the game's name out: bring it back.
-  if rec.hidden then
-    pcall(rec.hidden.SetAlpha, rec.hidden, 1)
-    rec.hidden = nil
+  -- The character's name stays where the plate shows it: as "(Name)" in a
+  -- softer grey, or just as the plate draws it.
+  local own = s.platesBrackets ~= false and anchor:GetText()
+  own = Safe(own) and type(own) == "string" and Plain(own) or ""
+  if own ~= "" then
+    if rec.hidden ~= anchor then Unfade(rec) end
+    MatchFont(o.real, anchor, -1)
+    o.real:ClearAllPoints()
+    o.real:SetPoint("CENTER", anchor, "CENTER", 0, 0)
+    SetClamped(o.real, "(" .. own .. ")")
+    o.real:SetTextColor(0.78, 0.78, 0.78, 0.95)
+    o.real:Show()
+    Fade(anchor)
+    rec.hidden = anchor
+  else
+    o.real:Hide()
+    Unfade(rec)
   end
+  if not o:IsShown() then
+    o:Show()
+    UI.FadeIn(o, 0.15)
+  end
+end
+
+-- Enemy players: only the rival mark, just before their name. Their plate
+-- is otherwise left exactly as it is.
+function P.PaintFoe(unit, rec)
+  if not P:ActiveFoes() then return Restore(rec) end
+  local ok, isPlayer = pcall(UnitIsPlayer, unit)
+  if not ok or not Safe(isPlayer) or not isPlayer then return Restore(rec) end
+  local name = GetUnitName(unit, true)
+  if not Safe(name) or type(name) ~= "string" or name == "" then return Restore(rec) end
+  local _, rival = Marks(name)
+  if not rival then return Restore(rec) end
+  local anchor = FindAnchor(unit, rec.plate)
+  if not anchor then return Restore(rec) end
+  local o = Overlay(rec.plate)
+  Unfade(rec)
+  o.name:Hide(); o.title:Hide(); o.real:Hide(); o.ring:Hide(); o.dot:Hide(); o.kin:Hide()
+  local w = anchor:GetStringWidth() or 0
+  o.rival:ClearAllPoints()
+  o.rival:SetPoint("RIGHT", anchor, "CENTER", -(w / 2) - 3, 0)
+  o.rival.ring:SetVertexColor(rival[1], rival[2], rival[3], 0.95)
+  o.rival:Show()
   if not o:IsShown() then
     o:Show()
     UI.FadeIn(o, 0.15)
@@ -347,7 +470,8 @@ end)
 
 K:On("LOGIN", function()
   local s = K.db.settings
-  for key, v in pairs({ plates = true, platesTitles = true, platesOOC = true, platesCombat = true, platesRelation = true }) do
+  for key, v in pairs({ plates = true, platesTitles = true, platesOOC = true, platesCombat = true, platesRelation = true,
+                         platesBrackets = true, platesIcons = true }) do
     if s[key] == nil then s[key] = v end
   end
   if K:Compat() then return end   -- Total RP 3 names the plates while it runs
@@ -362,6 +486,11 @@ K:On("LOGIN", function()
     P:Seed()
   end)
 end)
+
+-- Kin, relationships and rivals change the marks
+for _, e in ipairs({ "KIN", "RIVALS", "RELATIONS" }) do
+  K:On(e, function() if K.db and not K:Compat() then P:RefreshAll() end end)
+end
 
 K:On("REGISTRY", function(key)
   if type(key) ~= "string" then return end
@@ -410,6 +539,8 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
     }
   end
   card:Toggle("Roleplay names on nameplates", "Friendly players' profile names in roleplay gold above their character names, with a dot for IC, LFRP or OOC.", opt("plates"))
+  card:Toggle("Character name in brackets", "Under the roleplay name, their character's name as \"(Name)\" in a softer grey, where the plate shows it.", opt("platesBrackets"))
+  card:Toggle("Kin and rival marks", "A small icon after their name for your Kin and your rivals, in your relationship's or standing's colour. Rivals are marked on enemy players' plates too.", opt("platesIcons"))
   card:Toggle("Show titles", "Their title in small letters with the name, like \"the Wandering Blade\".", opt("platesTitles"))
   card:Toggle("Show out-of-character players", "When off, players marked OOC keep their ordinary name.", opt("platesOOC"))
   card:Toggle("Hide in combat", "Plates go back to plain names while you're fighting.", opt("platesCombat"))
