@@ -1,15 +1,18 @@
 -- Kinship RP: letters by post. A sealed letter waits in your Outbox
 -- (Letters.lua) until you open a mailbox, then goes as real game mail, so it
 -- reaches people who are offline, and your own characters too. Kinship on the
--- other end recognises it in the inbox, marks it with a seal, and keeps it on
--- the Letters page; anyone without Kinship simply reads an ordinary mail.
+-- other end recognises it in the inbox, marks it with a seal, and shows it as
+-- a letter; anyone without Kinship reads an ordinary mail.
 --
 -- Each mail is one part of a letter:
 --   subject  "Sealed letter: <title>"  ("Sealed letter (2/3): <title>" for longer ones)
---   body     the words, the signature on the last part, and a last line
---            {kinship:<wax>:<crest>:<part>/<parts>:<id>}
--- Game mail holds less than a Kinship letter, so longer letters go in parts,
--- joined back into one letter when they arrive.
+--   body     the words, the signature on the last part, and a postmark that
+--            reads naturally to anyone without Kinship:
+--            ~ Sealed in teal wax · house crest · fine hand · rain-soaked · Kinship letter 6ad3e835064c ~
+--            (a plain hand, pristine paper and no cipher are left out; a cipher adds "in cipher 4f2a")
+-- The crest itself isn't sent: "house crest" is looked up from the sender's
+-- profile, "Kinship seal" is the monogram. Game mail holds less than a
+-- Kinship letter, so longer letters go in parts, joined back when they arrive.
 
 local ADDON, ns = ...
 local K = ns.K
@@ -19,7 +22,8 @@ local P = {}
 K.Post = P
 
 local SUBJECT = "Sealed letter"
-local TAG_PATTERN = "{kinship:(%a+):([%w_%-]+):(%d+)/(%d+):(%x+)}%s*$"
+local DOT = " \194\183 "   -- " · "
+local POSTMARK = "~ Sealed in (%a+) wax(.-)" .. DOT .. "Kinship letter (%x+) ~%s*$"
 local MAX_PARTS = 9
 
 local function Short(n) return Ambiguate and Ambiguate(n or "?", "none") or (n or "?") end
@@ -39,16 +43,36 @@ local function Limits()
   return body, subject
 end
 
-local function CrestName(crest)
-  if crest == "monogram" then return "monogram" end
-  if type(crest) ~= "string" then return "-" end
-  return (crest:gsub("^[Ii]nterface\\[Ii]cons\\", ""))
+-- The postmark's words for how a letter looks, and back
+local function Marks(letter)
+  local out = {}
+  if letter.crest == "monogram" then out[#out + 1] = "Kinship seal"
+  elseif letter.crest then out[#out + 1] = "house crest" end
+  if (letter.hand or "plain") ~= "plain" then out[#out + 1] = L.HandLabel(letter.hand):lower() end
+  if (letter.cond or "pristine") ~= "pristine" then out[#out + 1] = L.CondLabel(letter.cond):lower() end
+  if letter.cipher then out[#out + 1] = "in cipher " .. letter.cipher end
+  return out
 end
 
-local function CrestFrom(name)
-  if name == "monogram" then return "monogram" end
-  if name == "-" or name == "" then return nil end
-  return L.ValidCrest("Interface\\Icons\\" .. name)
+local function ReadMarks(text)
+  local m = {}
+  for word in (text .. DOT):gmatch("(.-)" .. DOT) do
+    word = strtrim(word)
+    if word == "Kinship seal" then m.crest = "monogram"
+    elseif word == "house crest" then m.crest = "house"
+    elseif word:match("^in cipher %x+$") then m.cipher = word:match("(%x+)$")
+    elseif word ~= "" then
+      for _, h in ipairs(L.HANDS) do if h.label:lower() == word then m.hand = h.key end end
+      for _, c in ipairs(L.CONDITIONS) do if c.label:lower() == word then m.cond = c.key end end
+    end
+  end
+  return m
+end
+
+function P.Postmark(letter, mid)
+  local marks = Marks(letter)
+  return ("~ Sealed in %s wax%s%sKinship letter %s ~"):format(letter.seal or "crimson",
+    #marks > 0 and (DOT .. table.concat(marks, DOT)) or "", DOT, mid)
 end
 
 -- Cut text into pieces of at most `room` letters, at a space or line break where it can.
@@ -68,12 +92,12 @@ end
 -- A letter as the mails that carry it: { { subject, body }, ... }
 function P.Parts(letter, bodyMax, subjectMax)
   local mid = letter.mid or ("%x%04x"):format(letter.t or time(), 0)
-  local tag = function(i, n)
-    return ("{kinship:%s:%s:%d/%d:%s}"):format(letter.seal or "crimson", CrestName(letter.crest), i, n, mid)
-  end
-  local room = bodyMax - #tag(MAX_PARTS, MAX_PARTS) - 2
+  local mark = P.Postmark(letter, mid)
+  local room = bodyMax - #mark - 2
   local sign = (letter.sign or "") ~= "" and ("\n\n— " .. letter.sign) or ""
-  local pieces = Cut(letter.body or "", room)
+  -- A letter in cipher goes enciphered; only its writer keeps the key
+  local words = letter.key and L.Encipher(letter.body or "", letter.key) or (letter.body or "")
+  local pieces = Cut(words, room)
   -- The signature goes on the last part, or one of its own if it won't fit
   if #pieces[#pieces] + #sign > room then pieces[#pieces + 1] = "" end
   pieces[#pieces] = pieces[#pieces] .. sign
@@ -83,19 +107,22 @@ function P.Parts(letter, bodyMax, subjectMax)
   for i, text in ipairs(pieces) do
     local subject = SUBJECT .. (n > 1 and (" (%d/%d)"):format(i, n) or "")
       .. ((letter.title or "") ~= "" and (": " .. letter.title) or "")
-    out[i] = { subject = subject:sub(1, subjectMax), body = strtrim(text) .. "\n\n" .. tag(i, n) }
+    out[i] = { subject = subject:sub(1, subjectMax), body = strtrim(text) .. "\n\n" .. mark }
   end
   return out
 end
 
--- One part of a letter, read back from a mail's text
+-- One part of a letter, read back from a mail's subject and text
 function P.Read(subject, body)
   if type(subject) ~= "string" or subject:sub(1, #SUBJECT) ~= SUBJECT or type(body) ~= "string" then return nil end
-  local wax, crest, i, n, mid = body:match(TAG_PATTERN)
+  local wax, marks, mid = body:match(POSTMARK)
   if not wax then return nil end
-  local text = strtrim((body:gsub("\n*" .. TAG_PATTERN, "")))
+  local m = ReadMarks(marks)
+  local i, n = subject:match("^" .. SUBJECT .. " %((%d+)/(%d+)%)")
+  local text = strtrim((body:gsub("\n*" .. POSTMARK, "")))
   local title = subject:match("^" .. SUBJECT .. "[^:]*: (.+)$") or ""
-  return { wax = wax, crest = crest, i = tonumber(i), n = tonumber(n), mid = mid, text = text, title = title }
+  return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, cipher = m.cipher,
+           i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = text, title = title }
 end
 
 -- A letter's parts (their words, in order) back into its text and signature.
@@ -113,9 +140,16 @@ function P.Join(got, n)
   return strtrim(table.concat(parts, " ")), sign
 end
 
--- The mail's words without the tag, for the game's own mail window
+-- The mail's words without the postmark, for the game's own mail window
 function P.Clean(body)
-  return type(body) == "string" and strtrim((body:gsub("\n*" .. TAG_PATTERN, ""))) or body
+  return type(body) == "string" and strtrim((body:gsub("\n*" .. POSTMARK, ""))) or body
+end
+
+-- The sender's crest, for a letter sealed with their house crest
+local function HouseCrestOf(sender)
+  local e = K.Registry and K.Registry[K.NameKey(sender) or ""]
+  local crest = e and e.profile and e.profile.crest
+  return crest and L.ValidCrest(crest) or "monogram"
 end
 
 ---------------------------------------------------------------------------
@@ -233,7 +267,7 @@ function P:Take(sender, part)
   store[id] = e
   e.got[part.i] = part.text
   e.title = e.title or (part.title ~= "" and part.title or nil)
-  e.wax, e.crest = part.wax, part.crest
+  e.wax, e.crest, e.hand, e.cond, e.cipher = part.wax, part.crest, part.hand, part.cond, part.cipher
   for i = 1, e.n do if not e.got[i] then return end end
   -- All of it: one letter again
   store[id] = nil
@@ -241,7 +275,8 @@ function P:Take(sender, part)
   L:Deliver({
     id = id, dir = "in", from = sender, to = K:MyName(),
     title = L.Str(e.title or "", L.MAX_TITLE), body = L.Str(text, L.MAX_BODY), sign = L.Str(sign, L.MAX_SIGN),
-    seal = L.ValidSeal(e.wax), crest = CrestFrom(e.crest),
+    seal = L.ValidSeal(e.wax), crest = e.crest == "house" and HouseCrestOf(sender) or e.crest,
+    hand = L.ValidHand(e.hand), cond = L.ValidCond(e.cond), cipher = e.cipher,
     t = time(), read = false, state = "received", post = true,
   })
 end
@@ -437,6 +472,10 @@ function P:Sheet()
   open.sign:SetJustifyH("RIGHT")
   open.seal = UI.Seal(open, 34)
   open.seal:SetPoint("BOTTOMLEFT", 14, 12)
+  open.decipher = UI.Button(open, "Decipher...", 100, 22)
+  open.decipher:SetPoint("BOTTOM", 0, 14)
+  open.decipher:SetScript("OnClick", function() if P.sheetLetter then L:Open(P.sheetLetter) end end)
+  UI.Tooltip(open.decipher, "In cipher", "It reads as nonsense without its key word. Open it on your Letters page to decipher it.")
   self.sheet = s
   return s
 end
@@ -470,6 +509,7 @@ function P:ShowSheet()
   local s = self:Sheet()
   if not s then return end
   local crest = L.CrestTexture(l.crest)
+  L.Stain(s, l.cond, l.id)
   s.sealed:SetShown(not l.read)
   s.open:SetShown(l.read and true or false)
   if not l.read then
@@ -478,8 +518,12 @@ function P:ShowSheet()
     s.sealed.seal:SetSeal(l.seal, crest)
   else
     s.open.title:SetText(l.title ~= "" and UI.Escape(l.title) or ("From " .. Short(l.from)))
+    s.open.body.text:SetFontObject(L.HandFont(l.hand))
     s.open.body:SetText(UI.Escape(l.body))
+    s.open.sign:SetFontObject(L.HandFont(l.hand))
+    s.open.sign:SetTextColor(unpack(UI.INK.inkAccent))
     s.open.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
+    s.open.decipher:SetShown((l.cipher and not l.solved) and true or false)
     s.open.seal:SetSeal(l.seal, crest)
   end
   s:Show()
@@ -491,7 +535,7 @@ local function CleanOpenMail()
   local frame = rawget(_G, "InboxFrame")
   if not (text and frame and frame.openMailID and GetInboxText) then return end
   local body = GetInboxText(frame.openMailID)
-  if type(body) == "string" and body:find(TAG_PATTERN) then pcall(text.SetText, text, P.Clean(body)) end
+  if type(body) == "string" and body:find(POSTMARK) then pcall(text.SetText, text, P.Clean(body)) end
 end
 
 local ev = CreateFrame("Frame")

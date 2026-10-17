@@ -24,6 +24,30 @@ local STATES = {
 
 local function Short(n) return Ambiguate and Ambiguate(n or "?", "none") or (n or "?") end
 
+local page   -- the Letters page, once built
+local function SetKey(text)
+  if not page then return end
+  local key = L.CleanKey(text)
+  page.key = key ~= "" and key or nil
+  page:PaintOptions()
+end
+StaticPopupDialogs["KINSHIPRP_LETTER_KEY"] = {
+  text = "Write this letter in cipher.\n\nChoose a key word, and tell it to them in character: without it, the letter reads as nonsense.",
+  button1 = OKAY or "OK", button2 = CANCEL or "Cancel",
+  hasEditBox = true, maxLetters = 24,
+  OnShow = function(self)
+    local eb = self.editBox or self.EditBox or (self.GetEditBox and self:GetEditBox())
+    if eb then eb:SetText(page and page.key or ""); eb:HighlightText() end
+  end,
+  OnAccept = function(self)
+    local eb = self.editBox or self.EditBox or (self.GetEditBox and self:GetEditBox())
+    if eb then SetKey(eb:GetText()) end
+  end,
+  EditBoxOnEnterPressed = function(self) SetKey(self:GetText()); self:GetParent():Hide() end,
+  EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+  timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+}
+
 -- A sheet of paper with a soft shadow and a faint ruled margin.
 local function Paper(parent, w, h)
   local p = CreateFrame("Frame", nil, parent)
@@ -58,6 +82,7 @@ K:RegisterPage({
   subtitle = "Write, seal and post letters to other characters.",
 
   build = function(c)
+    page = c
     c.box, c.mode = "in", "read"
 
     c.boxes = UI.Segments(c, { { key = "in", label = "Received" }, { key = "out", label = "Sent" } }, 90,
@@ -129,6 +154,28 @@ K:RegisterPage({
     read.sign:SetJustifyH("RIGHT")
     read.seal = UI.Seal(read, 56)
     read.seal:SetPoint("BOTTOMLEFT", 26, 22)
+    read.key = UI.Edit(read, 150, 24, "ink", 24)
+    read.key:SetPoint("BOTTOMLEFT", 28, 100)
+    read.key.hint = UI.Text(read.key, "Key word", "Small", "inkSubtle")
+    read.key.hint:SetPoint("LEFT", 8, 0)
+    read.key:HookScript("OnTextChanged", function(self) self.hint:SetShown((self:GetText() or "") == "") end)
+    read.decipher = UI.Button(read, "Decipher", 90, 24)
+    read.decipher:SetPoint("LEFT", read.key, "RIGHT", 6, 0)
+    local function Decipher()
+      local l = c.selected
+      if not l then return end
+      if L:TryKey(l, read.key:GetText()) then
+        if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN) end
+        read.key:SetText("")
+        read.key:ClearFocus()
+        UI.FadeIn(read, 0.35)
+      else
+        K:Print("That key word doesn't make sense of it.")
+      end
+    end
+    read.decipher:SetScript("OnClick", Decipher)
+    read.key:SetScript("OnEnterPressed", Decipher)
+    UI.Tooltip(read.decipher, "Decipher", "Type the key word you were given in character.")
     read.state = UI.Chip(read)
     read.state:SetPoint("LEFT", read.seal, "RIGHT", 12, 0)
     read.reply = UI.Button(read, "Reply", 84, 24)
@@ -163,8 +210,37 @@ K:RegisterPage({
     local w = CreateFrame("Frame", nil, paper)
     w:SetAllPoints()
     c.write = w
-    w.heading = UI.Text(w, "A new letter", "GameFontNormalLarge", "inkHeading")
-    w.heading:SetPoint("TOPLEFT", 28, -26)
+    -- How it's written: the hand, the state of the paper, and a cipher
+    local function Option(x, title, body, menu)
+      local b = UI.Button(w, "", 110, 22)
+      b:SetPoint("TOPLEFT", x, -22)
+      b:SetScript("OnClick", function(self) UI.Menu(self, menu) end)
+      UI.Tooltip(b, title, body)
+      return b
+    end
+    w.hand = Option(28, "Your hand", "How your character writes. They see it in the same hand.", function(root)
+      root:CreateTitle("Your hand")
+      for _, h in ipairs(L.HANDS) do
+        root:CreateRadio(h.label, function() return c.hand == h.key end, function()
+          c.hand = h.key
+          K.db.settings.letterHand = h.key   -- remembered for your next letter
+          c:PaintOptions()
+        end)
+      end
+    end)
+    w.cond = Option(144, "The paper", "The state your letter arrives in.", function(root)
+      root:CreateTitle("The paper")
+      for _, cd in ipairs(L.CONDITIONS) do
+        root:CreateRadio(cd.label, function() return c.cond == cd.key end, function() c.cond = cd.key; c:PaintOptions() end)
+      end
+    end)
+    w.cipher = Option(260, "Cipher", "Scramble the letter with a key word. Without the key, it reads as nonsense, "
+      .. "to them and to anyone who gets hold of it.", function(root)
+      root:CreateTitle("Cipher")
+      root:CreateRadio("No cipher", function() return c.key == nil end, function() c.key = nil; c:PaintOptions() end)
+      root:CreateRadio(c.key and ("Key word: " .. c.key) or "Write in cipher...", function() return c.key ~= nil end,
+        function() StaticPopup_Show("KINSHIPRP_LETTER_KEY") end)
+    end)
     w.to = UI.Field(w, "To", 170, 60, nil, "ink")
     w.to:SetPoint("TOPLEFT", 28, -54)
     w.title = UI.Field(w, "Title (optional)", IW - 182, L.MAX_TITLE, nil, "ink")
@@ -217,7 +293,7 @@ K:RegisterPage({
     w.cancel:SetScript("OnClick", function() c.mode = "read"; K.Journal:RefreshCurrent() end)
     w.send:SetScript("OnClick", function()
       local letter, err = L:Send(w.to.edit:GetText(), w.title.edit:GetText(), w.body.edit:GetText(),
-        w.sign.edit:GetText(), c.seal, c.crest)
+        w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, key = c.key })
       if not letter then K:Print(err) return end
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
       c.box, c.selected, c.mode = "out", letter, "read"
@@ -237,8 +313,18 @@ K:RegisterPage({
       end
     end
 
+    function c:PaintOptions()
+      w.hand:SetText(L.HandLabel(self.hand))
+      w.cond:SetText(L.CondLabel(self.cond))
+      w.cipher:SetText(self.key and "In cipher" or "No cipher")
+      w.body.edit:SetFontObject(L.HandFont(self.hand))
+      L.Stain(self.paper, self.cond, "draft")
+    end
+
     function c:Compose(to, title)
       self.mode = "write"
+      self.hand = L.ValidHand(K.db.settings.letterHand)
+      self.cond, self.key = "pristine", nil
       self.seal = self.seal or "crimson"
       self.crest = DefaultCrest()
       K.Journal:RefreshCurrent()
@@ -247,6 +333,7 @@ K:RegisterPage({
       w.body.edit:SetText("")
       w.sign.edit:SetText(DefaultSign())
       self:PaintSeal()
+      self:PaintOptions()
       UI.FadeIn(w, 0.2)
       if (to or "") == "" then w.to.edit:SetFocus() else w.body.edit:SetFocus() end
     end
@@ -312,6 +399,9 @@ K:RegisterPage({
     c.sealed:SetShown(isSealed and true or false)
     c.read:SetShown(not writing and l ~= nil and not isSealed)
     c.blank:SetShown(not writing and l == nil)
+    -- The paper's condition, for the letter on show (or the one being written)
+    if writing then L.Stain(c.paper, c.cond, "draft")
+    else L.Stain(c.paper, l and l.cond, l and l.id) end
     if writing or not l then return end
 
     if c.shown ~= l then c.shown = l; UI.FadeIn(c.paper, 0.2) end
@@ -326,8 +416,19 @@ K:RegisterPage({
     if l.place and l.place ~= "" then meta[#meta + 1] = UI.Escape(l.place) end
     r.meta:SetText(table.concat(meta, "  ·  "))
     r.title:SetText(l.title ~= "" and UI.Escape(l.title) or (l.dir == "in" and ("From " .. Short(l.from)) or ("To " .. Short(l.to))))
+    -- In the writer's hand; a letter in cipher reads as nonsense until its key is found
+    r.body.text:SetFontObject(L.HandFont(l.hand))
     r.body:SetText(UI.Escape(l.body))
+    r.sign:SetFontObject(L.HandFont(l.hand))
+    r.sign:SetTextColor(unpack(UI.INK.inkAccent))
     r.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
+    local locked = l.dir == "in" and l.cipher and not l.solved
+    r.key:SetShown(locked and true or false)
+    r.decipher:SetShown(locked and true or false)
+    if l.cipher or l.key then
+      meta[#meta + 1] = locked and "In cipher" or (l.key and ("In cipher, key: " .. UI.Escape(l.key)) or "Deciphered")
+      r.meta:SetText(table.concat(meta, "  ·  "))
+    end
     r.seal:SetSeal(l.seal, L.CrestTexture(l.crest))
     local st = l.dir == "out" and STATES[l.state]
     r.state:Set(st and st.label or nil, st and st.color)

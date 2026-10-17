@@ -69,8 +69,175 @@ local function Post(target, msg, priority)
   return ok
 end
 
+---------------------------------------------------------------------------
+-- How a letter looks: the writer's hand, and the state of the paper
+---------------------------------------------------------------------------
+L.HANDS = {
+  { key = "plain", label = "Plain hand", file = "Fonts\\FRIZQT__.TTF", size = 14 },
+  { key = "fine", label = "Fine hand", file = "Fonts\\MORPHEUS.TTF", size = 16 },
+  { key = "rough", label = "Rough scrawl", file = "Fonts\\SKURRI.TTF", size = 15 },
+}
+L.CONDITIONS = {
+  { key = "pristine", label = "Pristine" },
+  { key = "rain", label = "Rain-soaked" },
+  { key = "tears", label = "Tear-stained" },
+  { key = "blood", label = "Blood-stained" },
+  { key = "singed", label = "Singed" },
+}
+local HAND, COND = {}, {}
+for _, h in ipairs(L.HANDS) do HAND[h.key] = h end
+for _, c in ipairs(L.CONDITIONS) do COND[c.key] = c end
+function L.ValidHand(k) return HAND[k] and k or "plain" end
+function L.ValidCond(k) return COND[k] and k or "pristine" end
+function L.HandLabel(k) return (HAND[k] or HAND.plain).label end
+function L.CondLabel(k) return (COND[k] or COND.pristine).label end
+
+-- The hand as a font, in ink (the game's own book, plain and scrawled faces)
+local fonts = {}
+function L.HandFont(key)
+  local h = HAND[key] or HAND.plain
+  if not fonts[h.key] then
+    local f = CreateFont("KinshipRPHand_" .. h.key)
+    if not f:SetFont(h.file, h.size, "") then f:SetFont(STANDARD_TEXT_FONT, 14, "") end
+    local ink = UI.INK.ink
+    f:SetTextColor(ink[1], ink[2], ink[3])
+    f:SetShadowOffset(0, 0)
+    fonts[h.key] = f
+  end
+  return fonts[h.key]
+end
+
+-- The same letter always looks the same: a little number from its id places the marks.
+local function Seed(s)
+  local n = 7
+  s = tostring(s or "")
+  for i = 1, #s do n = (n * 31 + s:byte(i)) % 2147483647 end
+  return n
+end
+
+-- Marks on a sheet of paper for its condition: water, tears, blood or scorching.
+function L.Stain(paper, cond, seed)
+  paper.stains = paper.stains or {}
+  paper.burns = paper.burns or {}
+  for _, t in ipairs(paper.stains) do t:Hide() end
+  for _, t in ipairs(paper.burns) do t:Hide() end
+  cond = L.ValidCond(cond)
+  if cond == "pristine" then return end
+  local w, h = paper:GetWidth(), paper:GetHeight()
+  if not w or w < 40 then return end
+  local state = Seed(seed) + 1
+  local function rnd()
+    state = (state * 1103515245 + 12345) % 2147483648
+    return state / 2147483648
+  end
+  local used = 0
+  local function blot(x, y, bw, bh, c, a)
+    used = used + 1
+    local t = paper.stains[used]
+    if not t then
+      t = UI.Circle(paper, 10, "BORDER", 1)
+      paper.stains[used] = t
+    end
+    t:ClearAllPoints()
+    t:SetSize(bw, bh)
+    t:SetPoint("CENTER", paper, "TOPLEFT", x, -y)
+    t:SetVertexColor(c[1], c[2], c[3], a)
+    t:Show()
+  end
+  if cond == "rain" then
+    for _ = 1, 7 do
+      local s = 50 + rnd() * 110
+      blot(rnd() * w, rnd() * h, s, s * (0.7 + rnd() * 0.5), { 0.32, 0.40, 0.48 }, 0.08 + rnd() * 0.07)
+    end
+  elseif cond == "tears" then
+    for _ = 1, 4 do
+      local x, y, s = w * (0.35 + rnd() * 0.5), h * (0.45 + rnd() * 0.4), 12 + rnd() * 14
+      blot(x, y, s * 2.2, s * 2.2, { 0.36, 0.44, 0.52 }, 0.07)
+      blot(x, y, s, s * 1.15, { 0.30, 0.38, 0.48 }, 0.16)
+    end
+  elseif cond == "blood" then
+    local x, y = (rnd() < 0.5) and w * 0.18 or w * 0.82, (rnd() < 0.5) and h * 0.2 or h * 0.8
+    blot(x, y, 70 + rnd() * 50, 30 + rnd() * 25, { 0.42, 0.04, 0.04 }, 0.30)
+    blot(x + 12, y + 6, 38, 20, { 0.30, 0.02, 0.02 }, 0.28)
+    for _ = 1, 6 do
+      local s = 4 + rnd() * 9
+      blot(x + (rnd() - 0.5) * 140, y + (rnd() - 0.5) * 90, s, s, { 0.40, 0.03, 0.03 }, 0.45)
+    end
+  elseif cond == "singed" then
+    -- Scorched edges, darkest at the rim, and a few burnt patches at the corners
+    local edge = 26
+    local sides = {
+      { "TOPLEFT", "TOPRIGHT", nil, edge, "VERTICAL", false },
+      { "BOTTOMLEFT", "BOTTOMRIGHT", nil, edge, "VERTICAL", true },
+      { "TOPLEFT", "BOTTOMLEFT", edge, nil, "HORIZONTAL", true },
+      { "TOPRIGHT", "BOTTOMRIGHT", edge, nil, "HORIZONTAL", false },
+    }
+    for i, sd in ipairs(sides) do
+      local t = paper.burns[i]
+      if not t then
+        t = paper:CreateTexture(nil, "BORDER", nil, 2)
+        t:SetTexture("Interface\\Buttons\\WHITE8X8")
+        paper.burns[i] = t
+      end
+      t:ClearAllPoints()
+      t:SetPoint(sd[1])
+      t:SetPoint(sd[2])
+      if sd[3] then t:SetWidth(sd[3]) else t:SetHeight(sd[4]) end
+      local dark, clear = CreateColor(0.22, 0.11, 0.03, 0.55), CreateColor(0.22, 0.11, 0.03, 0)
+      if sd[6] then t:SetGradient(sd[5], dark, clear) else t:SetGradient(sd[5], clear, dark) end
+      t:Show()
+    end
+    for _, c in ipairs({ { 0, 0 }, { w, 0 }, { 0, h }, { w, h } }) do
+      if rnd() < 0.75 then
+        local s = 30 + rnd() * 45
+        blot(c[1], c[2], s, s, { 0.18, 0.09, 0.03 }, 0.35)
+      end
+    end
+  end
+end
+
+---------------------------------------------------------------------------
+-- Ciphers: a key word shifts each letter A-Z along the alphabet (a Vigenere
+-- cipher); everything else is left as it is. The key never travels: a short
+-- check of the true words does, so the right key can be recognised.
+---------------------------------------------------------------------------
+function L.CleanKey(key) return (tostring(key or ""):lower():gsub("[^a-z]", "")) end
+
+local function Shift(text, key, dir)
+  key = L.CleanKey(key)
+  if key == "" then return text end
+  local i = 0
+  return (text:gsub("%a", function(ch)
+    local b = ch:byte()
+    local base = b >= 97 and 97 or 65
+    i = i % #key + 1
+    return string.char((b - base + dir * (key:byte(i) - 97)) % 26 + base)
+  end))
+end
+function L.Encipher(text, key) return Shift(text, key, 1) end
+function L.Decipher(text, key) return Shift(text, key, -1) end
+-- Spacing is left out: a long letter's parts are rejoined with plain spaces.
+function L.CipherCheck(text)
+  local n = 0
+  text = text:gsub("%s", "")
+  for i = 1, #text do n = (n * 33 + text:byte(i)) % 65536 end
+  return ("%04x"):format(n)
+end
+
+-- Try a key on a letter in cipher. True, and the letter's words revealed, if it's right.
+function L:TryKey(letter, key)
+  if not (letter and letter.cipher and not letter.solved) then return false end
+  local plain = L.Decipher(letter.body, key)
+  if L.CipherCheck(plain) ~= letter.cipher then return false end
+  letter.body, letter.solved = plain, true
+  K:Fire("LETTERS")
+  return true
+end
+
 -- Returns the letter, or nil and a reason.
-function L:Send(to, title, body, sign, seal, crest)
+-- opts: { hand = "fine", cond = "rain", key = "a key word" for a cipher }
+function L:Send(to, title, body, sign, seal, crest, opts)
+  opts = opts or {}
   to = strtrim(to or "")
   body = strtrim(body or "")
   if to == "" then return nil, "Who is the letter for?" end
@@ -84,7 +251,10 @@ function L:Send(to, title, body, sign, seal, crest)
     from = me, to = to, title = Str(strtrim(title or ""), L.MAX_TITLE), body = Str(body, L.MAX_BODY),
     sign = Str(strtrim(sign or ""), L.MAX_SIGN), seal = ValidSeal(seal), crest = ValidCrest(crest),
     place = K:CurrentPlace(), t = now, read = true, state = "outbox",
+    hand = L.ValidHand(opts.hand), cond = L.ValidCond(opts.cond),
   }
+  local key = L.CleanKey(opts.key)
+  if key ~= "" then letter.key, letter.cipher = key, L.CipherCheck(letter.body) end
   Store(letter)
   return letter
 end

@@ -920,6 +920,7 @@ function UI.ReadArea(parent, w, h, font, role)
   fs:SetJustifyV("TOP")
   fs:SetSpacing(4)
   UI.ScrollBar(sf, role and role:find("^ink") ~= nil)
+  sf.text = fs
   function sf:SetText(text)
     fs:SetText(text or "")
     child:SetHeight(math.max(1, fs:GetStringHeight() + 8))

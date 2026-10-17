@@ -10,6 +10,10 @@
   keeps them on your Letters page, sealed until you open them. People without
   Kinship get an ordinary, readable mail. Long letters go in parts and are
   joined back together.
+- Write in your character's hand (plain, fine or a rough scrawl), on paper
+  that arrives pristine, rain-soaked, tear-stained, blood-stained or singed.
+- Ciphers: scramble a letter with a key word you tell them in character.
+  Without it, the letter is nonsense; with it, Decipher reveals the words.
 
 ## 1.1.1
 
