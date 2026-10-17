@@ -1,6 +1,14 @@
-# Builds KinshipRP-<version>.zip and publishes a GitHub release when a
-# version tag is pushed (git tag v1.1.0 && git push origin v1.1.0).
-# The release notes are that version's section of CHANGELOG.md.
+# Builds KinshipRP-<version>.zip and publishes it when a version tag is
+# pushed (git tag v1.1.0 && git push origin v1.1.0): a GitHub release, and
+# CurseForge too once it's set up. The notes are that version's section of
+# CHANGELOG.md.
+#
+# CurseForge needs, under Settings > Secrets and variables > Actions:
+#   secret   CF_API_KEY       an API token from your CurseForge account
+#   variable CF_PROJECT_ID    the project's ID (on its CurseForge page)
+#   variable CF_GAME_VERSION  the game version to file it under: its name as
+#                             CurseForge shows it, or its ID (several, comma-separated)
+# Without CF_PROJECT_ID the CurseForge step is skipped.
 name: Release
 
 on:
@@ -16,8 +24,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install luacheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lua-check
+
       - name: Check the code
-        uses: lunarmodules/luacheck@v1
+        run: |
+          if ! luacheck . --formatter plain --codes > luacheck.txt; then
+            cat luacheck.txt
+            msg=$(sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g' luacheck.txt)
+            echo "::error title=luacheck found problems::$msg"
+            exit 1
+          fi
 
       - name: Check the version matches the tag
         run: |
@@ -25,20 +42,21 @@ jobs:
           for toc in KinshipRP.toc KinshipRP_Camelot.toc; do
             grep -qx "## Version: $v" "$toc" || { echo "::error::$toc isn't at version $v"; exit 1; }
           done
-          grep -q "K.VERSION = \"$v\"" Comm.lua || { echo "::error::Comm.lua isn't at version $v"; exit 1; }
+          grep -q "K.VERSION = \"$v\"" Core/Comm.lua || { echo "::error::Core/Comm.lua isn't at version $v"; exit 1; }
           grep -qx "## $v" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $v"; exit 1; }
 
       - name: Build the zip
         run: |
           v="${GITHUB_REF_NAME#v}"
           mkdir -p build/KinshipRP
-          rsync -a --exclude='.git*' --exclude='.github' --exclude='build' ./ build/KinshipRP/
+          rsync -a --exclude='.git*' --exclude='.github' --exclude='.luacheckrc' --exclude='build' ./ build/KinshipRP/
           cd build && zip -qr "KinshipRP-$v.zip" KinshipRP
 
       - name: Release notes from the changelog
         run: |
           v="${GITHUB_REF_NAME#v}"
-          awk -v head="## $v" '$0 == head { on = 1; next } /^## / && on { exit } on' CHANGELOG.md > notes.md
+          awk -v head="## $v" '$0 == head { on = 1; next } /^## / && on { exit } on' CHANGELOG.md > changelog.md
+          cp changelog.md notes.md
           printf '\n---\nUnzip into `World of Warcraft\\_classic_beta_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
 
       - uses: softprops/action-gh-release@v2
@@ -46,3 +64,38 @@ jobs:
           name: Kinship RP ${{ github.ref_name }}
           body_path: notes.md
           files: build/KinshipRP-*.zip
+
+      - name: Upload to CurseForge
+        if: ${{ vars.CF_PROJECT_ID != '' }}
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          CF_PROJECT_ID: ${{ vars.CF_PROJECT_ID }}
+          CF_GAME_VERSION: ${{ vars.CF_GAME_VERSION }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          api="https://wow.curseforge.com/api"
+          [ -n "$CF_API_KEY" ] || { echo "::error::Add the CF_API_KEY secret (an API token from your CurseForge account)."; exit 1; }
+          [ -n "$CF_GAME_VERSION" ] || { echo "::error::Add the CF_GAME_VERSION variable: the game version to file it under."; exit 1; }
+
+          # The game version: IDs as given, or looked up by name
+          if echo "$CF_GAME_VERSION" | grep -qE '^[0-9]+(,[0-9]+)*$'; then
+            ids="[$CF_GAME_VERSION]"
+          else
+            versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
+            ids=$(echo "$versions" | jq -c --arg n "$CF_GAME_VERSION" '[.[] | select(.name == $n) | .id]')
+            if [ "$ids" = "[]" ]; then
+              echo "::error::CurseForge has no game version called \"$CF_GAME_VERSION\". The names it knows are listed above."
+              echo "::group::CurseForge game versions (name, then ID)"
+              echo "$versions" | jq -r '.[] | "\(.name)  \(.id)"' | sort -u
+              echo "::endgroup::"
+              exit 1
+            fi
+          fi
+
+          meta=$(jq -n --rawfile cl changelog.md --arg name "Kinship RP $v" --argjson gv "$ids" \
+            '{changelog: $cl, changelogType: "markdown", displayName: $name, gameVersions: $gv, releaseType: "release"}')
+          curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" \
+            -F "metadata=$meta" -F "file=@build/KinshipRP-$v.zip" \
+            "$api/projects/$CF_PROJECT_ID/upload-file"
+          echo
+          echo "Uploaded Kinship RP $v to CurseForge."

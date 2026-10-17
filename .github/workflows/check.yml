@@ -1,5 +1,6 @@
 # Runs luacheck (settings in .luacheckrc) on every push to main and every
 # pull request: syntax errors, and names used that aren't defined anywhere.
+# Anything it finds is listed in one annotation on the run's summary page.
 name: Check
 
 on:
@@ -12,4 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: lunarmodules/luacheck@v1
+
+      - name: Install luacheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lua-check
+
+      - name: Check the code
+        run: |
+          if ! luacheck . --formatter plain --codes > luacheck.txt; then
+            cat luacheck.txt
+            msg=$(sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g' luacheck.txt)
+            echo "::error title=luacheck found problems::$msg"
+            exit 1
+          fi
+          echo "No problems found."
