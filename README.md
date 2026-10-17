@@ -82,7 +82,7 @@ Have an idea instead? [Suggest it here](https://github.com/alexwaddell97/kinship
 
 ## A note on AI
 
-Kinship is an AI-assisted project: I used Claude to help with the coding. I'm a developer in other fields, and I read through the code as I go to understand how it all works. The ideas, testing and decisions are mine. The logo and artwork aren't AI-made; the banner is my own screenshot, and the icons are the game's own.
+Kinship is an AI assisted project.
 
 ## Licence
 
