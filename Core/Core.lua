@@ -132,14 +132,13 @@ end
 
 -- Errors Kinship caught instead of letting them break something: kept for
 -- /kin bug (the last 25, repeats counted rather than listed, saved across a
--- /reload) and printed straight away while /kin debug is on.
+-- /reload).
 -- where: a short label such as "nameplates" or an event name.
 K.errors = {}
 local MAX_ERRORS = 25
 function K:CaughtError(where, err)
   if issecret(err) or issecret(where) then return end
   where, err = tostring(where or "?"), tostring(err)
-  if self.debug then self:Print("|cffff6060" .. where .. ":|r " .. err) end
   for _, e in ipairs(self.errors) do
     if e.where == where and e.msg == err then
       e.n, e.t = (e.n or 1) + 1, time()
@@ -736,13 +735,6 @@ SLASH_KINSHIPRP1, SLASH_KINSHIPRP2 = "/kinship", "/kin"
 SlashCmdList.KINSHIPRP = function(input)
   local cmd, rest = (input or ""):match("^%s*(%S*)%s*(.-)%s*$")
   cmd = (cmd or ""):lower()
-  -- Developer commands: only with /kin dev switched on, and not in the help
-  local devOnly = cmd == "debug" or cmd == "markers"
-    or (cmd == "plates" and (rest:lower() == "live" or rest:lower() == "debug"))
-  if devOnly and not K.db.settings.devCommands then
-    K:Print("That's a developer command. Type /kin dev to turn developer commands on.")
-    return
-  end
   if cmd == "" then
     K.Journal:Toggle()
   elseif cmd == "profile" or cmd == "chronicle" or cmd == "kin" or cmd == "house" or cmd == "gatherings"
@@ -751,8 +743,6 @@ SlashCmdList.KINSHIPRP = function(input)
     K.Journal:Open(cmd)
   elseif (cmd == "effects" or cmd == "auras") and K.Auras then
     if K:ExtOn("auras") then K.Auras:OpenJournal() else K:Print("Effects are switched off (Settings > Extended features).") end
-  elseif cmd == "markers" and K.QuestMarkers then
-    K.QuestMarkers:Report()
   elseif cmd == "satchel" and K.Satchel then
     K.Satchel:Toggle()
   elseif (cmd == "outfit" or cmd == "wear") and K.Worn then
@@ -807,16 +797,8 @@ SlashCmdList.KINSHIPRP = function(input)
     K.Backup:Open(rest:lower() == "restore" and "restore" or nil)
   elseif (cmd == "kofi" or cmd == "support") and K.Support then
     K.Support:Show()
-  elseif cmd == "dev" then
-    K.db.settings.devCommands = not K.db.settings.devCommands or nil
-    K:Print("Developer commands " .. (K.db.settings.devCommands and "on: /kin debug, /kin markers, /kin plates live, /kin plates debug."
-      or "off."))
-  elseif cmd == "debug" then
-    K.debug = not K.debug
-    K:Print("Debug messages " .. (K.debug and "on" or "off"))
   elseif cmd == "plates" and K.Plates then
-    local sub = rest:lower()
-    if sub == "live" then K.Plates:Demo() elseif sub == "debug" then K.Plates:Debug() else K.Plates:Preview() end
+    K.Plates:Preview()
   elseif cmd == "view" then
     K:ViewUnitProfile("target")
   elseif cmd == "status" and K:Compat() then
@@ -855,35 +837,3 @@ SlashCmdList.KINSHIPRP = function(input)
   end
 end
 
----------------------------------------------------------------------------
--- Development builds could set out a Westfall test campaign (/kin seed) and
--- demo content for screenshots (/kin showcase). Neither ships, so take away
--- what they left: only the quests, item designs, document and stash the
--- campaign recorded making (K.db.kinSeed). Runs once, after the modules have
--- set up their saved data.
----------------------------------------------------------------------------
-K:On("LOGIN", function()
-  C_Timer.After(0, function()
-    K.db.showcaseLog = nil
-    local made = K.db.kinSeed
-    if type(made) ~= "table" then return end
-    local Q, I, D, S = K.Quests, K.Items, K.Documents, K.Stashes
-    for _, id in ipairs(made.quests or {}) do
-      if Q then Q:Library()[id] = nil; Q:Log()[id] = nil end
-    end
-    for _, id in ipairs(made.designs or {}) do
-      if I then
-        local n = I:CountOf(id)
-        if n > 0 then I:Remove(id, n) end
-        K.db.itemDefs[id] = nil
-      end
-    end
-    for _, id in ipairs(made.docs or {}) do if D then D:Delete(id) end end
-    if made.stash and S then
-      local _, i = S:Find(made.stash)
-      if i then table.remove(S:Mine(), i) end
-    end
-    K.db.kinSeed = nil
-    K:Fire("QUESTS"); K:Fire("INVENTORY"); K:Fire("STASHES")
-  end)
-end)

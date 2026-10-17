@@ -379,22 +379,6 @@ local function DrawFoe(o, anchor, rival, rec)
   end
 end
 
----------------------------------------------------------------------------
--- Demo (/kin plates live): for a few minutes, players around you without a
--- profile get a made-up one, and some are marked as Kin or rivals, so you
--- can see plates on real players. Only on your screen; nothing is saved.
----------------------------------------------------------------------------
-local DEMO_FOR = 180
-local DEMO = {
-  { "Brother Aldric", "of the Cathedral", "ic" }, { "Mira Ashveil", "", "lfrp" },
-  { "Captain Hale Morrow", "the Lionguard", "ic" }, { "Sister Elowen", "", "ic" },
-  { "Old Tom Barrow", "Innkeeper", "lfrp" }, { "Lady Seraphine Vale", "the Gilded Rose", "ic" },
-  { "Corwin Blackwood", "", "ooc" }, { "Wren Fallowmere", "the Wandering Blade", "ic" },
-  -- No roleplay name: their own name, with a title before it or nothing at all
-  { "", "", "ic", "Lord" }, { "", "Knight of the Silver Hand", "ic", "Sir" },
-  { "", "", "lfrp", "Lady" }, { "", "", "ic" }, { "", "the Wandering Blade", "lfrp" },
-}
-
 -- What a plate's gold name says, and whether it already holds the
 -- character's name (so it takes the plate name's place). rp = the roleplay
 -- name (may be empty), prefix = a title like "Lord".
@@ -408,58 +392,6 @@ local function NameFor(anchor, name, rp, prefix)
   end
   return text, charName ~= "" and text:lower():find(charName:lower(), 1, true) ~= nil
 end
-local function Hash(name)
-  local h = 0
-  for i = 1, #name do h = (h * 31 + name:byte(i)) % 100003 end
-  return h
-end
-
-function P:DemoOn() return self.demoUntil and GetTime() < self.demoUntil or false end
-
--- A made-up profile and marks for someone, the same each time for that name.
-local function Demo(name, hostile)
-  local h = Hash(name)
-  local W = K.War
-  local function grudge(key) local g = W and W.Grudge(key); return g and g.color or { 0.95, 0.76, 0.36 } end
-  if hostile then
-    return { rival = grudge(({ "rival", "grudge", "nemesis" })[h % 3 + 1]) }
-  end
-  local d = DEMO[h % #DEMO + 1]
-  local rels = { "friend", "family" }
-  local def = K.RelationDef and K:RelationDef(rels[h % 2 + 1])
-  local kin = (h % 3 == 0 or h % 5 == 0) and (def and def.color or { 0.37, 0.77, 0.72 }) or nil
-  local rival = (h % 4 == 1) and grudge("rival") or nil
-  return { rp = d[1], prefix = d[4] or "", epithet = d[2], status = d[3], kin = kin, rival = rival, def = kin and def or nil }
-end
-
-function P:Demo()
-  if self:DemoOn() then
-    self.demoUntil = nil
-    K:Print("Nameplate demo off.")
-  else
-    self.demoUntil = GetTime() + DEMO_FOR
-    K:Print("Nameplate demo on for three minutes: players near you get made-up roleplay names, and some are marked "
-      .. "as Kin or rivals. Only you see it. Type /kin plates live again to stop."
-      .. ((not S().plates) and " (Roleplay names on nameplates is switched off in Settings > Nameplates.)" or ""))
-    C_Timer.After(DEMO_FOR + 0.5, function() if not P:DemoOn() then P:RefreshAll() end end)
-  end
-  self:RefreshAll()
-end
-
--- /kin plates debug: what the plates see, to paste into a bug report.
-function P:Debug()
-  local s = S() or {}
-  local n = 0
-  for _ in pairs(self.units) do n = n + 1 end
-  local lines = {
-    ("mode %s, active %s, in instance %s, compat %s"):format(tostring(self.mode), tostring(self:Active()),
-      tostring(IsInInstance()), tostring(K:Compat())),
-    ("names on plates %s, plates tracked %d, demo %s"):format(tostring(s.plates), n, tostring(self:DemoOn())),
-    ("your roleplay name: %s"):format(DisplayName(K:Profile()) ~= "" and DisplayName(K:Profile()) or "(none)"),
-  }
-  for _, l in ipairs(lines) do K:Print(l) end
-end
-
 local function Paint(unit, rec)
   local s = S()
   if not s then return Restore(rec) end
@@ -475,14 +407,6 @@ local function Paint(unit, rec)
   local reg = K:ProfileOf(name)
   local p = reg and reg.profile
   if not p or (reg.t and time() - reg.t > STALE) then P:Ask(name) end
-  if not p and P:DemoOn() then
-    local anchor = FindAnchor(unit, plate)
-    if not anchor then return Restore(rec) end
-    local d = Demo(name)
-    d.ring = { RingColor(d.def) }
-    d.text, d.sameName = NameFor(anchor, name, d.rp, d.prefix)
-    return Draw(Overlay(plate), anchor, d, rec)
-  end
   if not p then return Restore(rec) end
   if p.status == "ooc" and not s.platesOOC then return Restore(rec) end
   local anchor = FindAnchor(unit, plate)
@@ -507,7 +431,6 @@ function P.PaintFoe(unit, rec)
   local name = GetUnitName(unit, true)
   if not Safe(name) or type(name) ~= "string" or name == "" then return Restore(rec) end
   local _, rival = Marks(name)
-  if not rival and P:DemoOn() then rival = Demo(name, true).rival end
   if not rival then return Restore(rec) end
   local anchor = FindAnchor(unit, rec.plate)
   if not anchor then return Restore(rec) end

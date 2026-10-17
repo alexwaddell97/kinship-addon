@@ -13,7 +13,7 @@
 --
 -- Everything that talks to the game's frames is guarded: if the client's
 -- tracker or quest log is different from what's expected, the feature steps
--- aside quietly (and says why with /kin debug) instead of breaking them.
+-- aside quietly instead of breaking them.
 
 local ADDON, ns = ...
 local K = ns.K

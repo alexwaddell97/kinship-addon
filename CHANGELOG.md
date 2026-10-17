@@ -1,8 +1,11 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.2.0
 
-### New
+**After updating, restart the game fully** (not just /reload): there are new
+files, and the game only picks up new files when it starts.
+
+### Letters by post
 - Letters go by post. Seal a letter anywhere and it waits in your Sent
   letters until you next open a mailbox, where Kinship posts it as game mail,
   so it reaches people even when they're offline, and your own characters
@@ -22,8 +25,7 @@
   when you seal it and go into theirs when they break the seal. Real gold and
   game items on the Send Mail tab can go with a letter too.
 
-**Kinship in the game's own windows.** After updating, restart the game
-fully (not just /reload): there are new files.
+### Kinship in the game's own windows
 - Trade: trading with another Kinship player opens a Kinship card beside the
   trade window. Right-click a Kinship item in your bags to put it in. Both of
   you see what's offered, and the items move when the trade goes through.
@@ -37,6 +39,8 @@ fully (not just /reload): there are new files.
 - Your Warfront record and latest rivals sit beside the PvP window.
 - A Kinship button in the game menu (Esc).
 - Dice results in chat look like the game's own /roll.
+
+### Effects
 - Resting at an inn or in a city: wounds, Exhausted and Soaked pass twice as
   fast. Switch it off with Rest speeds healing in Settings > Effects.
 - Effects that come on their own, from what happens in the game: Drunk when
@@ -45,7 +49,9 @@ fully (not just /reload): there are new files.
   Exhausted after hours without rest, and Well rested after half an hour's
   rest. Only light ones, each toast has Not now to take it off, and each has
   its own switch in Settings > Effects that come on their own.
-- Nameplates: the character's name now sits under the roleplay name as
+
+### Nameplates
+- The character's name now sits under the roleplay name as
   "(Name)" in a softer grey, and your Kin and rivals get a small mark after
   their name. Rivals are marked on enemy players' plates too, in combat as
   well. Both can be switched off in Settings > Nameplates.
@@ -54,12 +60,12 @@ fully (not just /reload): there are new files.
   their status dot, title and marks.
 - `/kin plates` previews nameplates with your settings, no one else needed,
   with a key for the status dots and the Kin and rival marks.
-- Developer commands (`/kin debug`, `/kin markers`) are now behind `/kin dev`
-  and left out of the help list.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it
   while the bags are open.
+- The status dot on the target bar no longer hides under the portrait.
+- The Kinship button in the game menu matches EllesmereUI's skinned menu.
 
 ## 1.1.1
 

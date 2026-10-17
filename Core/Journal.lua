@@ -244,7 +244,7 @@ function J:Show(i)
   if changed then UI.FadeIn(self.content[i], 0.25) end
 end
 
--- Run a page's refresh, reporting errors when /kin debug is on.
+-- Run a page's refresh, logging any error for /kin bug.
 function J:Refresh(i)
   local page = self.pages[i]
   if not page or not page.refresh or not self.content[i].ok then return end
