@@ -52,10 +52,10 @@ fully (not just /reload): there are new files.
 - Nameplates no longer need a roleplay name: players who go by their
   character's name get it in roleplay gold, with any title like "Lord", and
   their status dot, title and marks.
-- `/kin plates` previews nameplates with your settings, no one else needed.
-  `/kin plates live` tries them on real players around you for three
-  minutes, with made-up names and marks only you can see. The preview has a
-  key for the status dots and the Kin and rival marks.
+- `/kin plates` previews nameplates with your settings, no one else needed,
+  with a key for the status dots and the Kin and rival marks.
+- Developer commands (`/kin debug`, `/kin markers`) are now behind `/kin dev`
+  and left out of the help list.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it

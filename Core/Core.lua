@@ -736,6 +736,13 @@ SLASH_KINSHIPRP1, SLASH_KINSHIPRP2 = "/kinship", "/kin"
 SlashCmdList.KINSHIPRP = function(input)
   local cmd, rest = (input or ""):match("^%s*(%S*)%s*(.-)%s*$")
   cmd = (cmd or ""):lower()
+  -- Developer commands: only with /kin dev switched on, and not in the help
+  local devOnly = cmd == "debug" or cmd == "markers"
+    or (cmd == "plates" and (rest:lower() == "live" or rest:lower() == "debug"))
+  if devOnly and not K.db.settings.devCommands then
+    K:Print("That's a developer command. Type /kin dev to turn developer commands on.")
+    return
+  end
   if cmd == "" then
     K.Journal:Toggle()
   elseif cmd == "profile" or cmd == "chronicle" or cmd == "kin" or cmd == "house" or cmd == "gatherings"
@@ -800,6 +807,10 @@ SlashCmdList.KINSHIPRP = function(input)
     K.Backup:Open(rest:lower() == "restore" and "restore" or nil)
   elseif (cmd == "kofi" or cmd == "support") and K.Support then
     K.Support:Show()
+  elseif cmd == "dev" then
+    K.db.settings.devCommands = not K.db.settings.devCommands or nil
+    K:Print("Developer commands " .. (K.db.settings.devCommands and "on: /kin debug, /kin markers, /kin plates live, /kin plates debug."
+      or "off."))
   elseif cmd == "debug" then
     K.debug = not K.debug
     K:Print("Debug messages " .. (K.debug and "on" or "off"))
@@ -829,7 +840,7 @@ SlashCmdList.KINSHIPRP = function(input)
       "/kin effects - wounds, boons and states on your character",
       "/kin roll [2d6+3] - roll dice (or open the dice tray)",
       "/kin scan - find roleplayers nearby on the map",
-      "/kin plates [live] - preview nameplates (live: try them on players around you)",
+      "/kin plates - preview nameplates with your settings, and what their marks mean",
       "/kin share | import - share a profile as text, or bring one in",
       "/kin ignore [name] - hide someone everywhere in Kinship",
       "/kin bar - show or hide the target bar",
