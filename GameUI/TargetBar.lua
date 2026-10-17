@@ -108,8 +108,14 @@ function B:Build()
     GameTooltip:Show()
   end)
   f.portrait:HookScript("OnLeave", function() GameTooltip:Hide() end)
+  -- Status dot: on the ring's edge, above the portrait, with a cut-out in
+  -- the bar's colour so it reads as a badge rather than a blot on the ring
+  f.dotBack = UI.Circle(f.portrait, 14, "OVERLAY", 0)
+  f.dotBack:SetPoint("CENTER", f.portrait, "BOTTOMRIGHT", -7, 7)
+  UI:OnTheme(function(t) f.dotBack:SetVertexColor(unpack(t.chrome)); f.dotBack:SetAlpha(1) end)
   f.dot = UI.Gem(f.portrait, 14)
-  f.dot:SetPoint("BOTTOMRIGHT", -1, 1)
+  f.dot:SetDrawLayer("OVERLAY", 1)
+  f.dot:SetPoint("CENTER", f.dotBack)
 
   f.name = UI.Text(f, "", "Header", "plain", NAME_MAX)
   f.name:SetPoint("TOPLEFT", f.portrait, "TOPRIGHT", 8, -6)
@@ -230,6 +236,7 @@ function B:Update()
     f.portrait.icon:SetTexCoord(0, 1, 0, 1)
   end
   f.dot:SetShown(p ~= nil and p.status ~= nil)
+  f.dotBack:SetShown(f.dot:IsShown())
   if p and p.status and K.STATUS[p.status] then f.dot:SetStatus(p.status) end
 
   -- Name, in their colour or their class's
