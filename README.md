@@ -8,7 +8,7 @@ A roleplay addon for World of Warcraft Forever. It keeps your character's profil
 
 It speaks the same profile protocol as Total RP 3, MyRolePlay and XRP, so players using those addons can read your profile and you can read theirs. It also runs happily alongside Total RP 3 if you'd rather keep it.
 
-> Kinship is in beta. If something's broken or confusing, please [open an issue](https://github.com/alexwaddell97/kinship-addon/issues).
+> Kinship is in beta. If something's broken or confusing, please [open an issue](https://github.com/alexwaddell97/kinship-addon/issues/new/choose).
 
 ## What it does
 
@@ -41,7 +41,7 @@ Kinship never loads or depends on Total RP 3. It only notices when it's there.
 
 ## Installing
 
-Download the latest version from CurseForge and unzip it into:
+Download the latest version from CurseForge, or the zip from the latest [release](https://github.com/alexwaddell97/kinship-addon/releases/latest), and unzip it into:
 
 ```
 World of Warcraft\_classic_beta_\Interface\AddOns\KinshipRP
@@ -71,7 +71,9 @@ Key bindings are under Key Bindings > AddOns > Kinship RP.
 
 ## Reporting a bug
 
-Type `/kin bug`, copy what it shows, and paste it into a [new issue](https://github.com/alexwaddell97/kinship-addon/issues) with a line about what you were doing. It includes Kinship's version and the last errors it caught, which makes things much quicker to track down.
+[Open a bug report](https://github.com/alexwaddell97/kinship-addon/issues/new?template=bug_report.yml). It asks for what `/kin bug` shows in game: copy everything in its box and paste it in. That includes Kinship's version and the last errors it caught, which makes things much quicker to track down.
+
+Have an idea instead? [Suggest it here](https://github.com/alexwaddell97/kinship-addon/issues/new?template=idea.yml).
 
 ## A note on AI
 

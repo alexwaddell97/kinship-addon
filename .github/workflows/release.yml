@@ -1,0 +1,45 @@
+# Builds KinshipRP-<version>.zip and publishes a GitHub release when a
+# version tag is pushed (git tag v1.1.0 && git push origin v1.1.0).
+# The release notes are that version's section of CHANGELOG.md.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the version matches the tag
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          for toc in KinshipRP.toc KinshipRP_Camelot.toc; do
+            grep -qx "## Version: $v" "$toc" || { echo "::error::$toc isn't at version $v"; exit 1; }
+          done
+          grep -q "K.VERSION = \"$v\"" Comm.lua || { echo "::error::Comm.lua isn't at version $v"; exit 1; }
+          grep -qx "## $v" CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $v"; exit 1; }
+
+      - name: Build the zip
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          mkdir -p build/KinshipRP
+          rsync -a --exclude='.git*' --exclude='.github' --exclude='build' ./ build/KinshipRP/
+          cd build && zip -qr "KinshipRP-$v.zip" KinshipRP
+
+      - name: Release notes from the changelog
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v head="## $v" '$0 == head { on = 1; next } /^## / && on { exit } on' CHANGELOG.md > notes.md
+          printf '\n---\nUnzip into `World of Warcraft\\_classic_beta_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Kinship RP ${{ github.ref_name }}
+          body_path: notes.md
+          files: build/KinshipRP-*.zip

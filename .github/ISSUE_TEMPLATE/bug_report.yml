@@ -1,0 +1,67 @@
+name: Something's broken
+description: A bug, an error, or something that doesn't work the way it says it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The more of this you can fill in, the quicker it gets fixed.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected to see instead.
+      placeholder: When I click Preview on the character sheet, nothing opens.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can I make it happen?
+      description: The steps that lead to it, if you know them.
+      placeholder: |
+        1. Open the character sheet and choose the Roleplay tab
+        2. Click Preview
+    validations:
+      required: false
+
+  - type: textarea
+    id: kinbug
+    attributes:
+      label: What /kin bug shows
+      description: Type `/kin bug` in game, copy everything in the box, and paste it here. It includes your Kinship version and the last errors it caught.
+      render: text
+    validations:
+      required: true
+
+  - type: dropdown
+    id: trp3
+    attributes:
+      label: Total RP 3
+      description: Were you running Total RP 3 as well?
+      options:
+        - No, just Kinship
+        - Yes, keeping both
+        - Yes, keeping both, with Total RP 3 Extended too
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: others
+    attributes:
+      label: Other addons that might be involved
+      description: UI replacements, nameplate or chat addons, anything that touches the same part of the screen.
+      placeholder: EllesmereUI, DialogueUI
+    validations:
+      required: false
+
+  - type: textarea
+    id: shots
+    attributes:
+      label: Screenshots
+      description: Drag images in here if they help show it.
+    validations:
+      required: false

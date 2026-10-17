@@ -1,0 +1,35 @@
+name: An idea
+description: Something you'd like Kinship to do, or do differently.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe it the way you'd explain it to another roleplayer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What would it help with?
+      description: A scene, a guild event, something that's awkward at the moment.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Kinship?
+      options:
+        - Profiles and the profile window
+        - Quests
+        - Items, worn items and outfits
+        - Houses and Kin
+        - Warfront and RP-PvP
+        - Letters, documents and stashes
+        - Working with Total RP 3
+        - Something else
+    validations:
+      required: false
