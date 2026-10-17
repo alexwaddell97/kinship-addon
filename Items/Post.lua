@@ -161,8 +161,14 @@ function P:Next()
   end
   local part = job.parts[job.i]
   self.sending = job
+  self.lastError = nil
   local ok, err = pcall(SendMail, Short(job.letter.to), part.subject, part.body)
-  if not ok then self:Failed(tostring(err)) end
+  if not ok then self:Failed(tostring(err)) return end
+  -- The mailbox always answers (sent, or why not). If it doesn't, don't hang.
+  local mine = job.i
+  C_Timer.After(10, function()
+    if self.sending == job and job.i == mine then self:Failed("the mailbox didn't answer") end
+  end)
 end
 
 function P:Sent()
