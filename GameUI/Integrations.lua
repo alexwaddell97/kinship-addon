@@ -256,6 +256,50 @@ local function GameMenuButton()
   end)
   btn:Hide()
 
+  -- Look like the button above it. A skinned menu (EllesmereUI's, say) hides
+  -- the buttons' own art and draws a dark inset with a border; do the same,
+  -- and take its font and colour, so ours doesn't stand out.
+  local function Match(anchor)
+    local skinned = anchor.Left and anchor.Left:GetAlpha() < 0.01
+    if skinned and not btn.kinInset then
+      for _, r in ipairs({ btn:GetRegions() }) do
+        if r:IsObjectType("Texture") and r ~= btn:GetFontString() then r:SetAlpha(0) end
+      end
+      for _, key in ipairs({ "Left", "Middle", "Right" }) do
+        local tex = btn[key]
+        if tex and tex.SetAlpha then
+          tex:SetAlpha(0)
+          hooksecurefunc(tex, "SetAlpha", function(self, a) if a > 0 then self:SetAlpha(0) end end)
+        end
+      end
+      local inset = CreateFrame("Frame", nil, btn)
+      inset:SetPoint("TOPLEFT", 2, -2)
+      inset:SetPoint("BOTTOMRIGHT", -2, 2)
+      inset:SetFrameLevel(btn:GetFrameLevel())
+      inset.bg = inset:CreateTexture(nil, "BACKGROUND", nil, -6)
+      inset.bg:SetAllPoints()
+      local hl = btn:CreateTexture(nil, "HIGHLIGHT")
+      hl:SetAllPoints(inset)
+      hl:SetColorTexture(1, 1, 1, 0.1)
+      btn.kinInset = inset
+      local eui = rawget(_G, "EllesmereUI")
+      if eui and type(eui._applyBlizzardConfiguredBorder) == "function" then
+        pcall(eui._applyBlizzardConfiguredBorder, inset, "popupMenuButton", 1)
+      end
+    end
+    if btn.kinInset then
+      local db = rawget(_G, "EllesmereUIDB")
+      local c = type(db) == "table" and type(db.popupMenuButtonBackgroundColor) == "table" and db.popupMenuButtonBackgroundColor
+      btn.kinInset.bg:SetColorTexture(c and c.r or 0.1, c and c.g or 0.1, c and c.b or 0.1, c and c.a or 0.8)
+    end
+    local theirs, ours = anchor:GetFontString(), btn:GetFontString()
+    if theirs and ours then
+      local face, size, flags = theirs:GetFont()
+      if face then ours:SetFont(face, size, flags or "") end
+      ours:SetTextColor(theirs:GetTextColor())
+    end
+  end
+
   local function Place()
     if InCombatLockdown() or not menu:IsShown() then btn:Hide() return end
     local list, anchor = {}, nil
@@ -269,10 +313,13 @@ local function GameMenuButton()
     table.sort(list, function(a, b) return a:GetTop() > b:GetTop() end)
     anchor = anchor or list[#list]
     -- The gap the menu already leaves between buttons, and its space at the foot
-    local gap = 4
+    -- (the smallest one: the space after AddOns may be a section break)
+    local gap
     for i = 1, #list - 1 do
-      if list[i] == anchor then gap = math.max(0, anchor:GetBottom() - list[i + 1]:GetTop()) break end
+      local d = list[i]:GetBottom() - list[i + 1]:GetTop()
+      if d >= 0 and (not gap or d < gap) then gap = d end
     end
+    gap = gap or 4
     local lowest = math.huge
     for _, b in ipairs(list) do lowest = math.min(lowest, b:GetBottom()) end
     local foot = lowest - menu:GetBottom()
@@ -289,6 +336,7 @@ local function GameMenuButton()
     end
     btn:ClearAllPoints()
     btn:SetPoint("TOP", anchor, "BOTTOM", 0, -gap)
+    Match(anchor)
     btn:Show()
     -- Tall enough to hold every button, with the same space at the foot
     lowest = math.min(lowest - shift, btn:GetBottom() or lowest)
