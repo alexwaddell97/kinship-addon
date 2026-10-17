@@ -37,7 +37,9 @@ fully (not just /reload): there are new files.
 - Your Warfront record and latest rivals sit beside the PvP window.
 - A Kinship button in the game menu (Esc).
 - Dice results in chat look like the game's own /roll.
-- Wounds heal twice as fast while you're resting at an inn or in a city.
+- Resting at an inn or in a city: wounds and Exhausted pass twice as fast,
+  and half an hour's rest leaves you Well rested. Each has its own switch in
+  Settings > Effects.
 
 ## 1.1.1
 

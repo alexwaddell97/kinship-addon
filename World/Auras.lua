@@ -285,27 +285,65 @@ function A:Expire()
   if changed then Changed() end
 end
 
--- Rest heals: at an inn or in a city (where rested XP builds) your wounds
--- mend twice as fast. Each tick takes the time just passed off them once more;
--- others hear the new times now and then rather than every few seconds.
+-- Rest: at an inn or in a city (where rested XP builds) wounds and
+-- exhaustion pass twice as fast. Each tick takes the time just passed off them
+-- once more; others hear the new times now and then rather than every few
+-- seconds. Half an hour's rest, with no exhaustion left, and you're Well rested.
+A.REST_FOR = 30 * MIN       -- rest needed to be Well rested
+A.REST_AGAIN = 6 * HOUR     -- and not more often than this
+local REST_LAPSE = 10 * MIN -- away from rest this long and the count starts again
 local lastTick, unshared = nil, 0
-function A:Rest()
-  local now = Now()
-  local was = lastTick
-  lastTick = now
-  if not (was and K.db and IsResting and IsResting()) then
-    if unshared > 0 then unshared = 0; Changed() end
-    return
-  end
-  local spent = math.min(now - was, 30)
-  if spent <= 0 then return end
+
+-- What rest eases: wounds, and exhaustion.
+function A.Mends(e)
+  return e and e.expires and (e.kind == "wound" or e.id == "exhausted") or false
+end
+
+local function RestBox()
+  local box = K.db.auras[K:CharKey()]
+  return type(box) == "table" and box or {}
+end
+
+-- Seconds rested towards Well rested (for the tooltip and tests).
+function A:Rested() return RestBox().rest or 0 end
+
+-- One tick of rest, `spent` seconds long (the ticker passes the time since the last).
+function A:RestFor(spent)
   local any = false
-  for _, e in ipairs(self:Mine()) do
-    if e.kind == "wound" and e.expires then e.expires = e.expires - spent; any = true end
+  if S().auraRest ~= false then
+    for _, e in ipairs(self:Mine()) do
+      if A.Mends(e) then e.expires = e.expires - spent; any = true end
+    end
+  end
+  local box = RestBox()
+  local now = Now()
+  if box.restAt and now - box.restAt > REST_LAPSE then box.rest = 0 end
+  box.rest, box.restAt = (box.rest or 0) + spent, now
+  if S().auraAuto ~= false and box.rest >= A.REST_FOR and not self:Find("exhausted") and not self:Find("rested")
+    and now - (box.restedAt or 0) >= A.REST_AGAIN and PRESET.rested then
+    box.rest, box.restedAt = 0, now
+    local e = self:Apply(PRESET.rested, PRESET.rested.dur, nil, nil, true)
+    if e then
+      UI.Toast({ icon = e.icon, round = true, color = A.Color("boon"), duration = 6,
+        title = "Well rested", text = "A good rest has done you good. " .. PRESET.rested.desc })
+    end
+    return
   end
   if not any then return end
   unshared = unshared + spent
   if unshared >= 60 then unshared = 0; Changed() else K:Fire("AURAS") end
+end
+
+function A:Rest()
+  local now = Now()
+  local was = lastTick
+  lastTick = now
+  if not (was and K.db and A.Resting()) then
+    if unshared > 0 then unshared = 0; Changed() end
+    return
+  end
+  local spent = math.min(now - was, 30)
+  if spent > 0 then self:RestFor(spent) end
 end
 
 function A.Resting()
@@ -360,9 +398,10 @@ function A:ShowTooltip(owner, e, other, anchor)
   if e.note and e.note ~= "" then GameTooltip:AddLine("\"" .. C(e.note) .. "\"", 1, 0.82, 0, true) end
   if e.from then GameTooltip:AddLine("From " .. UI.Escape(Short(e.from)), 0.55, 0.55, 0.55) end
   if e.next and PRESET[e.next] then GameTooltip:AddLine("Then: " .. PRESET[e.next].name, 0.55, 0.55, 0.55) end
-  if not other and e.kind == "wound" and e.expires then
-    if A.Resting() then GameTooltip:AddLine("Mending twice as fast while you rest.", 0.40, 0.80, 0.48, true)
-    else GameTooltip:AddLine("Rest at an inn or in a city to mend twice as fast.", 0.55, 0.55, 0.55, true) end
+  if not other and A.Mends(e) and S().auraRest ~= false then
+    local what = e.kind == "wound" and "Mending" or "Passing"
+    if A.Resting() then GameTooltip:AddLine(what .. " twice as fast while you rest.", 0.40, 0.80, 0.48, true)
+    else GameTooltip:AddLine("Rest at an inn or in a city and it passes twice as fast.", 0.55, 0.55, 0.55, true) end
   end
   GameTooltip:Show()
 end
@@ -741,6 +780,11 @@ K:RegisterSettings({ id = "auras", title = "Effects", order = 16,
   card:Toggle("Offer a wound after a PvP death", "When an enemy player brings you down, ask whether the fight left a mark.",
     "auraDeathPrompt")
   card:Toggle("Lock the effects bar", "Stop it moving when dragged.", "auraBarLock")
+  card:Toggle("Rest speeds healing", "At an inn or in a city, wounds and exhaustion pass twice as fast.",
+    { get = function() return S().auraRest ~= false end, set = function(v) K.db.settings.auraRest = v end })
+  card:Toggle("Effects that come on their own", "Kinship may give you an effect when it fits: half an hour's rest "
+    .. "leaves you Well rested. Off, you only get the effects you take on or accept.",
+    { get = function() return S().auraAuto ~= false end, set = function(v) K.db.settings.auraAuto = v end })
   card:Segments("From other players", {
     { key = "ask", label = "Ask me" }, { key = "group", label = "Trust my group" }, { key = "never", label = "Never" },
   }, function() return S().auraAccept or "ask" end, function(v) K.db.settings.auraAccept = v end, 110)
