@@ -79,9 +79,7 @@ L.HANDS = {
 }
 L.CONDITIONS = {
   { key = "pristine", label = "Pristine" },
-  { key = "rain", label = "Rain-soaked" },
-  { key = "tears", label = "Tear-stained" },
-  { key = "blood", label = "Blood-stained" },
+  { key = "aged", label = "Aged" },
   { key = "singed", label = "Singed" },
 }
 local HAND, COND = {}, {}
@@ -116,12 +114,13 @@ local function Seed(s)
   return n
 end
 
--- Marks on a sheet of paper for its condition: water, tears, blood or scorching.
+-- The paper's condition, drawn into the paper itself: yellowed with age, or scorched.
 function L.Stain(paper, cond, seed)
   paper.stains = paper.stains or {}
   paper.burns = paper.burns or {}
   for _, t in ipairs(paper.stains) do t:Hide() end
   for _, t in ipairs(paper.burns) do t:Hide() end
+  if paper.tint then paper.tint:Hide() end
   cond = L.ValidCond(cond)
   if cond == "pristine" then return end
   local w, h = paper:GetWidth(), paper:GetHeight()
@@ -131,50 +130,14 @@ function L.Stain(paper, cond, seed)
     state = (state * 1103515245 + 12345) % 2147483648
     return state / 2147483648
   end
-  local used = 0
-  local function blot(x, y, bw, bh, c, a)
-    used = used + 1
-    local t = paper.stains[used]
-    if not t then
-      t = paper:CreateTexture(nil, "BORDER", nil, 1)
-      t:SetTexture(K.MEDIA .. "StageFloor")   -- soft-edged, so marks soak in rather than sit on top
-      paper.stains[used] = t
-    end
-    t:ClearAllPoints()
-    t:SetSize(bw, bh)
-    t:SetPoint("CENTER", paper, "TOPLEFT", x, -y)
-    t:SetVertexColor(c[1], c[2], c[3], a)
-    t:Show()
-  end
-  if cond == "rain" then
-    -- Wide, pale water marks that have dried into the paper
-    for _ = 1, 6 do
-      local s = 90 + rnd() * 120
-      blot(rnd() * w, rnd() * h, s, s * (0.55 + rnd() * 0.35), { 0.36, 0.42, 0.48 }, 0.16 + rnd() * 0.10)
-    end
-  elseif cond == "tears" then
-    -- A few small round marks below the words, as if they fell while writing
-    for _ = 1, 4 do
-      local x, y, s = w * (0.3 + rnd() * 0.5), h * (0.5 + rnd() * 0.35), 26 + rnd() * 18
-      blot(x, y, s, s, { 0.40, 0.46, 0.52 }, 0.30)
-    end
-  elseif cond == "blood" then
-    -- One dried smear near a corner, with a few drops beside it
-    local x, y = (rnd() < 0.5) and w * 0.2 or w * 0.8, (rnd() < 0.5) and h * 0.22 or h * 0.78
-    blot(x, y, 130 + rnd() * 60, 60 + rnd() * 30, { 0.38, 0.06, 0.05 }, 0.32)
-    blot(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 16, 70, 34, { 0.30, 0.04, 0.03 }, 0.30)
-    for _ = 1, 4 do
-      local s = 12 + rnd() * 12
-      blot(x + (rnd() - 0.5) * 170, y + (rnd() - 0.5) * 100, s, s * 0.9, { 0.36, 0.05, 0.04 }, 0.40)
-    end
-  elseif cond == "singed" then
-    -- Scorched edges, darkest at the rim, and a few burnt patches at the corners
-    local edge = 26
+
+  -- Edges that darken toward the rim: scorched, or browned with age
+  local function Edges(size, r, g, b, a)
     local sides = {
-      { "TOPLEFT", "TOPRIGHT", nil, edge, "VERTICAL", false },
-      { "BOTTOMLEFT", "BOTTOMRIGHT", nil, edge, "VERTICAL", true },
-      { "TOPLEFT", "BOTTOMLEFT", edge, nil, "HORIZONTAL", true },
-      { "TOPRIGHT", "BOTTOMRIGHT", edge, nil, "HORIZONTAL", false },
+      { "TOPLEFT", "TOPRIGHT", nil, size, "VERTICAL", false },
+      { "BOTTOMLEFT", "BOTTOMRIGHT", nil, size, "VERTICAL", true },
+      { "TOPLEFT", "BOTTOMLEFT", size, nil, "HORIZONTAL", true },
+      { "TOPRIGHT", "BOTTOMRIGHT", size, nil, "HORIZONTAL", false },
     }
     for i, sd in ipairs(sides) do
       local t = paper.burns[i]
@@ -187,16 +150,46 @@ function L.Stain(paper, cond, seed)
       t:SetPoint(sd[1])
       t:SetPoint(sd[2])
       if sd[3] then t:SetWidth(sd[3]) else t:SetHeight(sd[4]) end
-      local dark, clear = CreateColor(0.22, 0.11, 0.03, 0.55), CreateColor(0.22, 0.11, 0.03, 0)
+      local dark, clear = CreateColor(r, g, b, a), CreateColor(r, g, b, 0)
       if sd[6] then t:SetGradient(sd[5], dark, clear) else t:SetGradient(sd[5], clear, dark) end
       t:Show()
     end
+  end
+
+  -- Soft-edged patches (Kinship's own pool texture), for burnt corners
+  local used = 0
+  local function Patch(x, y, pw, ph, r, g, b, a)
+    used = used + 1
+    local t = paper.stains[used]
+    if not t then
+      t = paper:CreateTexture(nil, "BORDER", nil, 1)
+      t:SetTexture(K.MEDIA .. "StageFloor")
+      paper.stains[used] = t
+    end
+    t:ClearAllPoints()
+    t:SetSize(pw, ph)
+    t:SetPoint("CENTER", paper, "TOPLEFT", x, -y)
+    t:SetVertexColor(r, g, b, a)
+    t:Show()
+  end
+
+  if cond == "singed" then
+    Edges(26, 0.22, 0.11, 0.03, 0.55)
     for _, c in ipairs({ { 0, 0 }, { w, 0 }, { 0, h }, { w, h } }) do
       if rnd() < 0.75 then
         local s = 60 + rnd() * 60
-        blot(c[1], c[2], s, s * 0.8, { 0.20, 0.10, 0.03 }, 0.45)
+        Patch(c[1], c[2], s, s * 0.8, 0.20, 0.10, 0.03, 0.45)
       end
     end
+  elseif cond == "aged" then
+    -- Yellowed all over, browning gently at the edges
+    if not paper.tint then
+      paper.tint = paper:CreateTexture(nil, "BORDER", nil, 0)
+      paper.tint:SetAllPoints()
+    end
+    paper.tint:SetColorTexture(0.62, 0.48, 0.20, 0.16)
+    paper.tint:Show()
+    Edges(34, 0.42, 0.28, 0.10, 0.32)
   end
 end
 

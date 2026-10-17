@@ -8,7 +8,7 @@
 --   subject  "Sealed letter: <title>"  ("Sealed letter (2/3): <title>" for longer ones)
 --   body     the words, the signature on the last part, and a postmark that
 --            reads naturally to anyone without Kinship:
---            ~ Sealed in teal wax · house crest · fine hand · rain-soaked · Kinship letter 6ad3e835064c ~
+--            ~ Sealed in teal wax · house crest · fine hand · singed · Kinship letter 6ad3e835064c ~
 --            (a plain hand, pristine paper and no cipher are left out; a cipher adds "in cipher 4f2a")
 -- The crest itself isn't sent: "house crest" is looked up from the sender's
 -- profile, "Kinship seal" is the monogram. Game mail holds less than a

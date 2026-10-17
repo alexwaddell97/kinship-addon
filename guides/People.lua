@@ -150,7 +150,7 @@ K:RegisterGuide({
         c.write.to.edit:ClearFocus()
       end },
     { title = "Hand, paper and cipher",
-      text = "Across the top: the hand your character writes in, which they'll see too; the state the paper arrives in, from pristine to blood-stained or singed; and a cipher, which scrambles the letter with a key word you tell them in character.",
+      text = "Across the top: the hand your character writes in, which they'll see too; the state the paper arrives in, pristine, yellowed with age or singed; and a cipher, which scrambles the letter with a key word you tell them in character.",
       target = function(c) return Shown(c.write) and c.write.hand end, pad = 6 },
     { title = "Your seal",
       text = "Pick a colour of wax beneath, and click the seal to press in your house crest or the Kinship monogram. It's the first thing they see, before the letter is even opened.",
