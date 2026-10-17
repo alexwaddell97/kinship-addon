@@ -301,8 +301,10 @@ function P:Build()
   f.status:SetPoint("TOPLEFT", 14, -44)
   f.status:SetSpacing(2)
   f.post = UI.Button(f, "Post them", 192, 24)
-  f.post:SetPoint("TOPLEFT", 14, -82)
+  f.post:SetPoint("TOPLEFT", f.status, "BOTTOMLEFT", 0, -10)   -- follows the text, however many lines
   f.post:SetScript("OnClick", function() P:PostAll() end)
+  UI.Tooltip(f.post, "Post them", "Letters you seal anywhere wait in your Sent letters until you're at a mailbox. "
+    .. "This sends them as game mail, so they reach people even when they're offline.")
   f.write = UI.Button(f, "Write a letter", 192, 24)
   f.write:SetPoint("TOPLEFT", f.post, "BOTTOMLEFT", 0, -6)
   f.write:SetScript("OnClick", function() L:Compose("") end)
@@ -325,11 +327,14 @@ function P:Paint()
   elseif waiting > 0 then
     f.status:SetText(("%d %s waiting to be posted."):format(waiting, waiting == 1 and "letter" or "letters"))
   else
-    f.status:SetText("Nothing waiting to be posted. Letters you seal are kept until you're at a mailbox.")
+    f.status:SetText("Nothing waiting to be posted.")
   end
   f.post:SetEnabled(waiting > 0 and not self.busy)
   f.read:SetShown(self:OpenLetter() ~= nil)
-  f:SetHeight(f.read:IsShown() and 172 or 142)
+  -- Tall enough for the text and the buttons beneath it
+  local h = 44 + math.ceil(f.status:GetStringHeight()) + 10 + 24 + 6 + 24 + 14
+  if f.read:IsShown() then h = h + 30 end
+  f:SetHeight(h)
 end
 
 -- Kinship letters in the inbox list wear the Kinship seal
