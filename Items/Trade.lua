@@ -322,6 +322,13 @@ K.Net:On("itemOffer", function(msg, sender, channel)
     K.Stashes:Received(sender, req, r)
     return
   end
+  -- Kinship items from a trade that just went through, as the trade window showed them
+  local TW = K.TradeWindow
+  if req and TW and TW:Expects(sender, req, entries) then
+    T:Accept(key)
+    TW:Received(sender, r)
+    return
+  end
   -- A quest reward you claimed: take it without asking (or, if it already came, just say so).
   local QR = K.QuestRewards
   local quest = req and QR and QR:Expects(sender, req)

@@ -476,7 +476,9 @@ local function MakeCells(f, makeSlot, cols, cell, gap, x0, y0)
     s:SetScript("OnClick", function(self, button)
       local slot = I:Slot(self.index)
       if not slot then return end
-      if button == "RightButton" then
+      if button == "RightButton" and K.TradeWindow and K.TradeWindow:TryAdd(slot.def) then
+        return
+      elseif button == "RightButton" then
         I:Use(self.index)
       elseif K.ItemLinks and K.ItemLinks:TryLink(slot.def) then
         return

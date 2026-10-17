@@ -58,6 +58,7 @@ Items\Items.lua
 Items\Wardrobe.lua
 Items\Documents.lua
 Items\Trade.lua
+Items\TradeWindow.lua
 Items\Stashes.lua
 Quests\QuestRewards.lua
 ext\Database.lua

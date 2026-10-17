@@ -113,7 +113,9 @@ local function BuildBags(tab, c)
     s:RegisterForDrag("LeftButton")
     s:SetScript("OnClick", function(self, button)
       local slot = I:Slot(self.index)
-      if button == "RightButton" then
+      if button == "RightButton" and slot and K.TradeWindow and K.TradeWindow:TryAdd(slot.def) then
+        return
+      elseif button == "RightButton" then
         if slot then tab.sel = self.index; I:Use(self.index) end
       elseif slot and K.ItemLinks and K.ItemLinks:TryLink(slot.def) then
         return
