@@ -97,6 +97,7 @@ K:RegisterPage({
     end
     addBtn:SetScript("OnClick", doAdd)
     add.edit:SetScript("OnEnterPressed", doAdd)
+    K.Suggest(add.edit, nil, true)   -- names you know, as you type (opening upward)
   end,
 
   refresh = function(c)

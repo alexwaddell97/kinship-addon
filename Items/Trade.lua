@@ -441,6 +441,7 @@ function T:BuildGive()
   self.give = f
   f.to = UI.Field(f, "To", 220, 60, nil, "desk")
   f.to:SetPoint("TOPLEFT", 18, -46)
+  K.Suggest(f.to.edit)   -- names you know, as you type
   f.toTarget = UI.Button(f, "My target", 96, 23)
   f.toTarget:SetPoint("TOPLEFT", 248, -60)
   f.toTarget:SetScript("OnClick", function()

@@ -21,6 +21,7 @@ Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 
 Core\Core.lua
 Core\UI.lua
+GameUI\Suggest.lua
 Core\Net.lua
 ext\Core.lua
 ext\Codec.lua

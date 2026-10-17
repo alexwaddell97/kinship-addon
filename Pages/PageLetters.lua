@@ -243,6 +243,8 @@ K:RegisterPage({
     end)
     w.to = UI.Field(w, "To", 170, 60, nil, "ink")
     w.to:SetPoint("TOPLEFT", 28, -54)
+    -- Your characters, Kin, correspondents and the Directory, as you type
+    K.Suggest(w.to.edit, function() w.title.edit:SetFocus() end)
     w.title = UI.Field(w, "Title (optional)", IW - 182, L.MAX_TITLE, nil, "ink")
     w.title:SetPoint("TOPLEFT", 210, -54)
     w.body = UI.TextArea(w, IW, PAPER_H - 102 - 120, L.MAX_BODY, nil, "ink")

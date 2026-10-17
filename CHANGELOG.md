@@ -14,6 +14,10 @@
   that arrives pristine, aged or singed.
 - Ciphers: scramble a letter with a key word you tell them in character.
   Without it, the letter is nonsense; with it, Decipher reveals the words.
+- Name suggestions: typing a name in a letter's To box, Give an item or Add
+  to Kin offers your own characters, your Kin, the people you've written to
+  and your Directory. It matches either of a character's names, or their
+  roleplay name.
 
 ## 1.1.1
 
