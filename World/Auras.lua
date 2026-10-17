@@ -106,6 +106,17 @@ local function ValidIcon(v)
 end
 
 -- "2d 4h", "3h 12m", "12m", "40s"
+-- One unit, as the game's own buffs show it ("2d", "23h", "47m", "30s"):
+-- short enough to sit under an icon on the effects bar.
+function A.LeftShort(expires)
+  if not expires then return nil end
+  local s = math.max(0, expires - Now())
+  if s >= DAY then return ("%dd"):format(math.floor(s / DAY)) end
+  if s >= HOUR then return ("%dh"):format(math.floor(s / HOUR)) end
+  if s >= MIN then return ("%dm"):format(math.floor(s / MIN)) end
+  return ("%ds"):format(math.floor(s))
+end
+
 function A.Left(expires)
   if not expires then return nil end
   local s = math.max(0, expires - Now())
@@ -654,7 +665,7 @@ function Bar:Build()
     if self.t < 1 then return end
     self.t = 0
     for _, b in ipairs(self.icons) do
-      if b:IsShown() and b.entry then b.time:SetText(b.entry.expires and A.Left(b.entry.expires) or "") end
+      if b:IsShown() and b.entry then b.time:SetText(b.entry.expires and A.LeftShort(b.entry.expires) or "") end
     end
   end)
   BarPlace(f)
@@ -721,7 +732,7 @@ function Bar:Update()
     local b = BarIcon(f, i)
     b.entry = e
     b.icon:SetTexture(e.icon)
-    b.time:SetText(e.expires and A.Left(e.expires) or "")
+    b.time:SetText(e.expires and A.LeftShort(e.expires) or "")
     b:ClearAllPoints()
     b:SetPoint("TOPRIGHT", f, "TOPRIGHT", -((i - 1) * (ICON + 8)) - 2, -2)
     b.paint(UI.Progress(b))

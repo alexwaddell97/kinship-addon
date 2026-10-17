@@ -415,7 +415,7 @@ local function BuildPane()
     if self.t < 1 then return end
     self.t = 0
     for _, m in ipairs(self.effects.icons) do
-      if m:IsShown() and m.entry then m.time:SetText(m.entry.expires and K.Auras.Left(m.entry.expires) or "") end
+      if m:IsShown() and m.entry then m.time:SetText(m.entry.expires and K.Auras.LeftShort(m.entry.expires) or "") end
     end
   end)
 
@@ -482,7 +482,7 @@ function CP:Refresh()
       m.icon:SetTexture(e.icon)
       m.color = K.Auras.Color(e.kind)
       m:Paint(UI.Progress(m))
-      m.time:SetText(e.expires and K.Auras.Left(e.expires) or "")
+      m.time:SetText(e.expires and K.Auras.LeftShort(e.expires) or "")
       m:Show()
     else
       m:Hide()
@@ -954,7 +954,7 @@ function CP:RefreshTheirs()
       m.icon:SetTexture(e.icon)
       m.color = K.Auras.Color(e.kind)
       m:Paint(UI.Progress(m))
-      m.time:SetText(e.expires and K.Auras.Left(e.expires) or "")
+      m.time:SetText(e.expires and K.Auras.LeftShort(e.expires) or "")
       m:Show()
     else
       m:Hide()

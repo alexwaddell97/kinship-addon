@@ -6,6 +6,9 @@
 - The nameplate setting "Show titles" is now "Show epithets": it's the
   epithet line, like "the Wandering Blade". Titles like "Lord" always show
   as part of the name.
+- Times under effect icons (the effects bar and the character sheet) no
+  longer run into each other: they show one unit, like "23h" or "47m", as
+  the game's own buffs do. Hover for the exact time.
 - The note under Settings > Nameplates describes the plates as they are now,
   on EllesmereUI's plates or the game's own.
 - New switches for features that had none: the Kinship button in the game
