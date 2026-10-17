@@ -638,9 +638,8 @@ K:On("LOGIN", function()
     if s[key] == nil then s[key] = v end
   end
   -- "Show my own nameplate" is gone: put back any game settings it changed
-  if type(s.platesSelfWas) == "table" then
-    local set = (C_CVar and C_CVar.SetCVar) or SetCVar
-    for n, v in pairs(s.platesSelfWas) do if v ~= nil then pcall(set, n, v) end end
+  if type(s.platesSelfWas) == "table" and C_CVar and C_CVar.SetCVar then
+    for n, v in pairs(s.platesSelfWas) do if v ~= nil then pcall(C_CVar.SetCVar, n, v) end end
   end
   s.platesSelf, s.platesSelfWas, s.platesSelfPos = nil, nil, nil
   if K:Compat() then return end   -- Total RP 3 names the plates while it runs
