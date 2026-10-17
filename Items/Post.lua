@@ -206,11 +206,11 @@ function P:Failed(why)
   self:Paint()
 end
 
--- Back in the Outbox, to try again
+-- Back in the Outbox, to try again (posted, like the rest, only with Post them)
 function P:Retry(letter)
   letter.state, letter.why = "outbox", nil
   K:Fire("LETTERS")
-  if self.open then self:PostAll() end
+  K:Print("Back with your letters to post. Press Post them at a mailbox to send it.")
 end
 
 ---------------------------------------------------------------------------
@@ -312,8 +312,8 @@ function P:Build()
   f.post = UI.Button(f, "Post them", 192, 24)
   f.post:SetPoint("TOPLEFT", f.status, "BOTTOMLEFT", 0, -10)   -- follows the text, however many lines
   f.post:SetScript("OnClick", function() P:PostAll() end)
-  UI.Tooltip(f.post, "Post them", "Letters you seal anywhere wait in your Sent letters until you're at a mailbox. "
-    .. "This sends them as game mail, so they reach people even when they're offline.")
+  UI.Tooltip(f.post, "Post them", "Sends your sealed letters as game mail, so they reach people even when they're "
+    .. "offline. Each mail costs the usual postage, shown above. Nothing is posted until you press this.")
   f.write = UI.Button(f, "Write a letter", 192, 24)
   f.write:SetPoint("TOPLEFT", f.post, "BOTTOMLEFT", 0, -6)
   f.write:SetScript("OnClick", function() L:Compose("") end)
@@ -327,6 +327,21 @@ function P:Build()
   return f
 end
 
+-- How many mails the Outbox makes, and what posting them costs
+function P:Postage()
+  local bodyMax, subjectMax = Limits()
+  local mails = 0
+  for _, l in ipairs(L:Outbox()) do mails = mails + #P.Parts(l, bodyMax, subjectMax) end
+  local each = (GetSendMailPrice and GetSendMailPrice()) or 30
+  if not each or each <= 0 then each = 30 end
+  return mails, mails * each
+end
+
+local function Money(copper)
+  if GetCoinTextureString then return GetCoinTextureString(copper) end
+  return ("%dc"):format(copper)
+end
+
 function P:Paint()
   local f = self.card
   if not (f and self.open) then return end
@@ -334,7 +349,9 @@ function P:Paint()
   if self.busy then
     f.status:SetText("Posting your letters...")
   elseif waiting > 0 then
-    f.status:SetText(("%d %s waiting to be posted."):format(waiting, waiting == 1 and "letter" or "letters"))
+    local mails, cost = self:Postage()
+    f.status:SetText(("%d %s waiting to be posted.\nPostage: %s%s"):format(waiting, waiting == 1 and "letter" or "letters",
+      Money(cost), mails > waiting and (" (%d mails)"):format(mails) or ""))
   else
     f.status:SetText("Nothing waiting to be posted.")
   end

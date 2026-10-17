@@ -206,14 +206,9 @@ K:RegisterPage({
     w.send:SetPoint("BOTTOMRIGHT", -28, 24)
     w.send:HookScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_TOP")
-      if K.Post and K.Post.open then
-        GameTooltip:SetText("Seal & post", 1, 0.82, 0)
-        GameTooltip:AddLine("It goes by mail now, so it reaches them even if they're offline.", 1, 1, 1, true)
-      else
-        GameTooltip:SetText("Seal it", 1, 0.82, 0)
-        GameTooltip:AddLine("It waits in your Sent letters until you next open a mailbox, then goes by mail, "
-          .. "so it reaches them even if they're offline.", 1, 1, 1, true)
-      end
+      GameTooltip:SetText("Seal it", 1, 0.82, 0)
+      GameTooltip:AddLine("It waits in your Sent letters until you post it at a mailbox (postage applies). "
+        .. "It goes as game mail, so it reaches them even if they're offline.", 1, 1, 1, true)
       GameTooltip:Show()
     end)
     w.send:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -227,9 +222,10 @@ K:RegisterPage({
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
       c.box, c.selected, c.mode = "out", letter, "read"
       K.Journal:RefreshCurrent()
-      -- At a mailbox it goes straight away; otherwise it waits for one
-      if K.Post and K.Post.open then K.Post:PostAll()
-      else K:Print("Sealed. It's in your Sent letters, to be posted next time you open a mailbox.") end
+      -- It waits to be posted: only Post them, at a mailbox, spends postage
+      K:Print((K.Post and K.Post.open)
+        and "Sealed. Press Post them beside the mail window to send it (postage applies)."
+        or "Sealed. It's in your Sent letters, to post next time you're at a mailbox.")
     end)
 
     function c:PaintSeal()
@@ -243,7 +239,6 @@ K:RegisterPage({
 
     function c:Compose(to, title)
       self.mode = "write"
-      w.send:SetText((K.Post and K.Post.open) and "Seal & post" or "Seal it")
       self.seal = self.seal or "crimson"
       self.crest = DefaultCrest()
       K.Journal:RefreshCurrent()
