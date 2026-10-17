@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://ko-fi.com/vaxorus"><img src="https://img.shields.io/badge/Support%20Kinship-on%20Ko--fi-FF5E5B?style=for-the-badge&logo=kofi&logoColor=white" alt="Support Kinship on Ko-fi"></a>
+  <a href="https://github.com/alexwaddell97/kinship-addon/wiki"><img src="https://img.shields.io/badge/How%20to%20use%20it-Wiki-2e8580?style=for-the-badge&logo=bookstack&logoColor=white" alt="The Kinship wiki"></a>
   <a href="https://github.com/alexwaddell97/kinship-addon/releases/latest"><img src="https://img.shields.io/github/v/release/alexwaddell97/kinship-addon?style=for-the-badge&label=Download&color=c9a860" alt="Download the latest release"></a>
 </p>
 
@@ -61,6 +62,8 @@ git clone https://github.com/alexwaddell97/kinship-addon.git KinshipRP
 ## Getting started
 
 Type `/kin` to open the journal, or click the minimap button. The first time, Kinship asks how much roleplay you've done before, then offers a short tour of each page (Esc skips them, and the **?** at the top of the journal plays one again).
+
+The **[wiki](https://github.com/alexwaddell97/kinship-addon/wiki)** goes through every feature in more detail.
 
 | Command | What it does |
 |---|---|
