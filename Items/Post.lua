@@ -91,18 +91,67 @@ local function Cut(text, room)
   return out
 end
 
+-- Enclosed Kinship items, as one line of printable text (deflated
+-- AceSerializer, the same way Total RP 3: Extended exports are written)
+local DATA_LINE = "^~ for Kinship RP: (%S+) ~$"
+local function Libs()
+  return LibStub and LibStub:GetLibrary("LibDeflate", true), LibStub and LibStub:GetLibrary("AceSerializer-3.0", true)
+end
+
+function P.Pack(enclosed)
+  local deflate, ser = Libs()
+  if not (deflate and ser and enclosed and #enclosed > 0) then return nil end
+  local list = {}
+  for _, e in ipairs(enclosed) do list[#list + 1] = { d = e.d, n = e.n } end
+  local ok, s = pcall(ser.Serialize, ser, { v = 1, items = list })
+  if not ok then return nil end
+  local packed = deflate:CompressDeflate(s)
+  return packed and ("KP1" .. deflate:EncodeForPrint(packed)) or nil
+end
+
+-- Back into enclosures, each design checked as carefully as one given in person
+function P.Unpack(text)
+  local deflate, ser = Libs()
+  local I = K.Items
+  if not (deflate and ser and I and type(text) == "string" and text:sub(1, 3) == "KP1") or #text > 20000 then return nil end
+  local raw = deflate:DecodeForPrint(text:sub(4))
+  raw = raw and deflate:DecompressDeflate(raw)
+  if not raw then return nil end
+  local ok, t = ser:Deserialize(raw)
+  if not (ok and type(t) == "table" and type(t.items) == "table") then return nil end
+  local out = {}
+  for i = 1, L.MAX_ENCLOSED do
+    local e = t.items[i]
+    if type(e) ~= "table" then break end
+    local def = I.Sanitize(e.d)
+    local n = math.floor(tonumber(e.n) or 0)
+    if def and not def.documentId and n >= 1 and n <= 999 then out[#out + 1] = { d = def, n = n } end
+  end
+  return #out > 0 and out or nil
+end
+
 -- A letter as the mails that carry it: { { subject, body }, ... }
+-- Words first (the signature and "Enclosed: ..." on the last of them), then
+-- any enclosed items' details, each part with the postmark.
 function P.Parts(letter, bodyMax, subjectMax)
   local mid = letter.mid or ("%x%04x"):format(letter.t or time(), 0)
   local mark = P.Postmark(letter, mid)
   local room = bodyMax - #mark - 2
   local sign = (letter.sign or "") ~= "" and ("\n\n— " .. letter.sign) or ""
+  local line = L.EnclosedLine(letter, true)
+  local tail = sign .. (line and ("\n\nEnclosed: " .. line) or "")
   -- A letter in cipher goes enciphered; only its writer keeps the key
   local words = letter.key and L.Encipher(letter.body or "", letter.key) or (letter.body or "")
   local pieces = Cut(words, room)
-  -- The signature goes on the last part, or one of its own if it won't fit
-  if #pieces[#pieces] + #sign > room then pieces[#pieces + 1] = "" end
-  pieces[#pieces] = pieces[#pieces] .. sign
+  -- The signature (and what's enclosed) go on the last part, or one of their own
+  if #pieces[#pieces] + #tail > room then pieces[#pieces + 1] = "" end
+  pieces[#pieces] = pieces[#pieces] .. tail
+  -- The enclosed items' details, cut to fit, each in a part of its own
+  local data = P.Pack(letter.enclosed)
+  if data then
+    local per = room - #"~ for Kinship RP:  ~"
+    for at = 1, #data, per do pieces[#pieces + 1] = "~ for Kinship RP: " .. data:sub(at, at + per - 1) .. " ~" end
+  end
   while #pieces > MAX_PARTS do table.remove(pieces, MAX_PARTS) end   -- never happens at sensible limits
   local n = #pieces
   local out = {}
@@ -130,22 +179,31 @@ function P.Read(subject, body)
   local m = ReadMarks(marks)
   local i, n = subject:match("^" .. SUBJECT .. " %((%d+)/(%d+)%)")
   local text = strtrim((body:gsub("\n*" .. POSTMARK, "")))
+  local data = text:match(DATA_LINE)
   return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, cipher = m.cipher,
-           i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = text, title = title }
+           i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = data and "" or text, data = data, title = title }
 end
 
 -- A letter's parts (their words, in order) back into its text and signature.
--- The signature is the last part's last line; the parts were cut at spaces.
+-- The signature is the last words' last line, before any "Enclosed: ..." line;
+-- parts that only carry enclosed items' details have no words. The parts
+-- were cut at spaces.
 function P.Join(got, n)
-  local parts = {}
-  for i = 1, n do parts[i] = got[i] or "" end
+  local parts, last = {}, nil
+  for i = 1, n do
+    local t = got[i] or ""
+    if t ~= "" then parts[#parts + 1] = t; last = #parts end
+  end
+  if not last then return "", "" end
+  local tail = parts[last]:gsub("\n\nEnclosed: [^\n]*$", ""):gsub("^Enclosed: [^\n]*$", "")
   local sign = ""
-  local before, s = parts[n]:match("^(.-)\n\n— ([^\n]*)$")
+  local before, s = tail:match("^(.-)\n\n— ([^\n]*)$")
   if not before then
-    s = parts[n]:match("^— ([^\n]*)$")
+    s = tail:match("^— ([^\n]*)$")
     if s then before = "" end
   end
-  if before then parts[n], sign = before, s end
+  parts[last] = before or tail
+  if before then sign = s end
   return strtrim(table.concat(parts, " ")), sign
 end
 
@@ -167,30 +225,44 @@ end
 ---------------------------------------------------------------------------
 P.jobs = {}
 
--- Something already set out on the Send Mail tab (an item, money, COD) would
--- go with our mail, so we wait for it to be cleared.
-local function SendTabBusy()
-  if (GetSendMailMoney and GetSendMailMoney() or 0) > 0 then return true end
-  if (GetSendMailCOD and GetSendMailCOD() or 0) > 0 then return true end
+-- Real gold and items set out on the Send Mail tab go with your letter (the
+-- oldest waiting, if there are several): { copper, goods, cod }.
+local function SendTab()
+  local copper = 0
+  local mf = rawget(_G, "SendMailMoney")
+  local codButton = rawget(_G, "SendMailCODButton")
+  local cod = codButton and codButton.GetChecked and codButton:GetChecked()
+  if mf and MoneyInputFrame_GetCopper then copper = MoneyInputFrame_GetCopper(mf) or 0 end
+  if copper == 0 and GetSendMailMoney then copper = GetSendMailMoney() or 0 end
+  if (GetSendMailCOD and GetSendMailCOD() or 0) > 0 then cod = true end
+  local goods = {}
   for i = 1, (rawget(_G, "ATTACHMENTS_MAX_SEND") or 12) do
-    if GetSendMailItem and GetSendMailItem(i) then return true end
+    local name, _, _, count = nil, nil, nil, nil
+    if GetSendMailItem then name, _, _, count = GetSendMailItem(i) end
+    if name then goods[#goods + 1] = (count and count > 1) and ("%d x %s"):format(count, name) or name end
   end
-  return false
+  return copper, goods, (cod and copper > 0) and true or false
 end
+P.SendTab = SendTab
 
 function P:PostAll()
   if not self.open then K:Print("Letters are posted at a mailbox.") return end
   if self.busy then return end
   local waiting = L:Outbox()
   if #waiting == 0 then return end
-  if SendTabBusy() then
-    K:Print("Clear the Send Mail tab first (items, money or COD would go with your letters).")
+  local copper, goods, cod = SendTab()
+  if cod then
+    K:Print("Kinship letters can't be sent cash on delivery. Switch the Send Mail tab to Send Money, or clear it.")
     return
   end
+  -- What's on the Send Mail tab goes with the first letter posted
+  local first = waiting[1]
+  first.purse = copper > 0 and copper or nil
+  first.goods = #goods > 0 and goods or nil
   local bodyMax, subjectMax = Limits()
   wipe(self.jobs)
   for _, l in ipairs(waiting) do
-    self.jobs[#self.jobs + 1] = { letter = l, parts = P.Parts(l, bodyMax, subjectMax), i = 1 }
+    self.jobs[#self.jobs + 1] = { letter = l, parts = P.Parts(l, bodyMax, subjectMax), i = 1, carries = l == first and (copper > 0 or #goods > 0) }
   end
   self.busy = true
   self:Next()
@@ -206,6 +278,9 @@ function P:Next()
   local part = job.parts[job.i]
   self.sending = job
   self.lastError = nil
+  -- Gold rides with the first part of the letter that carries it, and nothing else
+  if SetSendMailMoney then pcall(SetSendMailMoney, (job.carries and job.i == 1) and (job.letter.purse or 0) or 0) end
+  if SetSendMailCOD then pcall(SetSendMailCOD, 0) end
   local ok, err = pcall(SendMail, Short(job.letter.to), part.subject, part.body)
   if not ok then self:Failed(tostring(err)) return end
   -- Some clients never say a mail went, only when one didn't. So: no mail
@@ -222,6 +297,12 @@ function P:Sent()
   local job = self.sending
   if not job then return end
   self.sending = nil
+  if job.carries and job.i == 1 then
+    -- The Send Mail tab's gold and items have gone: clear what it still shows
+    local mf = rawget(_G, "SendMailMoney")
+    if mf and MoneyInputFrame_ResetMoney then pcall(MoneyInputFrame_ResetMoney, mf) end
+    if SendMailFrame_Update then pcall(SendMailFrame_Update) end
+  end
   job.i = job.i + 1
   if job.i > #job.parts then
     job.letter.state = "posted"
@@ -268,25 +349,34 @@ local function Parts()
 end
 
 -- A part read from the inbox: kept until the whole letter is here.
+-- part.money / part.parcels: real gold and items that came with that mail.
 function P:Take(sender, part)
   if not (sender and part) or K:IsIgnored(sender) or not L.Allowed(sender) then return end
   local id = ("post:%s:%s"):format(K.NameKey(sender) or sender, part.mid)
   if L:Find(id) then return end
   local store = Parts()
-  local e = store[id] or { from = sender, n = part.n, got = {}, t = time() }
+  local e = store[id] or { from = sender, n = part.n, got = {}, data = {}, t = time() }
   store[id] = e
+  e.data = e.data or {}
   e.got[part.i] = part.text
+  if part.data then e.data[part.i] = part.data end
   e.title = e.title or (part.title ~= "" and part.title or nil)
   e.wax, e.crest, e.hand, e.cond, e.cipher = part.wax, part.crest, part.hand, part.cond, part.cipher
+  if (part.money or 0) > 0 then e.purse = (e.purse or 0) + part.money end
+  if (part.parcels or 0) > 0 then e.parcels = (e.parcels or 0) + part.parcels end
   for i = 1, e.n do if not e.got[i] then return end end
   -- All of it: one letter again
   store[id] = nil
   local text, sign = P.Join(e.got, e.n)
+  local data = {}
+  for i = 1, e.n do if e.data[i] then data[#data + 1] = e.data[i] end end
   L:Deliver({
     id = id, dir = "in", from = sender, to = K:MyName(),
     title = L.Str(e.title or "", L.MAX_TITLE), body = L.Str(text, L.MAX_BODY), sign = L.Str(sign, L.MAX_SIGN),
     seal = L.ValidSeal(e.wax), crest = e.crest == "house" and HouseCrestOf(sender) or e.crest,
     hand = L.ValidHand(e.hand), cond = L.ValidCond(e.cond), cipher = e.cipher,
+    enclosed = #data > 0 and P.Unpack(table.concat(data)) or nil,
+    purse = e.purse, goods = e.parcels,
     t = time(), read = false, state = "received", post = true,
   })
 end
@@ -295,12 +385,21 @@ end
 -- parts of any letter you've just opened.
 function P:Scan()
   if not (GetInboxNumItems and GetInboxHeaderInfo and GetInboxText) then return end
+  local function Part(i, subject)
+    local _, _, _, _, money, _, _, hasItem = GetInboxHeaderInfo(i)
+    local part = P.Read(subject, GetInboxText(i))
+    if part then
+      part.money = type(money) == "number" and money or 0
+      part.parcels = type(hasItem) == "number" and hasItem or (hasItem and 1 or 0)
+    end
+    return part
+  end
   local opened = {}
   local n = GetInboxNumItems() or 0
   for i = 1, n do
     local _, _, sender, subject, _, _, _, _, wasRead = GetInboxHeaderInfo(i)
     if sender and type(subject) == "string" and subject:sub(1, #SUBJECT) == SUBJECT and wasRead then
-      local part = P.Read(subject, GetInboxText(i))
+      local part = Part(i, subject)
       if part then
         self:Take(sender, part)
         opened[sender .. "\0" .. part.mid] = part.n
@@ -313,7 +412,7 @@ function P:Scan()
     if sender and not wasRead and type(subject) == "string" and subject:match("^" .. SUBJECT .. " %(%d+/%d+%)") then
       for key in pairs(opened) do
         if key:sub(1, #sender + 1) == sender .. "\0" then
-          local part = P.Read(subject, GetInboxText(i))
+          local part = Part(i, subject)
           if part then self:Take(sender, part) end
           break
         end
@@ -345,6 +444,14 @@ function P:Build()
   f:SetFrameStrata(mf:GetFrameStrata())
   f:SetFrameLevel(mf:GetFrameLevel() + 5)
   self.card = f
+  -- Gold typed into the Send Mail tab says nothing when it changes: look again now and then
+  f.tick = 0
+  f:SetScript("OnUpdate", function(card, elapsed)
+    card.tick = card.tick + elapsed
+    if card.tick < 0.5 then return end
+    card.tick = 0
+    if not P.busy then P:Paint() end
+  end)
   local mono = f:CreateTexture(nil, "ARTWORK")
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
@@ -388,8 +495,16 @@ function P:Paint()
     f.status:SetText("Posting your letters...")
   elseif waiting > 0 then
     local mails, cost = self:Postage()
-    f.status:SetText(("%d %s waiting to be posted.\nPostage: %s%s"):format(waiting, waiting == 1 and "letter" or "letters",
-      Money(cost), mails > waiting and (" (%d mails)"):format(mails) or ""))
+    local text = ("%d %s waiting to be posted.\nPostage: %s%s"):format(waiting, waiting == 1 and "letter" or "letters",
+      Money(cost), mails > waiting and (" (%d mails)"):format(mails) or "")
+    local copper, goods, cod = SendTab()
+    if cod then
+      text = text .. "\n|cffe6a04cCash on delivery can't go with a letter.|r"
+    elseif copper > 0 or #goods > 0 then
+      local what = L.EnclosedLine({ purse = copper > 0 and copper or nil, goods = goods })
+      text = text .. ("\nGoing with your letter to %s: %s."):format(Short(L:Outbox()[1].to), what)
+    end
+    f.status:SetText(text)
   else
     f.status:SetText("Nothing waiting to be posted.")
   end
@@ -473,6 +588,12 @@ function P:Sheet()
   open.sign:SetJustifyH("RIGHT")
   open.seal = UI.Seal(open, 34)
   open.seal:SetPoint("BOTTOMLEFT", 14, 12)
+  open.encl = UI.Text(open, "", "Small", "ink", IW - 40)
+  open.encl:SetPoint("BOTTOMLEFT", 54, 42)
+  open.encl:SetWordWrap(false)
+  open.take = UI.Button(open, "Take them", 90, 22)
+  open.take:SetPoint("BOTTOMRIGHT", -14, 40)
+  open.take:SetScript("OnClick", function() if P.sheetLetter and L:TakeEnclosed(P.sheetLetter) then P:ShowSheet() end end)
   open.decipher = UI.Button(open, "Decipher...", 100, 22)
   open.decipher:SetPoint("BOTTOM", 0, 14)
   open.decipher:SetScript("OnClick", function() if P.sheetLetter then L:Open(P.sheetLetter) end end)
@@ -492,6 +613,7 @@ function P:BreakSeal()
     if p >= 1 then
       seal:SetScale(1); seal:SetAlpha(1)
       l.read = true
+      if l.enclosed and not l.taken then L:TakeEnclosed(l) end
       K:Fire("LETTERS")
       P:ShowSheet()
       UI.FadeIn(s.open, 0.35)
@@ -525,6 +647,9 @@ function P:ShowSheet()
     s.open.sign:SetTextColor(unpack(UI.INK.inkAccent))
     s.open.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
     s.open.decipher:SetShown((l.cipher and not l.solved) and true or false)
+    local line = L.EnclosedLine(l)
+    s.open.encl:SetText(line and ("Enclosed: " .. line) or "")
+    s.open.take:SetShown((l.enclosed and not l.taken) and true or false)
     s.open.seal:SetSeal(l.seal, crest)
   end
   s:Show()

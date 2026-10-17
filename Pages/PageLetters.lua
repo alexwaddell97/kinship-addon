@@ -147,13 +147,29 @@ K:RegisterPage({
     read.title:SetWordWrap(false)
     local rdiv = UI.Divider(read, IW, true)
     rdiv:SetPoint("TOPLEFT", 28, -72)
-    read.body = UI.ReadArea(read, IW + 6, PAPER_H - 82 - 128, "QuestFont", "ink")
+    read.body = UI.ReadArea(read, IW + 6, PAPER_H - 82 - 162, "QuestFont", "ink")
     read.body:SetPoint("TOPLEFT", 28, -82)
     read.sign = UI.Text(read, "", "QuestFont", "inkAccent", IW - 90)
     read.sign:SetPoint("BOTTOMRIGHT", -28, 86)
     read.sign:SetJustifyH("RIGHT")
     read.seal = UI.Seal(read, 56)
     read.seal:SetPoint("BOTTOMLEFT", 26, 22)
+    read.encl = CreateFrame("Frame", nil, read)
+    read.encl:SetSize(IW, 26)
+    read.encl:SetPoint("BOTTOMLEFT", 28, 130)
+    read.encl.label = UI.Text(read.encl, "Enclosed", "Small", "inkSubtle")
+    read.encl.label:SetPoint("LEFT", 0, 0)
+    read.enclSlots = {}
+    for i = 1, L.MAX_ENCLOSED do
+      local s = K.Items.NewSlot(read.encl, 26)
+      s:SetPoint("LEFT", read.encl.label, "RIGHT", 8 + (i - 1) * 30, 0)
+      s.tooltipAnchor = "ANCHOR_TOP"
+      read.enclSlots[i] = s
+    end
+    read.take = UI.Button(read.encl, "Take them", 90, 24)
+    read.take:SetScript("OnClick", function() if c.selected then L:TakeEnclosed(c.selected) end end)
+    read.encl.extra = UI.Text(read.encl, "", "Small", "ink", IW - 130)
+    read.encl.extra:SetWordWrap(false)
     read.key = UI.Edit(read, 150, 24, "ink", 24)
     read.key:SetPoint("BOTTOMLEFT", 28, 100)
     read.key.hint = UI.Text(read.key, "Key word", "Small", "inkSubtle")
@@ -190,7 +206,7 @@ K:RegisterPage({
     end)
     read.burn = UI.Button(read, "Burn", 70, 24)
     read.burn:SetPoint("RIGHT", read.reply, "LEFT", -6, 0)
-    read.burn:SetScript("OnClick", function() if c.selected then L:Delete(c.selected); c.selected = nil end end)
+    read.burn:SetScript("OnClick", function() if c.selected and L:Delete(c.selected) then c.selected = nil end end)
     UI.Tooltip(read.burn, "Burn this letter", "Delete it from your letters for good.")
 
     -- Nothing chosen
@@ -247,11 +263,67 @@ K:RegisterPage({
     K.Suggest(w.to.edit, function() w.title.edit:SetFocus() end)
     w.title = UI.Field(w, "Title (optional)", IW - 182, L.MAX_TITLE, nil, "ink")
     w.title:SetPoint("TOPLEFT", 210, -54)
-    w.body = UI.TextArea(w, IW, PAPER_H - 102 - 120, L.MAX_BODY, nil, "ink")
+    w.body = UI.TextArea(w, IW, PAPER_H - 102 - 154, L.MAX_BODY, nil, "ink")
     w.body:SetPoint("TOPLEFT", 28, -102)
     w.count = UI.Text(w, "", "Label", "inkSubtle")
     w.count:SetPoint("TOPLEFT", w.body, "BOTTOMLEFT", 2, -4)
     w.body.edit:HookScript("OnTextChanged", function(self) w.count:SetText(("%d / %d"):format(self:GetNumLetters(), L.MAX_BODY)) end)
+    -- Enclosures: Kinship items from your bags, up to three kinds
+    w.encl = CreateFrame("Frame", nil, w)
+    w.encl:SetSize(IW, 26)
+    w.encl:SetPoint("BOTTOMLEFT", 28, 108)
+    w.enclose = UI.Button(w.encl, "Enclose...", 96, 24)
+    w.enclose:SetPoint("LEFT", 0, 0)
+    UI.Tooltip(w.enclose, "Enclose", "Tuck Kinship items from your bags into the letter. They leave your bags when you seal it, "
+      .. "and go into theirs when they break the seal. Right-click one to take it out again.")
+    w.enclSlots = {}
+    for i = 1, L.MAX_ENCLOSED do
+      local s = K.Items.NewSlot(w.encl, 26)
+      s:SetPoint("LEFT", w.enclose, "RIGHT", 8 + (i - 1) * 30, 0)
+      s:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+      s:SetScript("OnClick", function(_, button)
+        if button == "RightButton" and c.enclosed[i] then
+          local e = c.enclosed[i]
+          e.n = e.n - 1
+          if e.n <= 0 then table.remove(c.enclosed, i) end
+          c:PaintEnclosed()
+        end
+      end)
+      s.tooltipAnchor = "ANCHOR_TOP"
+      w.enclSlots[i] = s
+    end
+    w.enclose:SetScript("OnClick", function(self)
+      local I = K.Items
+      local have, order = {}, {}
+      for _, s in ipairs(I:Bag()) do
+        if s and not have[s.def] and I:Get(s.def) then have[s.def] = true; order[#order + 1] = s.def end
+      end
+      UI.Menu(self, function(root)
+        root:CreateTitle("Enclose from your bags")
+        if #order == 0 then root:CreateTitle("|cff9a9a9aNothing in your bags|r") return end
+        for _, id in ipairs(order) do
+          local def = I:Get(id)
+          local inLetter = 0
+          for _, e in ipairs(c.enclosed) do if e.id == id then inLetter = e.n end end
+          local left = I:Available(id) - inLetter
+          if def.documentId then
+            root:CreateButton("|cff9a9a9a" .. UI.Escape(def.name) .. " (carries writing: use Give)|r", function() end)
+          elseif left > 0 then
+            root:CreateButton(("%s (%d)"):format(UI.Escape(def.name), left), function()
+              for _, e in ipairs(c.enclosed) do
+                if e.id == id then e.n = e.n + 1; c:PaintEnclosed() return end
+              end
+              if #c.enclosed >= L.MAX_ENCLOSED then
+                K:Print(("A letter holds up to %d kinds of item."):format(L.MAX_ENCLOSED))
+                return
+              end
+              c.enclosed[#c.enclosed + 1] = { id = id, n = 1 }
+              c:PaintEnclosed()
+            end)
+          end
+        end
+      end)
+    end)
     w.sign = UI.Field(w, "Signed", IW - 96, L.MAX_SIGN, nil, "ink")
     w.sign:SetPoint("BOTTOMLEFT", 28, 64)
 
@@ -295,7 +367,7 @@ K:RegisterPage({
     w.cancel:SetScript("OnClick", function() c.mode = "read"; K.Journal:RefreshCurrent() end)
     w.send:SetScript("OnClick", function()
       local letter, err = L:Send(w.to.edit:GetText(), w.title.edit:GetText(), w.body.edit:GetText(),
-        w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, key = c.key })
+        w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, key = c.key, enclosed = c.enclosed })
       if not letter then K:Print(err) return end
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
       c.box, c.selected, c.mode = "out", letter, "read"
@@ -315,6 +387,14 @@ K:RegisterPage({
       end
     end
 
+    function c:PaintEnclosed()
+      for i, s in ipairs(w.enclSlots) do
+        local e = self.enclosed[i]
+        s:SetItem(e and K.Items:Get(e.id), e and e.n)
+        s:SetShown(e ~= nil)
+      end
+    end
+
     function c:PaintOptions()
       w.hand:SetText(L.HandLabel(self.hand))
       w.cond:SetText(L.CondLabel(self.cond))
@@ -327,6 +407,8 @@ K:RegisterPage({
       self.mode = "write"
       self.hand = L.ValidHand(K.db.settings.letterHand)
       self.cond, self.key = "pristine", nil
+      self.enclosed = {}
+      self:PaintEnclosed()
       self.seal = self.seal or "crimson"
       self.crest = DefaultCrest()
       K.Journal:RefreshCurrent()
@@ -355,6 +437,7 @@ K:RegisterPage({
         if p >= 1 then
           s:SetScale(1); s:SetAlpha(1); s:SetPoint("CENTER", 0, -30)
           l.read = true
+          if l.enclosed and not l.taken then L:TakeEnclosed(l) end
           K:Fire("LETTERS")
           UI.FadeIn(c.read, 0.35)
         end
@@ -424,6 +507,26 @@ K:RegisterPage({
     r.sign:SetFontObject(L.HandFont(l.hand))
     r.sign:SetTextColor(unpack(UI.INK.inkAccent))
     r.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
+    -- What's enclosed: Kinship items (to take), and real gold or items (from the mail)
+    local items = l.enclosed or {}
+    local real = (l.purse or 0) > 0 or (type(l.goods) == "table" and #l.goods > 0) or (type(l.goods) == "number" and l.goods > 0)
+    r.encl:SetShown(#items > 0 or real)
+    local lastSlot
+    for i, s in ipairs(r.enclSlots) do
+      local e = items[i]
+      s:SetItem(e and (K.Items:Get(e.d.id) or e.d), e and e.n)
+      s:SetShown(e ~= nil)
+      if e then lastSlot = s end
+    end
+    local anchor = lastSlot or r.encl.label
+    local canTake = l.dir == "in" and #items > 0 and not l.taken and l.read
+    r.take:SetShown(canTake and true or false)
+    r.take:ClearAllPoints()
+    r.take:SetPoint("LEFT", anchor, "RIGHT", 10, 0)
+    r.encl.extra:ClearAllPoints()
+    r.encl.extra:SetPoint("LEFT", canTake and r.take or anchor, "RIGHT", 10, 0)
+    local extra = real and L.EnclosedLine({ purse = l.purse, goods = l.goods }) or nil
+    r.encl.extra:SetText(extra and ((#items > 0 and "and " or "") .. extra .. (l.dir == "in" and " (take it from the mail)" or "")) or "")
     local locked = l.dir == "in" and l.cipher and not l.solved
     r.key:SetShown(locked and true or false)
     r.decipher:SetShown(locked and true or false)

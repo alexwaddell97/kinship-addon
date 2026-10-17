@@ -18,6 +18,9 @@
   to Kin offers your own characters, your Kin, the people you've written to
   and your Directory. It matches either of a character's names, or their
   roleplay name.
+- Enclose Kinship items in a letter, up to three kinds: they leave your bags
+  when you seal it and go into theirs when they break the seal. Real gold and
+  game items on the Send Mail tab can go with a letter too.
 
 ## 1.1.1
 

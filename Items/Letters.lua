@@ -231,8 +231,100 @@ function L:TryKey(letter, key)
   return true
 end
 
+---------------------------------------------------------------------------
+-- Enclosures: Kinship items tucked into a letter. They leave your bags when
+-- it's sealed, travel with it (Post.lua), and go into theirs when the seal
+-- is broken. Burning a letter that was never posted gives them back.
+--   letter.enclosed = { { d = design, n = count }, ... }   (taken = true once received)
+-- Real gold and items from the Send Mail tab can go too (Post.lua), noted as
+--   letter.purse (copper) and letter.goods ({ "2 x Linen Cloth", ... } or a count)
+---------------------------------------------------------------------------
+L.MAX_ENCLOSED = 3
+
+-- Can this design travel by post? (Writing it carries is too long for the post.)
+function L.CanEnclose(id)
+  local I = K.Items
+  local def = I and I:Get(id)
+  if not def then return nil, "That item isn't in your bags." end
+  if def.documentId then
+    return nil, ("%s carries writing, too much for the post. Hand it over with Give instead."):format(def.name)
+  end
+  return def
+end
+
+-- "2 x Moonbrook Locket, Writ of Passage", in quality colours (onCard for paper)
+function L.EnclosedLine(letter, plain)
+  local I = K.Items
+  local parts = {}
+  for _, e in ipairs(letter.enclosed or {}) do
+    local d = e.d or {}
+    local name = (e.n or 1) > 1 and ("%d x %s"):format(e.n, d.name or "?") or (d.name or "?")
+    if plain then
+      local q = I and I.Quality(d.quality)
+      parts[#parts + 1] = (q and (d.quality or 1) >= 2) and (name .. " (" .. q.label:lower() .. ")") or name
+    else
+      local c = I and I.QualityColor(d.quality, true) or { 0.2, 0.2, 0.2 }
+      parts[#parts + 1] = ("|cff%s%s|r"):format(UI.Hex(c), UI.Escape(name))
+    end
+  end
+  if (letter.purse or 0) > 0 then
+    parts[#parts + 1] = "a purse of " .. (GetCoinText and GetCoinText(letter.purse, " ") or (letter.purse .. " copper"))
+  end
+  local goods = letter.goods
+  if type(goods) == "table" then
+    for _, g in ipairs(goods) do parts[#parts + 1] = plain and g or UI.Escape(g) end
+  elseif type(goods) == "number" and goods > 0 then
+    parts[#parts + 1] = goods == 1 and "a parcel" or (goods .. " parcels")
+  end
+  return #parts > 0 and table.concat(parts, ", ") or nil
+end
+
+-- Put what's enclosed into your bags. False, with a reason, if there's no room.
+function L:TakeEnclosed(letter)
+  local I = K.Items
+  if not (I and letter and letter.enclosed and not letter.taken) then return false end
+  local fits = {}
+  for _, e in ipairs(letter.enclosed) do
+    local known = I:Get(e.d.id)
+    fits[#fits + 1] = { id = e.d.id, n = e.n, stack = known and known.stack or e.d.stack }
+  end
+  if not I:Fits(fits) then
+    I.Error("There's no room in your bags for what's enclosed.")
+    return false
+  end
+  for _, e in ipairs(letter.enclosed) do
+    local def = I:Learn(e.d)
+    if def then I:Add(def.id, e.n) end
+  end
+  letter.taken = true
+  if SOUNDKIT and SOUNDKIT.IG_BACKPACK_OPEN then PlaySound(SOUNDKIT.IG_BACKPACK_OPEN) end
+  K:Print(("From the letter: %s."):format(L.EnclosedLine({ enclosed = letter.enclosed })))
+  K:Fire("LETTERS")
+  return true
+end
+
+-- A letter that was never posted, burned: its enclosures come back.
+local function ReturnEnclosed(letter)
+  local I = K.Items
+  if not (I and letter.enclosed and letter.dir == "out" and (letter.state == "outbox" or letter.state == "failed")) then return true end
+  local fits = {}
+  for _, e in ipairs(letter.enclosed) do fits[#fits + 1] = { id = e.d.id, n = e.n, stack = e.d.stack } end
+  if not I:Fits(fits) then
+    I.Error("Make room in your bags first: what's enclosed comes back to you.")
+    return false
+  end
+  for _, e in ipairs(letter.enclosed) do
+    local def = I:Learn(e.d)
+    if def then I:Add(def.id, e.n) end
+  end
+  letter.enclosed = nil
+  return true
+end
+L.ReturnEnclosed = ReturnEnclosed
+
 -- Returns the letter, or nil and a reason.
--- opts: { hand = "fine", cond = "rain", key = "a key word" for a cipher }
+-- opts: { hand = "fine", cond = "aged", key = "a key word" for a cipher,
+--         enclosed = { { id = item id, n = count }, ... } Kinship items to enclose }
 function L:Send(to, title, body, sign, seal, crest, opts)
   opts = opts or {}
   to = strtrim(to or "")
@@ -240,6 +332,18 @@ function L:Send(to, title, body, sign, seal, crest, opts)
   if to == "" then return nil, "Who is the letter for?" end
   if body == "" then return nil, "The letter is empty." end
   if K.NameKey(to) == K.NameKey(K:MyName()) then return nil, "You can't send a letter to yourself." end
+  -- Enclosures: check them all before anything leaves your bags
+  local I = K.Items
+  local enclosed
+  for i, e in ipairs(opts.enclosed or {}) do
+    if i > L.MAX_ENCLOSED then break end
+    local def, why = L.CanEnclose(e.id)
+    if not def then return nil, why end
+    local n = math.floor(tonumber(e.n) or 0)
+    if n < 1 or I:Available(e.id) < n then return nil, ("You don't have %d %s to enclose."):format(n, def.name) end
+    enclosed = enclosed or {}
+    enclosed[#enclosed + 1] = { d = I:Pack(e.id), n = n }
+  end
   local me, now = K:MyName(), time()
   local letter = {
     id = ("%s-%d-%d"):format(me, now, math.random(1000, 9999)), dir = "out",
@@ -252,6 +356,10 @@ function L:Send(to, title, body, sign, seal, crest, opts)
   }
   local key = L.CleanKey(opts.key)
   if key ~= "" then letter.key, letter.cipher = key, L.CipherCheck(letter.body) end
+  if enclosed then
+    for _, e in ipairs(enclosed) do I:Remove(e.d.id, e.n) end
+    letter.enclosed = enclosed
+  end
   Store(letter)
   return letter
 end
@@ -343,8 +451,10 @@ function L:Compose(to)
 end
 
 function L:Delete(letter)
+  if not ReturnEnclosed(letter) then return false end   -- an unposted letter's enclosures come back
   local _, i = self:Find(letter.id)
   if i then table.remove(K:LetterBox(), i); K:Fire("LETTERS") end
+  return true
 end
 
 K:On("LOGIN", function()
