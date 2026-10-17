@@ -66,7 +66,8 @@ K:RegisterGuide({
       target = function(c) return c.frames[1].detail:GetParent() end },
     { title = "After a fall",
       text = "When you die, a card asks whether the enemy you were last facing brought you down, and one click "
-        .. "records it. Fights settled with emotes and dice never reach the game, so log those by hand here.",
+        .. "records it. Fights settled with emotes and dice never reach the game, so log those by hand here. "
+        .. "Your record also sits beside the game's PvP window, and rivals wear a mark on their nameplates.",
       before = Tab(1),
       target = function(c) return c.frames[1].detail end },
     { title = "Your war stance",
@@ -125,8 +126,9 @@ K:RegisterGuide({
       before = Tab(1),
       target = function(c) return c.tabs end },
     { title = "Your bags",
-      text = "Drag an item to move it, right-click to use it, and shift-click a stack to split it in two. "
-        .. "The chip at the top tells you how much room is left. Your items also sit in a satchel beside your game bags.",
+      text = "Drag an item to move it, right-click to use it, and shift-click a stack to split it in two "
+        .. "(or, while you're typing in chat, to link it). The chip at the top tells you how much room is left. "
+        .. "Your items also sit in a satchel beside your game bags.",
       before = Tab(1),
       target = function(c) return c.frames[1].cells[1]:GetParent() end },
     { title = "A closer look",
@@ -142,6 +144,12 @@ K:RegisterGuide({
         local d = c.frames[1].detail
         return Span("itemButtons", d.use, d.destroy)
       end },
+    { title = "Trades and the bank",
+      text = "Trading with another Kinship player? A card beside the trade window takes Kinship items: right-click "
+        .. "them in, and they move when the trade goes through. At a banker, your Kinship vault opens beside the "
+        .. "bank: right-click to keep something there, click to take it back.",
+      before = Tab(1),
+      target = function(c) return c.frames[1].cells[1]:GetParent() end },
     { title = "Stashes",
       text = "Search the area for stashes other players have left nearby; hidden ones only turn up when you're "
         .. "standing right on top of them. Your stashes lists everything you've left out, and where.",

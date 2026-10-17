@@ -80,7 +80,8 @@ K:RegisterGuide({
       target = function(J) return J.helpButton end },
     { title = "Make a start",
       text = "Begin with your Profile: a name, a few details and a line about what you're doing now go a long way. "
-        .. "Every page has its own short tour the first time you open it." },
+        .. "Every page has its own short tour the first time you open it. Come back any time with /kin, the "
+        .. "minimap button, or Kinship in the game menu (Esc)." },
   },
 })
 
@@ -168,6 +169,12 @@ K:RegisterGuide({
     { title = "Effects on you",
       text = "Effects are the wounds, boons and states your character carries for a while: a bandaged arm, a blessing, a hangover. "
         .. "What's on you now is listed here with the time left; End takes one off early.",
+      target = function(c) local e = c.frames[4]; return e and e.active and Up(e.active) end,
+      before = Tab(4) },
+    { title = "Rest, and what comes on its own",
+      text = "At an inn or in a city, wounds and exhaustion pass twice as fast, and half an hour's rest leaves you "
+        .. "Well rested. A few light effects come from the game itself: a drink too many, a long swim, a real "
+        .. "bandage on a wound. Every one can be taken off with Not now, and each has its own switch in Settings.",
       target = function(c) local e = c.frames[4]; return e and e.active and Up(e.active) end,
       before = Tab(4) },
     { title = "Laying an effect",

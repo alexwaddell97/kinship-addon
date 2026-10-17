@@ -247,7 +247,7 @@ local function OnEvent(_, event, a, b)
   if event == "TRADE_SHOW" then
     TW.partner, TW.mine, TW.theirs, TW.heard, TW.closed = PartnerName(), {}, {}, false, nil
     TW.completeSeen = false
-    if not (On() and TW.partner) then return end
+    if not (On() and TW.partner and K.db.settings.tradeCard ~= false) then return end
     local f = TW:Build()
     if not f then return end
     Share()

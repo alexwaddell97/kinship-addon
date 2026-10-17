@@ -730,6 +730,14 @@ K:RegisterSettings({ id = "items", title = "Items & stashes", order = 40,
   shown = function() return K:ExtOn("inventory") end, build = function(card)
   card:Toggle("Accept item offers", "Other players can offer you items. Turn off to turn every offer away.", "itemOffers")
   card:Toggle("Answer area searches", "Players searching nearby can find your stashes.", "stashAnswer")
+  card:Toggle("Kinship items in the trade window", "A card beside the trade window when you trade with another Kinship player, to swap Kinship items as part of the trade. Off, your trades are ordinary game trades.", {
+    get = function() return K.db.settings.tradeCard ~= false end,
+    set = function(v) K.db.settings.tradeCard = v end,
+  })
+  card:Toggle("Kinship vault at the bank", "Thirty more slots that open beside the bank when you talk to a banker.", {
+    get = function() return K.db.settings.vault ~= false end,
+    set = function(v) K.db.settings.vault = v; if not v and K.Vault then K.Vault:Hide() end end,
+  })
   card:Toggle("Satchel button by your bags", "A small bag beside your bag bar that opens your roleplay satchel.", {
     get = function() return K.db.settings.satchelButton ~= false end,
     set = function(v) K.db.settings.satchelButton = v; if K.Satchel then K.Satchel:PlaceButton() end end,

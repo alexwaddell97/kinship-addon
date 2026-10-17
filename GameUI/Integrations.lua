@@ -301,7 +301,7 @@ local function GameMenuButton()
   end
 
   local function Place()
-    if InCombatLockdown() or not menu:IsShown() then btn:Hide() return end
+    if InCombatLockdown() or not menu:IsShown() or K.db.settings.gameMenuButton == false then btn:Hide() return end
     local list, anchor = {}, nil
     for b in menu.buttonPool:EnumerateActive() do
       if b:IsShown() and b:GetTop() then

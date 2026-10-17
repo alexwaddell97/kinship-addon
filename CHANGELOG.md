@@ -6,6 +6,15 @@
 - The nameplate setting "Show titles" is now "Show epithets": it's the
   epithet line, like "the Wandering Blade". Titles like "Lord" always show
   as part of the name.
+- The note under Settings > Nameplates describes the plates as they are now,
+  on EllesmereUI's plates or the game's own.
+- New switches for features that had none: the Kinship button in the game
+  menu (Settings > General), and Kinship items in the trade window and the
+  vault at the bank (Settings > Items & stashes).
+- The tours cover what's new in 1.2.0: posting letters and enclosing items,
+  trades, chat links and the vault, rest and the effects that come on their
+  own, the PvP card, and Kin and rival marks on nameplates. Press ? on a page
+  to see its tour again.
 
 ## 1.2.0
 

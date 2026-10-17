@@ -136,7 +136,7 @@ function V:Paint()
 end
 
 function V:Show()
-  if not On() then return end
+  if not On() or K.db.settings.vault == false then return end
   local f = self:Build()
   local parent = BankParent()
   f:ClearAllPoints()
