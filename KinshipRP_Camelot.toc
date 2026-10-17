@@ -70,6 +70,7 @@ Profile\RPExperience.lua
 World\Sync.lua
 GameUI\Chat.lua
 GameUI\ChatLinks.lua
+Items\ItemLinks.lua
 GameUI\Language.lua
 World\Dice.lua
 Profile\Relations.lua

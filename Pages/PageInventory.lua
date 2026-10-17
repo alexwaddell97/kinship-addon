@@ -115,6 +115,8 @@ local function BuildBags(tab, c)
       local slot = I:Slot(self.index)
       if button == "RightButton" then
         if slot then tab.sel = self.index; I:Use(self.index) end
+      elseif slot and K.ItemLinks and K.ItemLinks:TryLink(slot.def) then
+        return
       elseif IsShiftKeyDown() and slot and slot.count > 1 then
         local to = I:Split(self.index, math.floor(slot.count / 2))
         if to then tab.sel = to; tab.cells[to]:Pop() end
@@ -417,6 +419,7 @@ local function BuildWorkshop(tab, c)
       row.sub:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -4)
       row.sub:SetWordWrap(false)
       row:SetScript("OnClick", function(self)
+        if K.ItemLinks and K.ItemLinks:TryLink(self.item) then return end
         tab.selected = self.item.id
         tab.make = 1
         Refresh()

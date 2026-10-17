@@ -75,6 +75,8 @@ local function ActiveEditBox()
   end
 end
 
+L.ActiveEditBox = ActiveEditBox
+
 function L:Insert(name)
   name = CleanName(name)
   if not name then return end
@@ -195,9 +197,9 @@ K:RegisterTargetButton({
 })
 
 K:RegisterSettings({ id = "chatlinks", title = "Profile links", order = 11, build = function(card)
-  card:Toggle("Clickable profile links", "[Kinship: Name] in chat becomes a link to that profile.", "chatLinks")
-  card:Note("Share a profile from the target bar, or type [Kinship: Name] yourself. Everyone with Kinship sees a link; "
-    .. "everyone else reads the plain text.")
+  card:Toggle("Clickable profile and item links", "[Kinship: Name] and [Kinship item: Name] in chat become links.", "chatLinks")
+  card:Note("Share a profile from the target bar, or shift-click a Kinship item while typing to link it. Everyone with "
+    .. "Kinship sees a link; everyone else reads the plain text.")
   local b = card:Button("Link my profile in chat", function() L:InsertMine() end, 180)
   UI.Tooltip(b, "Link my profile", "Puts a link to your own profile in the chat box.")
 end })

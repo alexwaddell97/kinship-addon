@@ -32,7 +32,7 @@ local GOOD, BAD, WARN = { 0.40, 0.80, 0.48 }, { 0.90, 0.36, 0.30 }, { 0.95, 0.76
 local SKIP = { errorLog = true, backup = true }
 -- Other players' profiles, items and documents you've come across. They come
 -- back as you meet people again, so they can be left out to keep codes short.
-local OTHERS = { registry = true, itemCache = true, docCache = true }
+local OTHERS = { registry = true, itemCache = true, docCache = true, itemLinksSeen = true }
 
 local function Codec() return K.ProfileShare and K.ProfileShare.Codec end
 local function State()

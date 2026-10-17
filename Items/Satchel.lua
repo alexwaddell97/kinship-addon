@@ -478,6 +478,8 @@ local function MakeCells(f, makeSlot, cols, cell, gap, x0, y0)
       if not slot then return end
       if button == "RightButton" then
         I:Use(self.index)
+      elseif K.ItemLinks and K.ItemLinks:TryLink(slot.def) then
+        return
       elseif IsShiftKeyDown() and slot.count > 1 then
         local to = I:Split(self.index, math.floor(slot.count / 2))
         if to then f.cells[to]:Pop() end
