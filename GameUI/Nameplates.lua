@@ -678,7 +678,7 @@ function P:Describe()
   local ok = UI.Hex(K:Theme().accent)
   local warn = UI.CardHex and UI.CardHex({ 0.92, 0.56, 0.30 }) or "b0602a"
   if not s or not s.plates then
-    return "Off. Switch it on to see roleplay names above friendly players."
+    return "Off. Every nameplate is left as the game draws it."
   end
   local mode, label = self:DetectMode()
   self.mode, self.modeLabel = mode, label
@@ -686,14 +686,16 @@ function P:Describe()
   if mode == "standdown" then
     text = ("|cff%s%s is drawing friendly nameplates,|r so Kinship stays out of its way. "
       .. "Switch off its friendly player plates to see roleplay names here."):format(warn, label)
-  elseif mode == "ellesmere" then
-    text = ("|cff%sWorking alongside %s.|r Kinship adds the roleplay name above each friendly player's own name "
-      .. "instead of replacing it, so EllesmereUI's layout stays exactly as you set it."):format(ok, label)
   else
-    text = ("|cff%sOn.|r Roleplay names show above the character names on the game's own nameplates."):format(ok)
+    local which = mode == "ellesmere" and ("|cff%sOn, with %s.|r "):format(ok, label)
+      or ("|cff%sOn, with the game's own nameplates.|r "):format(ok)
+    local under = s.platesBrackets ~= false and "the character's name becomes \"(Name)\" where the plate had it"
+      or "the plate's own name stays underneath"
+    text = which .. "The roleplay name sits above in gold and " .. under .. "."
+    if mode == "ellesmere" then text = text .. " EllesmereUI's sizes, bars and colours stay as you set them." end
     local okC, shown = pcall(function() return C_CVar.GetCVarBool("nameplateShowFriends") end)
     if okC and shown == false then
-      text = text .. (" |cff%sFriendly player nameplates are switched off in the game's options.|r"):format(warn)
+      text = text .. (" |cff%sFriendly player nameplates are off in the game: Ctrl+Shift+V shows them.|r"):format(warn)
     end
   end
   return text .. " Names step aside in dungeons and raids, where profiles can't travel."
@@ -713,7 +715,7 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
   card:Toggle("Show out-of-character players", "When off, players marked OOC keep their ordinary name.", opt("platesOOC"))
   card:Toggle("Hide in combat", "Plates go back to plain names while you're fighting.", opt("platesCombat"))
   card:Toggle("Colour by relationship", "The ring round their status dot in your relationship's colour: friends, family, rivals and the rest.", opt("platesRelation"))
-  local note = card:Note("", 52)
+  local note = card:Note("", 70)
   card:OnRefresh(function()
     note:SetText(P:Describe())
     P:RefreshAll()
