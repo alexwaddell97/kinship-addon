@@ -22,7 +22,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install luacheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lua-check
@@ -59,7 +59,7 @@ jobs:
           cp changelog.md notes.md
           printf '\n---\nUnzip into `World of Warcraft\\_classic_beta_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           name: Kinship RP ${{ github.ref_name }}
           body_path: notes.md
