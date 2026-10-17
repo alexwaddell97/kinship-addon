@@ -369,7 +369,8 @@ end
 
 local ev = CreateFrame("Frame")
 for _, e in ipairs({ "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "MAIL_SEND_SUCCESS", "MAIL_FAILED" }) do
-  pcall(ev.RegisterEvent, ev, e)
+  -- A client without one of these can't tell us how posting went: note it for /kin bug
+  if not pcall(ev.RegisterEvent, ev, e) then K:CaughtError("post", "this client has no " .. e .. " event") end
 end
 ev:SetScript("OnEvent", function(_, event, ...)
   if event == "MAIL_SHOW" then
