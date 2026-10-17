@@ -88,6 +88,7 @@ Profile\Compat.lua
 GameUI\CharacterPanel.lua
 GameUI\UnitNames.lua
 GameUI\SocialNames.lua
+GameUI\PvPCard.lua
 GameUI\TargetBar.lua
 guides\You.lua
 guides\People.lua

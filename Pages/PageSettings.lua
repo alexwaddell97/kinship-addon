@@ -530,6 +530,7 @@ K:RegisterSettings({ id = "warfront", title = "Warfront", order = 20, build = fu
   card:Toggle("Record battles in your Chronicle", "Victories and defeats become Chronicle entries.", "warChronicle")
   card:Toggle("Remember enemies you meet", "Enemy players you target or mouse over are kept under Sighted.", "warSightings")
   card:Toggle("Rival line in tooltips", "Your standing and tally when you mouse over a rival.", "warTooltip")
+  card:Toggle("Beside the PvP window", "Your record and latest rivals in a card next to the game's PvP window.", "pvpCard")
   card:Toggle("Narrate parley for your side", "A short custom emote alongside each Parley emote.", "parleyNarrate")
 end })
 
