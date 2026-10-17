@@ -441,6 +441,8 @@ function K:MyProfiles()
     self.db.profiles[key] = p
   end
   p.name = self:PlayerName()
+  -- The whole name: on Forever the plain one is the first name only ("Vax" of Vax Orus)
+  p.full = self:MyName()
   return p
 end
 

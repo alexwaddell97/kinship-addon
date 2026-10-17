@@ -93,7 +93,7 @@ end
 
 -- Enclosed Kinship items, as one line of printable text (deflated
 -- AceSerializer, the same way Total RP 3: Extended exports are written)
-local DATA_LINE = "^~ for Kinship RP: (%S+) ~$"
+local DATA_LINE = "\n*~ for Kinship RP: (%S+) ~$"   -- the last line of a mail, alone or after the words
 local function Libs()
   return LibStub and LibStub:GetLibrary("LibDeflate", true), LibStub and LibStub:GetLibrary("AceSerializer-3.0", true)
 end
@@ -146,11 +146,17 @@ function P.Parts(letter, bodyMax, subjectMax)
   -- The signature (and what's enclosed) go on the last part, or one of their own
   if #pieces[#pieces] + #tail > room then pieces[#pieces + 1] = "" end
   pieces[#pieces] = pieces[#pieces] .. tail
-  -- The enclosed items' details, cut to fit, each in a part of its own
+  -- The enclosed items' details: after the words in the last part if they
+  -- fit (one postage), otherwise cut to fit into parts of their own
   local data = P.Pack(letter.enclosed)
   if data then
-    local per = room - #"~ for Kinship RP:  ~"
-    for at = 1, #data, per do pieces[#pieces + 1] = "~ for Kinship RP: " .. data:sub(at, at + per - 1) .. " ~" end
+    local line = "~ for Kinship RP: " .. data .. " ~"
+    if #pieces[#pieces] + 2 + #line <= room then
+      pieces[#pieces] = pieces[#pieces] .. "\n\n" .. line
+    else
+      local per = room - #"~ for Kinship RP:  ~"
+      for at = 1, #data, per do pieces[#pieces + 1] = "~ for Kinship RP: " .. data:sub(at, at + per - 1) .. " ~" end
+    end
   end
   while #pieces > MAX_PARTS do table.remove(pieces, MAX_PARTS) end   -- never happens at sensible limits
   local n = #pieces
@@ -179,9 +185,11 @@ function P.Read(subject, body)
   local m = ReadMarks(marks)
   local i, n = subject:match("^" .. SUBJECT .. " %((%d+)/(%d+)%)")
   local text = strtrim((body:gsub("\n*" .. POSTMARK, "")))
+  -- The items' details, alone in this part or after its words
   local data = text:match(DATA_LINE)
+  if data then text = strtrim((text:gsub(DATA_LINE, ""))) end
   return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, cipher = m.cipher,
-           i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = data and "" or text, data = data, title = title }
+           i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = text, data = data, title = title }
 end
 
 -- A letter's parts (their words, in order) back into its text and signature.

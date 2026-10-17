@@ -33,11 +33,12 @@ function K:People()
     local e = K.Registry and K.Registry[K.NameKey(name) or ""]
     return e and e.profile and e.profile.rpName
   end
-  -- Your own characters
+  -- Your own characters, by their whole name (each remembers it at login;
+  -- the plain name is only the first of a Forever character's two)
   for _, p in pairs(K.db.profiles or {}) do
-    if type(p) == "table" and p.name and p.name ~= K:PlayerName() then
+    if type(p) == "table" and p.full then
       local prof = p.list and p.list[p.active]
-      Add(p.name, prof and prof.rpName, "Your character")
+      Add(p.full, prof and prof.rpName, "Your character")
     end
   end
   -- Your Kin, by bond
