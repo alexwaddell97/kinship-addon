@@ -13,6 +13,9 @@ local PAPER_W, PAPER_H = CW - LIST_W - 12, CH - TOP
 -- Letters are paper in either look.
 local PAPER, PAPER_EDGE, PAPER_RULE = { 0.955, 0.925, 0.850 }, { 0.30, 0.20, 0.08, 0.40 }, { 0.45, 0.32, 0.15, 0.16 }
 local STATES = {
+  outbox      = { label = "To post",     color = { 0.95, 0.76, 0.36 } },
+  posted      = { label = "Posted",      color = { 0.42, 0.82, 0.50 } },
+  -- Letters sent by courier, before letters went by post
   sending     = { label = "Sending",     color = { 0.95, 0.76, 0.36 } },
   delivered   = { label = "Delivered",   color = { 0.42, 0.82, 0.50 } },
   unconfirmed = { label = "No reply",    color = { 0.95, 0.60, 0.30 } },
@@ -52,7 +55,7 @@ end
 
 K:RegisterPage({
   id = "letters", title = "Letters", heading = "Letters",
-  subtitle = "Write, seal and send letters to other characters.",
+  subtitle = "Write, seal and post letters to other characters.",
 
   build = function(c)
     c.box, c.mode = "in", "read"
@@ -66,7 +69,7 @@ K:RegisterPage({
 
     -- The pile ------------------------------------------------------------------
     c.list = UI.List(c, LIST_W, CH - TOP, 56,
-      "No letters yet. Write to someone and they'll find a sealed letter waiting for them.",
+      "No letters yet. Write to someone, post it at a mailbox, and they'll find a sealed letter waiting for them.",
       function(row)
         row.seal = UI.Seal(row, 30)
         row.seal:SetPoint("LEFT", 10, 0)
@@ -131,6 +134,10 @@ K:RegisterPage({
     read.reply = UI.Button(read, "Reply", 84, 24)
     read.reply:SetPoint("BOTTOMRIGHT", -26, 24)
     read.reply:SetScript("OnClick", function()
+      if c.selected and c.selected.dir == "out" and c.selected.state == "failed" and K.Post then
+        K.Post:Retry(c.selected)
+        return
+      end
       local l = c.selected
       if l then c:Compose(l.dir == "in" and l.from or l.to, l.title ~= "" and ("Re: " .. l.title:gsub("^Re: ", "")) or "") end
     end)
@@ -195,8 +202,21 @@ K:RegisterPage({
       UI.Tooltip(b, s.label .. " wax")
       w.swatches[i] = b
     end
-    w.send = UI.Button(w, "Seal & send", 110, 26)
+    w.send = UI.Button(w, "Seal it", 110, 26)
     w.send:SetPoint("BOTTOMRIGHT", -28, 24)
+    w.send:HookScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_TOP")
+      if K.Post and K.Post.open then
+        GameTooltip:SetText("Seal & post", 1, 0.82, 0)
+        GameTooltip:AddLine("It goes by mail now, so it reaches them even if they're offline.", 1, 1, 1, true)
+      else
+        GameTooltip:SetText("Seal it", 1, 0.82, 0)
+        GameTooltip:AddLine("It waits in your Sent letters until you next open a mailbox, then goes by mail, "
+          .. "so it reaches them even if they're offline.", 1, 1, 1, true)
+      end
+      GameTooltip:Show()
+    end)
+    w.send:HookScript("OnLeave", function() GameTooltip:Hide() end)
     w.cancel = UI.Button(w, "Cancel", 80, 26)
     w.cancel:SetPoint("RIGHT", w.send, "LEFT", -6, 0)
     w.cancel:SetScript("OnClick", function() c.mode = "read"; K.Journal:RefreshCurrent() end)
@@ -207,6 +227,9 @@ K:RegisterPage({
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
       c.box, c.selected, c.mode = "out", letter, "read"
       K.Journal:RefreshCurrent()
+      -- At a mailbox it goes straight away; otherwise it waits for one
+      if K.Post and K.Post.open then K.Post:PostAll()
+      else K:Print("Sealed. It's in your Sent letters, to be posted next time you open a mailbox.") end
     end)
 
     function c:PaintSeal()
@@ -220,6 +243,7 @@ K:RegisterPage({
 
     function c:Compose(to, title)
       self.mode = "write"
+      w.send:SetText((K.Post and K.Post.open) and "Seal & post" or "Seal it")
       self.seal = self.seal or "crimson"
       self.crest = DefaultCrest()
       K.Journal:RefreshCurrent()
@@ -312,7 +336,8 @@ K:RegisterPage({
     r.seal:SetSeal(l.seal, L.CrestTexture(l.crest))
     local st = l.dir == "out" and STATES[l.state]
     r.state:Set(st and st.label or nil, st and st.color)
-    r.reply:SetText(l.dir == "in" and "Reply" or "Write again")
+    local retry = l.dir == "out" and l.state == "failed"
+    r.reply:SetText(l.dir == "in" and "Reply" or (retry and "Try again" or "Write again"))
     r.reply:SetWidth(l.dir == "in" and 84 or 110)
   end,
 })

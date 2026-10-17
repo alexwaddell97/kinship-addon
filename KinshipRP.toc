@@ -51,6 +51,7 @@ World\Warfront.lua
 Pages\PageWarfront.lua
 World\Parley.lua
 Items\Letters.lua
+Items\Post.lua
 Pages\PageLetters.lua
 Items\Items.lua
 Items\Wardrobe.lua

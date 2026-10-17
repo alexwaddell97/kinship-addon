@@ -1,7 +1,10 @@
--- Kinship RP: letters. Write a letter, seal it in wax and send it by courier
--- (an addon whisper). The recipient gets a sealed letter to open. Letters
--- reach anyone you could whisper; Battle.net friends on the other faction
--- too, through Chomp's Battle.net relay.
+-- Kinship RP: letters. Write a letter and seal it in wax: it waits in your
+-- Outbox until you next open a mailbox, then goes as real game mail (Post.lua),
+-- so it reaches people who are offline. The recipient's Kinship finds it in
+-- their inbox and gives them a sealed letter to open; anyone without Kinship
+-- reads an ordinary mail.
+-- Letters from earlier versions of Kinship came by courier (an addon
+-- whisper) and still arrive that way:
 --   L  a letter          A  "it arrived" (sent back by the recipient)
 
 local ADDON, ns = ...
@@ -76,34 +79,53 @@ function L:Send(to, title, body, sign, seal, crest)
   local me, now = K:MyName(), time()
   local letter = {
     id = ("%s-%d-%d"):format(me, now, math.random(1000, 9999)), dir = "out",
+    -- A short id for the post: it rides in the mail itself
+    mid = ("%x%04x"):format(now, math.random(0, 65535)),
     from = me, to = to, title = Str(strtrim(title or ""), L.MAX_TITLE), body = Str(body, L.MAX_BODY),
     sign = Str(strtrim(sign or ""), L.MAX_SIGN), seal = ValidSeal(seal), crest = ValidCrest(crest),
-    place = K:CurrentPlace(), t = now, read = true, state = "sending",
+    place = K:CurrentPlace(), t = now, read = true, state = "outbox",
   }
-  local ok = Post(to, { k = "L", id = letter.id, title = letter.title, body = letter.body, sign = letter.sign,
-                        seal = letter.seal, crest = letter.crest, place = letter.place, t = now })
-  letter.state = ok and "sending" or "failed"
   Store(letter)
-  if ok then
-    C_Timer.After(30, function()
-      if letter.state == "sending" then
-        letter.state = "unconfirmed"
-        K:Fire("LETTERS")
-      end
-    end)
-  end
   return letter
 end
+
+-- Letters waiting to be posted, oldest first
+function L:Outbox()
+  local out = {}
+  for _, l in ipairs(K:LetterBox()) do
+    if l.dir == "out" and l.state == "outbox" then table.insert(out, 1, l) end
+  end
+  return out
+end
+
+-- A letter has come in (by post or by courier): keep it, note it in the
+-- Chronicle, and say so.
+function L:Deliver(letter)
+  Store(letter)
+  K:AddEntry("letter", "A letter from " .. Short(letter.from), letter.title ~= "" and letter.title or nil)
+  UI.Toast({
+    icon = L.CrestTexture(letter.crest) or K.ICON, round = letter.crest ~= nil and letter.crest ~= "monogram",
+    title = "A letter has arrived",
+    text = ("From |cffffffff%s|r%s"):format(Short(letter.from), letter.title ~= "" and (": " .. UI.Escape(letter.title)) or ""),
+    color = UI.SealColor(letter.seal),
+    sound = "TELL_MESSAGE",
+    duration = 10,
+    onClick = function() L:Open(letter) end,
+  })
+end
+
+-- Who's let through (Settings > Letters: only from my Kin)
+function L.Allowed(sender)
+  if K.db.settings.lettersFrom ~= "kin" then return true end
+  return K:KinFor(sender) ~= nil or K:KinFor(Short(sender)) ~= nil
+end
+L.Str, L.ValidSeal, L.ValidCrest = Str, ValidSeal, ValidCrest
 
 ---------------------------------------------------------------------------
 -- Receiving
 ---------------------------------------------------------------------------
 L.recv = {}
 
-local function Allowed(sender)
-  if K.db.settings.lettersFrom ~= "kin" then return true end
-  return K:KinFor(sender) ~= nil or K:KinFor(Short(sender)) ~= nil
-end
 
 function L:Receive(msg, sender)
   if type(msg) ~= "table" or not Safe(sender) or type(sender) ~= "string" then return end
@@ -120,7 +142,7 @@ function L:Receive(msg, sender)
   end
   if msg.k ~= "L" or type(msg.id) ~= "string" or #msg.id > 100 then return end
   if self:Find(msg.id) then Post(sender, { k = "A", id = msg.id }, "LOW") return end
-  if not Allowed(sender) then return end
+  if not L.Allowed(sender) then return end
 
   local now = GetTime()
   local r = self.recv[from]
@@ -136,19 +158,8 @@ function L:Receive(msg, sender)
     seal = ValidSeal(msg.seal), crest = ValidCrest(msg.crest), place = Str(msg.place, 60),
     t = time(), sent = type(msg.t) == "number" and msg.t or nil, read = false, state = "received",
   }
-  Store(letter)
   Post(sender, { k = "A", id = msg.id }, "LOW")
-  K:AddEntry("letter", "A letter from " .. Short(sender), letter.title ~= "" and letter.title or nil)
-
-  UI.Toast({
-    icon = L.CrestTexture(letter.crest) or K.ICON, round = letter.crest ~= nil and letter.crest ~= "monogram",
-    title = "A letter has arrived",
-    text = ("From |cffffffff%s|r%s"):format(Short(sender), letter.title ~= "" and (": " .. UI.Escape(letter.title)) or ""),
-    color = UI.SealColor(letter.seal),
-    sound = "TELL_MESSAGE",
-    duration = 10,
-    onClick = function() L:Open(letter) end,
-  })
+  self:Deliver(letter)
 end
 
 ---------------------------------------------------------------------------

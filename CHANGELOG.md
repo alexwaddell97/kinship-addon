@@ -1,5 +1,16 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### New
+- Letters go by post. Seal a letter anywhere and it waits in your Sent
+  letters until you next open a mailbox, where Kinship posts it as game mail,
+  so it reaches people even when they're offline, and your own characters
+  too. Kinship letters wear the Kinship seal in the mailbox, and Kinship
+  keeps them on your Letters page, sealed until you open them. People without
+  Kinship get an ordinary, readable mail. Long letters go in parts and are
+  joined back together.
+
 ## 1.1.1
 
 **After updating, restart the game fully** (not just /reload): Kinship's
