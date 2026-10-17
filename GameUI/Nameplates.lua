@@ -390,7 +390,24 @@ local DEMO = {
   { "Captain Hale Morrow", "the Lionguard", "ic" }, { "Sister Elowen", "", "ic" },
   { "Old Tom Barrow", "Innkeeper", "lfrp" }, { "Lady Seraphine Vale", "the Gilded Rose", "ic" },
   { "Corwin Blackwood", "", "ooc" }, { "Wren Fallowmere", "the Wandering Blade", "ic" },
+  -- No roleplay name: their own name, with a title before it or nothing at all
+  { "", "", "ic", "Lord" }, { "", "Knight of the Silver Hand", "ic", "Sir" },
+  { "", "", "lfrp", "Lady" }, { "", "", "ic" }, { "", "the Wandering Blade", "lfrp" },
 }
+
+-- What a plate's gold name says, and whether it already holds the
+-- character's name (so it takes the plate name's place). rp = the roleplay
+-- name (may be empty), prefix = a title like "Lord".
+local function NameFor(anchor, name, rp, prefix)
+  local charName = anchor:GetText()
+  charName = Safe(charName) and type(charName) == "string" and Plain(charName) or ""
+  if charName == "" then charName = Plain(Ambiguate and Ambiguate(name, "none") or name) end
+  local text = rp
+  if text == "" then
+    text = prefix ~= "" and (prefix .. " " .. charName) or charName
+  end
+  return text, charName ~= "" and text:lower():find(charName:lower(), 1, true) ~= nil
+end
 local function Hash(name)
   local h = 0
   for i = 1, #name do h = (h * 31 + name:byte(i)) % 100003 end
@@ -412,7 +429,7 @@ local function Demo(name, hostile)
   local def = K.RelationDef and K:RelationDef(rels[h % 2 + 1])
   local kin = (h % 3 == 0 or h % 5 == 0) and (def and def.color or { 0.37, 0.77, 0.72 }) or nil
   local rival = (h % 4 == 1) and grudge("rival") or nil
-  return { text = d[1], epithet = d[2], status = d[3], kin = kin, rival = rival, def = kin and def or nil }
+  return { rp = d[1], prefix = d[4] or "", epithet = d[2], status = d[3], kin = kin, rival = rival, def = kin and def or nil }
 end
 
 function P:Demo()
@@ -463,6 +480,7 @@ local function Paint(unit, rec)
     if not anchor then return Restore(rec) end
     local d = Demo(name)
     d.ring = { RingColor(d.def) }
+    d.text, d.sameName = NameFor(anchor, name, d.rp, d.prefix)
     return Draw(Overlay(plate), anchor, d, rec)
   end
   if not p then return Restore(rec) end
@@ -472,15 +490,7 @@ local function Paint(unit, rec)
   -- No roleplay name? Plenty of people play under their character's name
   -- (Forever's already have two). Then it's that name, with any title like
   -- "Lord" before it, in roleplay gold where the plate's name was.
-  local text = DisplayName(p)
-  local charName = anchor:GetText()
-  charName = Safe(charName) and type(charName) == "string" and Plain(charName) or ""
-  if charName == "" then charName = Plain(Ambiguate and Ambiguate(name, "none") or name) end
-  if text == "" then
-    local prefix = Plain(p.prefix)
-    text = prefix ~= "" and (prefix .. " " .. charName) or charName
-  end
-  local same = charName ~= "" and text:lower():find(charName:lower(), 1, true) ~= nil
+  local text, same = NameFor(anchor, name, DisplayName(p), Plain(p.prefix))
   local kin, rival = Marks(name)
   Draw(Overlay(plate), anchor, {
     text = text, epithet = Plain(p.epithet), status = p.status, sameName = same,
