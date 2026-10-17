@@ -478,6 +478,8 @@ local function MakeCells(f, makeSlot, cols, cell, gap, x0, y0)
       if not slot then return end
       if button == "RightButton" and K.TradeWindow and K.TradeWindow:TryAdd(slot.def) then
         return
+      elseif button == "RightButton" and K.Vault and K.Vault:TryDeposit(self.index) then
+        return
       elseif button == "RightButton" then
         I:Use(self.index)
       elseif K.ItemLinks and K.ItemLinks:TryLink(slot.def) then

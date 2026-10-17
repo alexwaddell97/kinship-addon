@@ -289,6 +289,8 @@ local function Fill(bag, id, n, stack, slots)
   return math.max(0, n)
 end
 
+I.Fill = Fill   -- the vault fills its slots the same way
+
 -- Would all of these fit? entries = { { id, n, stack }, ... }
 function I:Fits(entries)
   local copy = {}
