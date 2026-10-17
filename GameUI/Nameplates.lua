@@ -280,41 +280,22 @@ local function RingColor(def)
   return 0, 0, 0, 0.65
 end
 
-local function Paint(unit, rec)
+-- Draw a friendly plate's overlay over the plate's own name (anchor).
+-- d = { text, epithet, status, ring = {r,g,b,a}, kin = colour|nil,
+-- rival = colour|nil }. rec remembers which name we faded. Also used by the
+-- preview (/kin plates), so what you see there is what plates draw.
+local function Draw(o, anchor, d, rec)
   local s = S()
-  if not s then return Restore(rec) end
-  local plate = rec.plate
-  if not plate or (plate.IsForbidden and plate:IsForbidden()) then return Restore(rec) end
-  if not FriendlyPlayer(unit) then return P.PaintFoe(unit, rec) end
-  if not P:Active() then return Restore(rec) end
-  local name = GetUnitName(unit, true)
-  if not Safe(name) or type(name) ~= "string" or name == "" then return Restore(rec) end
-  rec.key = K.NameKey(name)
-  if not rec.key or K:IsIgnored(name) then return Restore(rec) end
-
-  local reg = K:ProfileOf(name)
-  local p = reg and reg.profile
-  if not p or (reg.t and time() - reg.t > STALE) then P:Ask(name) end
-  if not p then return Restore(rec) end
-  if p.status == "ooc" and not s.platesOOC then return Restore(rec) end
-  local text = DisplayName(p)
-  if text == "" then return Restore(rec) end
-
-  local anchor = FindAnchor(unit, plate)
-  if not anchor then return Restore(rec) end
-  local o = Overlay(plate)
-  local def = K.RelationOf and K:RelationOf(name)
-
   MatchFont(o.name, anchor, 0)
   MatchFont(o.title, anchor, -2)
-  SetClamped(o.name, text)
+  SetClamped(o.name, d.text)
   local c = K.RP_NAME_COLOR
   o.name:SetTextColor(c[1], c[2], c[3], 1)
-  o.ring:SetVertexColor(RingColor(def))
-  local st = K.STATUS[p.status] or K.STATUS.ooc
+  o.ring:SetVertexColor(unpack(d.ring))
+  local st = K.STATUS[d.status] or K.STATUS.ooc
   o.dot:SetVertexColor(st.color[1], st.color[2], st.color[3], 1)
 
-  local epithet = s.platesTitles and Plain(p.epithet) or ""
+  local epithet = s.platesTitles and d.epithet or ""
   local hasTitle = epithet ~= ""
   if hasTitle then
     SetClamped(o.title, epithet)
@@ -323,18 +304,16 @@ local function Paint(unit, rec)
   o.title:SetShown(hasTitle)
 
   -- Kin and rival marks after the name
-  local kin, rival = nil, nil
-  if s.platesIcons then kin, rival = Marks(name) end
   local marks = 0
-  for _, m in ipairs({ { o.kin, kin }, { o.rival, rival } }) do
-    local b, c = m[1], m[2]
+  for _, m in ipairs({ { o.kin, s.platesIcons and d.kin }, { o.rival, s.platesIcons and d.rival } }) do
+    local b, col = m[1], m[2] or nil
     b:ClearAllPoints()
-    if c then
-      b.ring:SetVertexColor(c[1], c[2], c[3], 0.95)
+    if col then
+      b.ring:SetVertexColor(col[1], col[2], col[3], 0.95)
       b:SetPoint("LEFT", o.name, "RIGHT", 4 + marks * (BADGE + 2), 0)
       marks = marks + 1
     end
-    b:SetShown(c ~= nil)
+    b:SetShown(col ~= nil)
   end
   local shift = DOT_SHIFT - (marks > 0 and (marks * (BADGE + 2) + 2) / 2 or 0)
 
@@ -378,6 +357,50 @@ local function Paint(unit, rec)
   end
 end
 
+-- An enemy plate: only the rival mark, just before their name.
+local function DrawFoe(o, anchor, rival, rec)
+  Unfade(rec)
+  o.name:Hide(); o.title:Hide(); o.real:Hide(); o.ring:Hide(); o.dot:Hide(); o.kin:Hide()
+  local w = anchor:GetStringWidth() or 0
+  o.rival:ClearAllPoints()
+  o.rival:SetPoint("RIGHT", anchor, "CENTER", -(w / 2) - 3, 0)
+  o.rival.ring:SetVertexColor(rival[1], rival[2], rival[3], 0.95)
+  o.rival:Show()
+  if not o:IsShown() then
+    o:Show()
+    UI.FadeIn(o, 0.15)
+  end
+end
+
+local function Paint(unit, rec)
+  local s = S()
+  if not s then return Restore(rec) end
+  local plate = rec.plate
+  if not plate or (plate.IsForbidden and plate:IsForbidden()) then return Restore(rec) end
+  if not FriendlyPlayer(unit) then return P.PaintFoe(unit, rec) end
+  if not P:Active() then return Restore(rec) end
+  local name = GetUnitName(unit, true)
+  if not Safe(name) or type(name) ~= "string" or name == "" then return Restore(rec) end
+  rec.key = K.NameKey(name)
+  if not rec.key or K:IsIgnored(name) then return Restore(rec) end
+
+  local reg = K:ProfileOf(name)
+  local p = reg and reg.profile
+  if not p or (reg.t and time() - reg.t > STALE) then P:Ask(name) end
+  if not p then return Restore(rec) end
+  if p.status == "ooc" and not s.platesOOC then return Restore(rec) end
+  local text = DisplayName(p)
+  if text == "" then return Restore(rec) end
+
+  local anchor = FindAnchor(unit, plate)
+  if not anchor then return Restore(rec) end
+  local kin, rival = Marks(name)
+  Draw(Overlay(plate), anchor, {
+    text = text, epithet = Plain(p.epithet), status = p.status,
+    ring = { RingColor(K.RelationOf and K:RelationOf(name)) }, kin = kin, rival = rival,
+  }, rec)
+end
+
 -- Enemy players: only the rival mark, just before their name. Their plate
 -- is otherwise left exactly as it is.
 function P.PaintFoe(unit, rec)
@@ -390,18 +413,112 @@ function P.PaintFoe(unit, rec)
   if not rival then return Restore(rec) end
   local anchor = FindAnchor(unit, rec.plate)
   if not anchor then return Restore(rec) end
-  local o = Overlay(rec.plate)
-  Unfade(rec)
-  o.name:Hide(); o.title:Hide(); o.real:Hide(); o.ring:Hide(); o.dot:Hide(); o.kin:Hide()
-  local w = anchor:GetStringWidth() or 0
-  o.rival:ClearAllPoints()
-  o.rival:SetPoint("RIGHT", anchor, "CENTER", -(w / 2) - 3, 0)
-  o.rival.ring:SetVertexColor(rival[1], rival[2], rival[3], 0.95)
-  o.rival:Show()
-  if not o:IsShown() then
-    o:Show()
-    UI.FadeIn(o, 0.15)
+  DrawFoe(Overlay(rec.plate), anchor, rival, rec)
+end
+
+---------------------------------------------------------------------------
+-- Preview (/kin plates): sample plates drawn the way real ones are, with
+-- your current settings, so you can see them without anyone around.
+---------------------------------------------------------------------------
+local function SamplePlate(parent, charName, hostile)
+  local pl = CreateFrame("Frame", nil, parent)
+  pl:SetSize(130, 40)
+  pl.bar = pl:CreateTexture(nil, "ARTWORK")
+  pl.bar:SetTexture("Interface\\Buttons\\WHITE8X8")
+  pl.bar:SetSize(110, 8)
+  pl.bar:SetPoint("BOTTOM", 0, 6)
+  if hostile then pl.bar:SetVertexColor(0.78, 0.18, 0.15) else pl.bar:SetVertexColor(0.18, 0.62, 0.25) end
+  pl.edge = pl:CreateTexture(nil, "BACKGROUND")
+  pl.edge:SetColorTexture(0, 0, 0, 1)
+  pl.edge:SetPoint("TOPLEFT", pl.bar, -1, 1)
+  pl.edge:SetPoint("BOTTOMRIGHT", pl.bar, 1, -1)
+  pl.name = pl:CreateFontString(nil, "OVERLAY")
+  pl.name:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+  pl.name:SetPoint("BOTTOM", pl.bar, "TOP", 0, 3)
+  pl.name:SetText(charName)
+  if hostile then pl.name:SetTextColor(1, 0.25, 0.2) else pl.name:SetTextColor(1, 1, 1) end
+  pl.rec = { plate = pl }
+  return pl
+end
+
+-- The font a real plate is using right now, if one is showing.
+local function LivePlateFont()
+  for unit, rec in pairs(P.units) do
+    local a = rec.plate and FindAnchor(unit, rec.plate)
+    if a then return a end
   end
+end
+
+function P:PaintPreview()
+  local f = self.preview
+  if not f or not f:IsShown() then return end
+  local W = K.War
+  local function rel(key, fallback)
+    local d = K.RelationDef and K:RelationDef(key)
+    return d and d.color or fallback
+  end
+  local function grudge(key)
+    local g = W and W.Grudge(key)
+    return g and g.color or { 0.95, 0.76, 0.36 }
+  end
+  local me = K:Profile()
+  local myName = DisplayName(me)
+  local live = LivePlateFont()
+  local samples = {
+    { char = K:MyName() or "Vax Orus", text = myName ~= "" and myName or "Lord John Dynamo",
+      epithet = myName ~= "" and Plain(me.epithet) or "the Deviant", status = me.status or "ic",
+      kin = rel("friend", { 0.42, 0.82, 0.46 }), relKey = "friend" },
+    { char = "Mirabel Thorn", text = "Mira Ashveil", epithet = "", status = "lfrp",
+      kin = rel("family", { 0.96, 0.70, 0.26 }), rival = grudge("rival"), relKey = "family" },
+    { char = "Aldric Vane", text = "Brother Aldric", epithet = "of the Cathedral", status = "ic" },
+    { char = "Grukka", hostile = true, rival = grudge("nemesis") },
+  }
+  for i, d in ipairs(samples) do
+    local pl = f.plates[i]
+    pl.name:SetText(d.char)
+    if live then MatchFont(pl.name, live, 0) end
+    local o = Overlay(pl)
+    if d.hostile then
+      if S().platesIcons then DrawFoe(o, pl.name, d.rival, pl.rec) else Restore(pl.rec) end
+    else
+      local def = d.relKey and K.RelationDef and K:RelationDef(d.relKey)
+      Draw(o, pl.name, { text = d.text, epithet = d.epithet, status = d.status,
+        ring = { RingColor(def) }, kin = d.kin, rival = d.rival }, pl.rec)
+    end
+  end
+end
+
+function P:Preview()
+  local f = self.preview
+  if f and f:IsShown() then f:Hide() return end
+  if not f then
+    f = UI.Panel(UIParent)
+    f:SetSize(600, 150)
+    f:SetPoint("CENTER", 0, 120)
+    f:SetFrameStrata("DIALOG")
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    self.preview = f
+    local head = UI.Text(f, "Nameplate preview", "Header", "heading")
+    head:SetPoint("TOPLEFT", 14, -12)
+    local note = UI.Text(f, "Samples drawn the way real plates are, with your settings. Change them in Settings > Nameplates.",
+      "Small", "subtle", 520)
+    note:SetPoint("BOTTOMLEFT", 14, 10)
+    local close = UI.CloseButton(f, true)
+    close:SetPoint("TOPRIGHT", -6, -6)
+    close:SetScript("OnClick", function() f:Hide() end)
+    f.plates = {}
+    for i = 1, 4 do
+      local pl = SamplePlate(f, "", i == 4)
+      pl:SetPoint("BOTTOM", f, "BOTTOMLEFT", 80 + (i - 1) * 146, 34)
+      f.plates[i] = pl
+    end
+  end
+  f:Show()
+  self:PaintPreview()
 end
 
 function P:Update(unit)
@@ -418,6 +535,7 @@ end
 function P:RefreshAll()
   if K:Compat() then return end
   for unit in pairs(self.units) do self:Update(unit) end
+  K.Try("plate preview", self.PaintPreview, self)
 end
 
 local function Added(unit)

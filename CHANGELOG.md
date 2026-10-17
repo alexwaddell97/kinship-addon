@@ -49,6 +49,7 @@ fully (not just /reload): there are new files.
   "(Name)" in a softer grey, and your Kin and rivals get a small mark after
   their name. Rivals are marked on enemy players' plates too, in combat as
   well. Both can be switched off in Settings > Nameplates.
+- `/kin plates` previews nameplates with your settings, no one else needed.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it
