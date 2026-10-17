@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.2.1
+
+Small fixes after 1.2.0. No new files, so a /reload is enough.
 
 ### Fixed
 - The nameplate setting "Show titles" is now "Show epithets": it's the
