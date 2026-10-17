@@ -1,5 +1,5 @@
 -- Kinship RP: roleplay names on friendly player nameplates, with a status dot
--- (IC / LFRP / OOC), an optional title line and your relationship's colour.
+-- (IC / LFRP / OOC), an optional epithet line and your relationship's colour.
 --
 -- The roleplay name sits just above the plate's own name, in roleplay gold,
 -- and the character's name stays where the plate draws it: you can always
@@ -324,7 +324,7 @@ local function Draw(o, anchor, d, rec)
   o.name:Show()
   o.ring:Show()
   o.dot:Show()
-  -- Above the plate's own name (the character name), the title between them.
+  -- Above the plate's own name (the character name), the epithet between them.
   -- The name already holds the character's name: it takes the plate name's
   -- place rather than sitting above it.
   if d.sameName then o:SetPoint("BOTTOM", anchor, "BOTTOM", 0, 0) else o:SetPoint("BOTTOM", anchor, "TOP", 0, 2) end
@@ -709,7 +709,7 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
   card:Toggle("Roleplay nameplates", "Kinship's touches on players' nameplates: roleplay names in gold (or their character name, with any title, if they don't use one), a dot for IC, LFRP or OOC, and the marks below. Off, every plate is left as the game draws it.", opt("plates"))
   card:Toggle("Character name in brackets", "Under the roleplay name, their character's name as \"(Name)\" in a softer grey, where the plate shows it.", opt("platesBrackets"))
   card:Toggle("Kin and rival marks", "A small icon after their name for your Kin and your rivals, in your relationship's or standing's colour. Rivals are marked on enemy players' plates too.", opt("platesIcons"))
-  card:Toggle("Show titles", "Their title in small letters with the name, like \"the Wandering Blade\".", opt("platesTitles"))
+  card:Toggle("Show epithets", "Their epithet in small letters under the name, like \"the Wandering Blade\". Titles like \"Lord\" always show as part of the name.", opt("platesTitles"))
   card:Toggle("Show out-of-character players", "When off, players marked OOC keep their ordinary name.", opt("platesOOC"))
   card:Toggle("Hide in combat", "Plates go back to plain names while you're fighting.", opt("platesCombat"))
   card:Toggle("Colour by relationship", "The ring round their status dot in your relationship's colour: friends, family, rivals and the rest.", opt("platesRelation"))

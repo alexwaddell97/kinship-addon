@@ -1,5 +1,12 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Fixed
+- The nameplate setting "Show titles" is now "Show epithets": it's the
+  epithet line, like "the Wandering Blade". Titles like "Lord" always show
+  as part of the name.
+
 ## 1.2.0
 
 **After updating, restart the game fully** (not just /reload): there are new
@@ -57,7 +64,7 @@ files, and the game only picks up new files when it starts.
   well. Both can be switched off in Settings > Nameplates.
 - Nameplates no longer need a roleplay name: players who go by their
   character's name get it in roleplay gold, with any title like "Lord", and
-  their status dot, title and marks.
+  their status dot, epithet and marks.
 - `/kin plates` previews nameplates with your settings, no one else needed,
   with a key for the status dots and the Kin and rival marks.
 
