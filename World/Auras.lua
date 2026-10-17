@@ -296,7 +296,29 @@ local lastTick, unshared = nil, 0
 
 -- What rest eases: wounds, and exhaustion.
 function A.Mends(e)
-  return e and e.expires and (e.kind == "wound" or e.id == "exhausted") or false
+  return e and e.expires and (e.kind == "wound" or e.id == "exhausted" or e.id == "soaked") or false
+end
+
+-- Effects that come on their own (World/AutoEffects.lua, and Well rested
+-- here): all of them behind one switch, each with its own as well.
+function A.AutoOn(id)
+  local s = S()
+  if s.auraAuto == false or not K:ExtOn("auras") then return false end
+  return not (type(s.autoFx) == "table" and s.autoFx[id] == false)
+end
+
+-- Give yourself one of those, with a toast whose "Not now" takes it off
+-- again. Returns the entry, or nil when it's switched off or already on you.
+function A:AutoGive(id, dur, text)
+  local def = PRESET[id]
+  if not def or not A.AutoOn(id) or self:Find(id) then return nil end
+  local e = self:Apply(def, dur or def.dur, nil, nil, true)
+  if not e then return nil end
+  e.auto = true
+  UI.Toast({ icon = e.icon, round = true, color = A.Color(def.kind), duration = 8,
+    title = def.name, text = text or def.desc,
+    actions = { { label = "Not now", fn = function() A:Remove(e.key, true) end } } })
+  return e
 end
 
 local function RestBox()
@@ -319,13 +341,11 @@ function A:RestFor(spent)
   local now = Now()
   if box.restAt and now - box.restAt > REST_LAPSE then box.rest = 0 end
   box.rest, box.restAt = (box.rest or 0) + spent, now
-  if S().auraAuto ~= false and box.rest >= A.REST_FOR and not self:Find("exhausted") and not self:Find("rested")
-    and now - (box.restedAt or 0) >= A.REST_AGAIN and PRESET.rested then
+  if A.AutoOn("rested") and box.rest >= A.REST_FOR and not self:Find("exhausted") and not self:Find("rested")
+    and now - (box.restedAt or 0) >= A.REST_AGAIN then
     box.rest, box.restedAt = 0, now
-    local e = self:Apply(PRESET.rested, PRESET.rested.dur, nil, nil, true)
-    if e then
-      UI.Toast({ icon = e.icon, round = true, color = A.Color("boon"), duration = 6,
-        title = "Well rested", text = "A good rest has done you good. " .. PRESET.rested.desc })
+    if self:AutoGive("rested", nil, "A good rest has done you good. " .. PRESET.rested.desc) and K.AutoEffects then
+      K.AutoEffects:Rested()
     end
     return
   end
@@ -782,9 +802,6 @@ K:RegisterSettings({ id = "auras", title = "Effects", order = 16,
   card:Toggle("Lock the effects bar", "Stop it moving when dragged.", "auraBarLock")
   card:Toggle("Rest speeds healing", "At an inn or in a city, wounds and exhaustion pass twice as fast.",
     { get = function() return S().auraRest ~= false end, set = function(v) K.db.settings.auraRest = v end })
-  card:Toggle("Effects that come on their own", "Kinship may give you an effect when it fits: half an hour's rest "
-    .. "leaves you Well rested. Off, you only get the effects you take on or accept.",
-    { get = function() return S().auraAuto ~= false end, set = function(v) K.db.settings.auraAuto = v end })
   card:Segments("From other players", {
     { key = "ask", label = "Ask me" }, { key = "group", label = "Trust my group" }, { key = "never", label = "Never" },
   }, function() return S().auraAccept or "ask" end, function(v) K.db.settings.auraAccept = v end, 110)

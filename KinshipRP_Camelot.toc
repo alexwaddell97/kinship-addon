@@ -35,6 +35,7 @@ Pages\PageProfile.lua
 Profile\Persona.lua
 World\Auras.lua
 World\AurasTab.lua
+World\AutoEffects.lua
 Pages\PagePersona.lua
 Profile\Companions.lua
 Pages\PageCompanions.lua

@@ -37,9 +37,14 @@ fully (not just /reload): there are new files.
 - Your Warfront record and latest rivals sit beside the PvP window.
 - A Kinship button in the game menu (Esc).
 - Dice results in chat look like the game's own /roll.
-- Resting at an inn or in a city: wounds and Exhausted pass twice as fast,
-  and half an hour's rest leaves you Well rested. Each has its own switch in
-  Settings > Effects.
+- Resting at an inn or in a city: wounds, Exhausted and Soaked pass twice as
+  fast. Switch it off with Rest speeds healing in Settings > Effects.
+- Effects that come on their own, from what happens in the game: Drunk when
+  the game says you're tipsy, Soaked after a long swim, Bandaged when a real
+  bandage goes on a wound (halving it), Hungry after hours without food,
+  Exhausted after hours without rest, and Well rested after half an hour's
+  rest. Only light ones, each toast has Not now to take it off, and each has
+  its own switch in Settings > Effects that come on their own.
 
 ## 1.1.1
 
