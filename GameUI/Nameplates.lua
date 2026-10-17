@@ -272,8 +272,6 @@ local function Restore(rec)
   local o = rec.plate and P.overlays[rec.plate]
   if o then o:Hide() end
   Unfade(rec)
-  local own = rec.plate and P.selfAnchors and P.selfAnchors[rec.plate]
-  if own then own:GetParent():Hide() end
 end
 
 -- The ring round the status dot: your relationship's colour, if you like.
@@ -424,172 +422,18 @@ function P:Demo()
   self:RefreshAll()
 end
 
----------------------------------------------------------------------------
--- Your own plate. Where the game has a personal nameplate (the bars under
--- your character), your roleplay name goes over it: "Show my own nameplate"
--- turns that plate on, and switching it off puts the game's settings back.
--- Where it hasn't (Forever, so far), Kinship shows a plate of its own over
--- your character, which you can move: Settings > Nameplates > Move my plate.
----------------------------------------------------------------------------
-local SELF_CVARS = { "nameplateShowSelf", "nameplatePersonalShowAlways" }
-local function CVar(name)
-  local get = (C_CVar and C_CVar.GetCVar) or GetCVar
-  local ok, v = pcall(get, name)
-  return ok and v or nil
-end
-local function SetCVarSafe(name, v)
-  local set = (C_CVar and C_CVar.SetCVar) or SetCVar
-  return (pcall(set, name, v))
-end
-
-function P:SelfAvailable() return CVar("nameplateShowSelf") ~= nil end
-
-function P:SetSelfPlate(on)
-  local s = S()
-  if on then
-    if InCombatLockdown() then K:Print("Try again out of combat.") s.platesSelf = false return end
-    if self:SelfAvailable() and type(s.platesSelfWas) ~= "table" then
-      s.platesSelfWas = {}
-      for _, n in ipairs(SELF_CVARS) do s.platesSelfWas[n] = CVar(n) end
-    end
-    if self:SelfAvailable() then
-      for _, n in ipairs(SELF_CVARS) do SetCVarSafe(n, "1") end
-    end
-    s.platesSelf = true
-  else
-    if InCombatLockdown() then K:Print("Try again out of combat.") return end
-    if type(s.platesSelfWas) == "table" then
-      for n, v in pairs(s.platesSelfWas) do if v ~= nil then SetCVarSafe(n, v) end end
-    end
-    s.platesSelfWas = nil
-    s.platesSelf = false
-  end
-  self:RefreshAll()
-end
-
--- A name line of our own to hang yours from: the personal plate has none.
-P.selfAnchors = setmetatable({}, { __mode = "k" })
-local function SelfAnchor(plate)
-  local a = P.selfAnchors[plate]
-  if not a then
-    local holder = CreateFrame("Frame", nil, plate)
-    holder:SetSize(1, 1)
-    local uf = plate.UnitFrame
-    local bar = uf and (uf.healthBar or uf.HealthBar) or uf or plate
-    holder:SetPoint("BOTTOM", bar, "TOP", 0, 4)
-    a = holder:CreateFontString(nil, "OVERLAY")
-    a:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
-    a:SetPoint("BOTTOM", holder, "BOTTOM", 0, 0)
-    P.selfAnchors[plate] = a
-  end
-  return a
-end
-
-local function PaintSelf(rec)
-  local s = S()
-  local plate = rec.plate
-  if not s.platesSelf or not P:Active() then return Restore(rec) end
-  local me = K:Profile()
-  local text = DisplayName(me)
-  if text == "" then return Restore(rec) end
-  local a = SelfAnchor(plate)
-  a:SetText(K:MyName() or "")
-  a:GetParent():Show()
-  Draw(Overlay(plate), a, { text = text, epithet = Plain(me.epithet), status = me.status, ring = { RingColor(nil) } }, rec)
-end
-
--- Is the game showing a personal nameplate right now?
-local function GamePlateShown()
-  local ok, plate = pcall(C_NamePlate.GetNamePlateForUnit, "player")
-  return ok and plate and plate:IsShown() and true or false
-end
-
--- Kinship's own plate, for clients without a personal nameplate: a name line
--- like a plate's, over your character. Out of the mouse's way unless you're
--- moving it.
-function P:FloatPlate()
-  local f = self.float
-  if f then return f end
-  f = CreateFrame("Frame", "KinshipRPOwnPlate", UIParent)
-  f:SetSize(160, 16)
-  f:SetFrameStrata("BACKGROUND")
-  f:SetMovable(true)
-  f:SetClampedToScreen(true)
-  f:EnableMouse(false)
-  f:RegisterForDrag("LeftButton")
-  f:SetScript("OnDragStart", f.StartMoving)
-  f:SetScript("OnDragStop", function(self)
-    self:StopMovingOrSizing()
-    local _, _, _, x, y = self:GetPoint(1)
-    S().platesSelfPos = { x = math.floor(x + 0.5), y = math.floor(y + 0.5) }
-  end)
-  f.hint = f:CreateTexture(nil, "BACKGROUND")
-  f.hint:SetPoint("TOPLEFT", -8, 40)
-  f.hint:SetPoint("BOTTOMRIGHT", 8, -6)
-  f.hint:SetColorTexture(0.37, 0.77, 0.72, 0.25)
-  f.hint:Hide()
-  f.name = f:CreateFontString(nil, "OVERLAY")
-  f.name:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
-  f.name:SetPoint("CENTER")
-  f.rec = { plate = f }
-  local pos = S().platesSelfPos
-  f:SetPoint("CENTER", UIParent, "CENTER", type(pos) == "table" and pos.x or 0, type(pos) == "table" and pos.y or 90)
-  f:Hide()
-  self.float = f
-  return f
-end
-
 -- /kin plates debug: what the plates see, to paste into a bug report.
 function P:Debug()
   local s = S() or {}
   local n = 0
   for _ in pairs(self.units) do n = n + 1 end
-  local f = self.float
   local lines = {
     ("mode %s, active %s, in instance %s, compat %s"):format(tostring(self.mode), tostring(self:Active()),
       tostring(IsInInstance()), tostring(K:Compat())),
-    ("names on plates %s, own plate setting %s, plates tracked %d"):format(tostring(s.plates), tostring(s.platesSelf), n),
-    ("game personal plate: setting %s, showing %s"):format(tostring(CVar("nameplateShowSelf")), tostring(GamePlateShown())),
-    ("Kinship's own plate: %s"):format(f and (f:IsShown() and "showing" or "hidden") or "not made yet"),
+    ("names on plates %s, plates tracked %d, demo %s"):format(tostring(s.plates), n, tostring(self:DemoOn())),
     ("your roleplay name: %s"):format(DisplayName(K:Profile()) ~= "" and DisplayName(K:Profile()) or "(none)"),
   }
   for _, l in ipairs(lines) do K:Print(l) end
-end
-
-function P:MovePlate()
-  local f = self:FloatPlate()
-  local moving = not f.moving
-  f.moving = moving
-  f:EnableMouse(moving)
-  f.hint:SetShown(moving)
-  if moving then
-    if not S().platesSelf then self:SetSelfPlate(true) end
-    K:Print("Drag your plate to sit over your character, then press Move my plate again to lock it.")
-  end
-  self:PaintFloat()
-end
-
-function P:PaintFloat()
-  local s = S()
-  local f = self.float
-  local want = s and s.platesSelf and (f and f.moving or (self:Active() and not GamePlateShown()))
-  if not want then
-    if f then Restore(f.rec); f:Hide() end
-    return
-  end
-  f = self:FloatPlate()
-  local me = K:Profile()
-  local text = DisplayName(me)
-  f.name:SetText(K:MyName() or "")
-  f:Show()
-  if text == "" then Restore(f.rec); return end
-  local live
-  for unit, rec in pairs(self.units) do
-    local a = rec.plate and FindAnchor(unit, rec.plate)
-    if a then live = a break end
-  end
-  if live then MatchFont(f.name, live, 0) end
-  Draw(Overlay(f), f.name, { text = text, epithet = Plain(me.epithet), status = me.status, ring = { RingColor(nil) } }, f.rec)
 end
 
 local function Paint(unit, rec)
@@ -597,11 +441,6 @@ local function Paint(unit, rec)
   if not s then return Restore(rec) end
   local plate = rec.plate
   if not plate or (plate.IsForbidden and plate:IsForbidden()) then return Restore(rec) end
-  local ok, me = pcall(UnitIsUnit, unit, "player")
-  if ok and Safe(me) and me then return PaintSelf(rec) end
-  -- A plate that showed yours before, now someone else's
-  local own = P.selfAnchors[plate]
-  if own then own:GetParent():Hide() end
   if not FriendlyPlayer(unit) then return P.PaintFoe(unit, rec) end
   if not P:Active() then return Restore(rec) end
   local name = GetUnitName(unit, true)
@@ -793,7 +632,6 @@ function P:RefreshAll()
   if K:Compat() then return end
   for unit in pairs(self.units) do self:Update(unit) end
   K.Try("plate preview", self.PaintPreview, self)
-  K.Try("own plate", self.PaintFloat, self)
 end
 
 local function Added(unit)
@@ -831,11 +669,8 @@ end
 local ev = CreateFrame("Frame")
 ev:SetScript("OnEvent", function(_, event, unit)
   if not K.db then return end
-  if event == "NAME_PLATE_UNIT_ADDED" or event == "NAME_PLATE_UNIT_REMOVED" then
-    if event == "NAME_PLATE_UNIT_ADDED" then Added(unit) else Removed(unit) end
-    -- Yours came or went: Kinship's own plate steps in or aside
-    local ok, me = pcall(UnitIsUnit, unit, "player")
-    if ok and Safe(me) and me then C_Timer.After(0, function() K.Try("own plate", P.PaintFloat, P) end) end
+  if event == "NAME_PLATE_UNIT_ADDED" then Added(unit)
+  elseif event == "NAME_PLATE_UNIT_REMOVED" then Removed(unit)
   elseif event == "PLAYER_REGEN_DISABLED" then
     P.inCombat = true
     if S().platesCombat then P:RefreshAll() end
@@ -853,6 +688,12 @@ K:On("LOGIN", function()
                          platesBrackets = true, platesIcons = true }) do
     if s[key] == nil then s[key] = v end
   end
+  -- "Show my own nameplate" is gone: put back any game settings it changed
+  if type(s.platesSelfWas) == "table" then
+    local set = (C_CVar and C_CVar.SetCVar) or SetCVar
+    for n, v in pairs(s.platesSelfWas) do if v ~= nil then pcall(set, n, v) end end
+  end
+  s.platesSelf, s.platesSelfWas, s.platesSelfPos = nil, nil, nil
   if K:Compat() then return end   -- Total RP 3 names the plates while it runs
   P.mode, P.modeLabel = P:DetectMode()
   for _, e in ipairs({ "NAME_PLATE_UNIT_ADDED", "NAME_PLATE_UNIT_REMOVED", "PLAYER_REGEN_DISABLED",
@@ -865,9 +706,6 @@ K:On("LOGIN", function()
     P:Seed()
   end)
 end)
-
--- Your own profile changing repaints your plate
-K:On("PROFILE", function() if K.db and not K:Compat() then K.Try("own plate", P.PaintFloat, P) end end)
 
 -- Kin, relationships and rivals change the marks
 for _, e in ipairs({ "KIN", "RIVALS", "RELATIONS" }) do
@@ -926,11 +764,6 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
   card:Toggle("Show titles", "Their title in small letters with the name, like \"the Wandering Blade\".", opt("platesTitles"))
   card:Toggle("Show out-of-character players", "When off, players marked OOC keep their ordinary name.", opt("platesOOC"))
   card:Toggle("Hide in combat", "Plates go back to plain names while you're fighting.", opt("platesCombat"))
-  card:Toggle("Show my own nameplate", "Your roleplay name over your character, as others with Kinship see it. Uses the game's personal nameplate where there is one, otherwise a plate of Kinship's own: place it with Move my plate.", {
-    get = function() return S().platesSelf and true or false end,
-    set = function(v) P:SetSelfPlate(v) end,
-  })
-  card:Button("Move my plate", function() P:MovePlate() end, 140)
   card:Toggle("Colour by relationship", "The ring round their status dot in your relationship's colour: friends, family, rivals and the rest.", opt("platesRelation"))
   local note = card:Note("", 52)
   card:OnRefresh(function()

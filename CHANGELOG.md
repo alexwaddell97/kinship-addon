@@ -53,10 +53,6 @@ fully (not just /reload): there are new files.
   `/kin plates live` tries them on real players around you for three
   minutes, with made-up names and marks only you can see. The preview has a
   key for the status dots and the Kin and rival marks.
-- Show my own nameplate (Settings > Nameplates): your roleplay name over your
-  character, as others with Kinship see it. Forever has no personal
-  nameplate, so Kinship shows a plate of its own: place it over your
-  character with Move my plate.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it
