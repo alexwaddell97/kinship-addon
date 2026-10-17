@@ -50,6 +50,8 @@ fully (not just /reload): there are new files.
   their name. Rivals are marked on enemy players' plates too, in combat as
   well. Both can be switched off in Settings > Nameplates.
 - `/kin plates` previews nameplates with your settings, no one else needed.
+  `/kin plates live` tries them on real players around you for three
+  minutes, with made-up names and marks only you can see.
 
 ### Fixed
 - The satchel closes with your bags (B) again after you close and reopen it

@@ -804,7 +804,7 @@ SlashCmdList.KINSHIPRP = function(input)
     K.debug = not K.debug
     K:Print("Debug messages " .. (K.debug and "on" or "off"))
   elseif cmd == "plates" and K.Plates then
-    K.Plates:Preview()
+    if rest:lower() == "live" then K.Plates:Demo() else K.Plates:Preview() end
   elseif cmd == "view" then
     K:ViewUnitProfile("target")
   elseif cmd == "status" and K:Compat() then
@@ -828,7 +828,7 @@ SlashCmdList.KINSHIPRP = function(input)
       "/kin effects - wounds, boons and states on your character",
       "/kin roll [2d6+3] - roll dice (or open the dice tray)",
       "/kin scan - find roleplayers nearby on the map",
-      "/kin plates - preview how nameplates look with your settings",
+      "/kin plates [live] - preview nameplates (live: try them on players around you)",
       "/kin share | import - share a profile as text, or bring one in",
       "/kin ignore [name] - hide someone everywhere in Kinship",
       "/kin bar - show or hide the target bar",
