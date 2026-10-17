@@ -1,0 +1,90 @@
+## Interface: 16001
+## Title: Kinship RP
+## Notes: A roleplay addon for WoW Forever: profiles, houses, quests you write yourself, items and RP-PvP. Works with Total RP 3 users.
+## Author: Vaxorus
+## Version: 1.1.0
+## Category: Roleplay
+## X-Website: https://ko-fi.com/vaxorus
+## SavedVariables: KinshipRPDB
+## IconTexture: Interface\AddOns\KinshipRP\Media\Icon
+## AddonCompartmentFunc: KinshipRP_OnCompartmentClick
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\ChatThrottleLib\ChatThrottleLib.lua
+Libs\Chomp\Chomp.xml
+Libs\LibMSP\LibMSP.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibDeflate\lib.xml
+Libs\AceSerializer-3.0\AceSerializer-3.0.xml
+
+Core.lua
+UI.lua
+Net.lua
+ext\Core.lua
+ext\Codec.lua
+ext\Settings.lua
+Markup.lua
+IconPicker.lua
+Journal.lua
+Guide.lua
+Support.lua
+PageProfile.lua
+Persona.lua
+Auras.lua
+AurasTab.lua
+PagePersona.lua
+Companions.lua
+PageCompanions.lua
+PageChronicle.lua
+PageKin.lua
+PageDirectory.lua
+PageHouse.lua
+PageGatherings.lua
+QuestMarkers.lua
+Quests.lua
+PageQuests.lua
+QuestTracker.lua
+QuestAuto.lua
+Warfront.lua
+PageWarfront.lua
+Parley.lua
+Letters.lua
+PageLetters.lua
+Items.lua
+Wardrobe.lua
+Documents.lua
+Trade.lua
+Stashes.lua
+QuestRewards.lua
+ext\Database.lua
+PageInventory.lua
+Satchel.lua
+PageSettings.lua
+Viewer.lua
+Comm.lua
+RPExperience.lua
+Sync.lua
+Chat.lua
+ChatLinks.lua
+Language.lua
+Dice.lua
+Relations.lua
+Safety.lua
+Nameplates.lua
+MapScan.lua
+Automation.lua
+ProfileShare.lua
+Backup.lua
+BugReport.lua
+Import.lua
+Compat.lua
+CharacterPanel.lua
+UnitNames.lua
+TargetBar.lua
+guides\You.lua
+guides\People.lua
+guides\World.lua
+Options.lua
+Integrations.lua

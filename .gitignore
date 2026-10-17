@@ -1,0 +1,12 @@
+# Release builds
+*.zip
+
+# Editor and system files
+.vscode/
+.idea/
+*.bak
+*.orig
+*.tmp
+Thumbs.db
+Desktop.ini
+.DS_Store

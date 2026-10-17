@@ -1,0 +1,20 @@
+<Bindings>
+  <Binding name="KINSHIPRP_PARLEY" header="KINSHIPRP" category="ADDONS" runOnUp="true">
+    KinshipRP_ParleyKey(keystate)
+  </Binding>
+  <Binding name="KINSHIPRP_JOURNAL" header="KINSHIPRP" category="ADDONS">
+    KinshipRP_OnCompartmentClick()
+  </Binding>
+  <Binding name="KINSHIPRP_VIEW" header="KINSHIPRP" category="ADDONS">
+    KinshipRP_ViewKey()
+  </Binding>
+  <Binding name="KINSHIPRP_STATUS" header="KINSHIPRP" category="ADDONS">
+    KinshipRP_StatusKey()
+  </Binding>
+  <Binding name="KINSHIPRP_DICE" header="KINSHIPRP" category="ADDONS">
+    KinshipRP_DiceKey()
+  </Binding>
+  <Binding name="KINSHIPRP_SATCHEL" header="KINSHIPRP" category="ADDONS">
+    KinshipRP_SatchelKey()
+  </Binding>
+</Bindings>
