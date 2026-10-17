@@ -331,7 +331,7 @@ function P:Build()
   if not mf then return nil end
   local f = UI.Panel(mf)
   f:SetSize(220, 172)
-  f:SetPoint("TOPLEFT", mf, "BOTTOMLEFT", 0, -6)   -- below: an opened mail appears to the right
+  f:SetPoint("TOPLEFT", mf, "TOPRIGHT", 6, 0)   -- steps aside while a mail is open there (see MAIL_SHOW)
   f:SetFrameStrata(mf:GetFrameStrata())
   f:SetFrameLevel(mf:GetFrameLevel() + 5)
   self.card = f
@@ -352,13 +352,6 @@ function P:Build()
   f.write = UI.Button(f, "Write a letter", 192, 24)
   f.write:SetPoint("TOPLEFT", f.post, "BOTTOMLEFT", 0, -6)
   f.write:SetScript("OnClick", function() L:Compose("") end)
-  f.read = UI.Button(f, "Read it as a letter", 192, 24)
-  f.read:SetPoint("TOPLEFT", f.write, "BOTTOMLEFT", 0, -6)
-  f.read:SetScript("OnClick", function()
-    local l = P:OpenLetter()
-    if l then L:Open(l) end
-  end)
-  UI.Tooltip(f.read, "Read it as a letter", "Open this letter in Kinship, sealed, as it was sent.")
   return f
 end
 
@@ -391,10 +384,8 @@ function P:Paint()
     f.status:SetText("Nothing waiting to be posted.")
   end
   f.post:SetEnabled(waiting > 0 and not self.busy)
-  f.read:SetShown(self:OpenLetter() ~= nil)
   -- Tall enough for the text and the buttons beneath it
   local h = 44 + math.ceil(f.status:GetStringHeight()) + 10 + 24 + 6 + 24 + 14
-  if f.read:IsShown() then h = h + 30 end
   f:SetHeight(h)
 end
 
@@ -559,9 +550,13 @@ ev:SetScript("OnEvent", function(_, event, ...)
       local om = rawget(_G, "OpenMailFrame")
       if om then
         om:HookScript("OnShow", function()
+          if P.card then P.card:Hide() end   -- the mail opens where the card sits
           C_Timer.After(0, function() K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P) end)
         end)
-        om:HookScript("OnHide", function() if P.sheet then P.sheet:Hide() end end)
+        om:HookScript("OnHide", function()
+          if P.sheet then P.sheet:Hide() end
+          if P.card and P.open then P.card:Show(); P:Paint() end
+        end)
       end
     end
     local f = K.Try("post card", P.Build, P) and P.card
