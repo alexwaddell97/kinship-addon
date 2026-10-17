@@ -22,6 +22,23 @@
   when you seal it and go into theirs when they break the seal. Real gold and
   game items on the Send Mail tab can go with a letter too.
 
+**Kinship in the game's own windows.** After updating, restart the game
+fully (not just /reload): there are new files.
+- Trade: trading with another Kinship player opens a Kinship card beside the
+  trade window. Right-click a Kinship item in your bags to put it in. Both of
+  you see what's offered, and the items move when the trade goes through.
+- Link Kinship items in chat: shift-click one while typing, the same as a
+  real item. Hover the link to see the item, click to pin it. Without
+  Kinship it reads as plain words.
+- A Kinship vault at the bank: thirty slots that open beside the bank.
+  Right-click to put an item in, click to take it out.
+- Friends, the guild roster and /who show roleplay names beside character
+  names, once their profile has arrived.
+- Your Warfront record and latest rivals sit beside the PvP window.
+- A Kinship button in the game menu (Esc).
+- Dice results in chat look like the game's own /roll.
+- Wounds heal twice as fast while you're resting at an inn or in a city.
+
 ## 1.1.1
 
 **After updating, restart the game fully** (not just /reload): Kinship's
