@@ -240,6 +240,65 @@ function SB:Update()
 end
 
 ---------------------------------------------------------------------------
+-- A Kinship button in the game menu (Esc), just below AddOns, the same size
+-- and spacing as its neighbours. Like other addons' menu buttons it stays out
+-- of combat, and the menu's height is worked out afresh each time it's laid out.
+---------------------------------------------------------------------------
+local function GameMenuButton()
+  local menu = rawget(_G, "GameMenuFrame")
+  if not (menu and menu.buttonPool and menu.Layout) then return end
+  local btn = CreateFrame("Button", "KinshipRP_GameMenuButton", menu, "MainMenuFrameButtonTemplate")
+  btn:SetSize(200, 35)
+  btn:SetText("Kinship")
+  btn:SetScript("OnClick", function()
+    HideUIPanel(menu)
+    K.Journal:Toggle()
+  end)
+  btn:Hide()
+
+  local function Place()
+    if InCombatLockdown() or not menu:IsShown() then btn:Hide() return end
+    local list, anchor = {}, nil
+    for b in menu.buttonPool:EnumerateActive() do
+      if b:IsShown() and b:GetTop() then
+        list[#list + 1] = b
+        if b:GetText() == (ADDONS or "AddOns") then anchor = b end
+      end
+    end
+    if #list == 0 then btn:Hide() return end
+    table.sort(list, function(a, b) return a:GetTop() > b:GetTop() end)
+    anchor = anchor or list[#list]
+    -- The gap the menu already leaves between buttons, and its space at the foot
+    local gap = 4
+    for i = 1, #list - 1 do
+      if list[i] == anchor then gap = math.max(0, anchor:GetBottom() - list[i + 1]:GetTop()) break end
+    end
+    local lowest = math.huge
+    for _, b in ipairs(list) do lowest = math.min(lowest, b:GetBottom()) end
+    local foot = lowest - menu:GetBottom()
+    -- Make room below the anchor, then sit in it
+    local w, h = anchor:GetSize()
+    btn:SetSize(w, h)
+    local shift = h + gap
+    local cut = anchor:GetBottom()
+    for _, b in ipairs(list) do
+      if b ~= anchor and b:GetTop() <= cut + 1 then
+        local p, rel, rp, x, y = b:GetPoint(1)
+        if p then b:SetPoint(p, rel, rp, x, y - shift) end
+      end
+    end
+    btn:ClearAllPoints()
+    btn:SetPoint("TOP", anchor, "BOTTOM", 0, -gap)
+    btn:Show()
+    -- Tall enough to hold every button, with the same space at the foot
+    lowest = math.min(lowest - shift, btn:GetBottom() or lowest)
+    menu:SetHeight(menu:GetTop() - lowest + foot)
+  end
+  hooksecurefunc(menu, "Layout", function() C_Timer.After(0, function() K.Try("game menu", Place) end) end)
+  menu:HookScript("OnHide", function() btn:Hide() end)
+end
+
+---------------------------------------------------------------------------
 -- The minimap button (LibDBIcon, so minimap button collectors pick it up):
 -- click for your journal, right-click for Settings.
 ---------------------------------------------------------------------------
@@ -282,6 +341,7 @@ K:On("LOGIN", function()
   SB:Build()
   SB:Update()
   K.Try("minimap button", MinimapButton)
+  K.Try("game menu", GameMenuButton)
 end)
 
 K:On("PROFILE", function() SB:Update() end)

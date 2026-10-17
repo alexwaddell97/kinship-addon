@@ -285,6 +285,33 @@ function A:Expire()
   if changed then Changed() end
 end
 
+-- Rest heals: at an inn or in a city (where rested XP builds) your wounds
+-- mend twice as fast. Each tick takes the time just passed off them once more;
+-- others hear the new times now and then rather than every few seconds.
+local lastTick, unshared = nil, 0
+function A:Rest()
+  local now = Now()
+  local was = lastTick
+  lastTick = now
+  if not (was and K.db and IsResting and IsResting()) then
+    if unshared > 0 then unshared = 0; Changed() end
+    return
+  end
+  local spent = math.min(now - was, 30)
+  if spent <= 0 then return end
+  local any = false
+  for _, e in ipairs(self:Mine()) do
+    if e.kind == "wound" and e.expires then e.expires = e.expires - spent; any = true end
+  end
+  if not any then return end
+  unshared = unshared + spent
+  if unshared >= 60 then unshared = 0; Changed() else K:Fire("AURAS") end
+end
+
+function A.Resting()
+  return IsResting and IsResting() and true or false
+end
+
 ---------------------------------------------------------------------------
 -- Other players' effects
 ---------------------------------------------------------------------------
@@ -333,6 +360,10 @@ function A:ShowTooltip(owner, e, other, anchor)
   if e.note and e.note ~= "" then GameTooltip:AddLine("\"" .. C(e.note) .. "\"", 1, 0.82, 0, true) end
   if e.from then GameTooltip:AddLine("From " .. UI.Escape(Short(e.from)), 0.55, 0.55, 0.55) end
   if e.next and PRESET[e.next] then GameTooltip:AddLine("Then: " .. PRESET[e.next].name, 0.55, 0.55, 0.55) end
+  if not other and e.kind == "wound" and e.expires then
+    if A.Resting() then GameTooltip:AddLine("Mending twice as fast while you rest.", 0.40, 0.80, 0.48, true)
+    else GameTooltip:AddLine("Rest at an inn or in a city to mend twice as fast.", 0.55, 0.55, 0.55, true) end
+  end
   GameTooltip:Show()
 end
 
@@ -695,7 +726,11 @@ K:On("LOGIN", function()
   ev:RegisterEvent("PLAYER_DEAD")
   A:Expire()
   Bar:Update()
-  C_Timer.NewTicker(5, function() if K:ExtOn("auras") then K.Try("auras", A.Expire, A) end end)
+  C_Timer.NewTicker(5, function()
+    if not K:ExtOn("auras") then return end
+    K.Try("auras", A.Rest, A)
+    K.Try("auras", A.Expire, A)
+  end)
 end)
 
 K:RegisterSettings({ id = "auras", title = "Effects", order = 16,

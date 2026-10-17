@@ -200,20 +200,29 @@ function D:Record(res)
   K:Fire("DICE", res)
 end
 
+-- A roll in chat looks like the game's own /roll: the system colour and, for
+-- a single die, the game's own words ("Aldric Vane rolls 14 (1-20)"). Bigger
+-- rolls show what made the total ("rolls 17 (2d6 (5, 6) +3)").
 function D:ChatLine(res)
   local frame = DEFAULT_CHAT_FRAME
   if not frame then return end
-  local dice = UI.Hex(DICE_COLOR)
-  local nat = NaturalColor(res)
-  local total = ("|cff%s%d|r"):format(nat and UI.Hex(nat) or "ffffff", res.total)
-  local who = res.me and "You roll" or ("|cff%s%s|r rolls"):format(dice, res.who)
-  local tail = ""
-  if res.me then
-    if res.to then tail = (" |cff8c8c8c(shared with %s)|r"):format(res.to)
-    elseif res.note then tail = " |cff8c8c8c(only you)|r" end
+  local sys = ChatTypeInfo and ChatTypeInfo.SYSTEM
+  local r, g, b = sys and sys.r or 1, sys and sys.g or 1, sys and sys.b or 0
+  local who = res.who or "?"
+  local line
+  local only = #res.groups == 1 and res.groups[1]
+  if only and only.n == 1 and only.s ~= -1 and (res.mod or 0) == 0 and RANDOM_ROLL_RESULT then
+    line = RANDOM_ROLL_RESULT:format(who, res.total, 1, only.d)
+  else
+    line = ("%s rolls %d (%s)"):format(who, res.total, D.Breakdown(res))
   end
-  frame:AddMessage(("|T%s:14:14:0:0:64:64:5:59:5:59|t %s |cff%s%s|r: %s = %s%s"):format(
-    DICE_ICON, who, dice, res.expr, D.Breakdown(res), total, tail), 0.92, 0.88, 0.78)
+  local nat = Natural(res)
+  if nat == "crit" then line = line .. " Natural 20!" elseif nat == "fumble" then line = line .. " Natural 1." end
+  if res.me then
+    if res.to then line = line .. (" |cff8c8c8c(shared with %s)|r"):format(res.to)
+    elseif res.note then line = line .. " |cff8c8c8c(only you)|r" end
+  end
+  frame:AddMessage(line, r, g, b)
 end
 
 function D:Toast(res)
