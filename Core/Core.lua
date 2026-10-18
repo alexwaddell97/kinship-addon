@@ -27,6 +27,27 @@ K.ART = {
 function K.Art(name) return K.ART[name] or name end
 
 ---------------------------------------------------------------------------
+-- Small helpers every part of Kinship uses
+---------------------------------------------------------------------------
+-- Your saved settings ({} before they've loaded).
+function K.Settings() return K.db and K.db.settings or {} end
+
+-- The server's clock, the same for everyone (effects and their timers).
+function K.Now() return GetServerTime and GetServerTime() or time() end
+
+-- A player's name without their realm. fallback (default "?") stands in for
+-- no name at all.
+function K.Short(name, fallback)
+  if type(name) ~= "string" or name == "" then return fallback or "?" end
+  return Ambiguate and Ambiguate(name, "none") or name
+end
+
+-- Text with colour codes and other escapes taken out, trimmed.
+function K.Plain(s)
+  return strtrim((tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|", "")))
+end
+
+---------------------------------------------------------------------------
 -- Saved data
 ---------------------------------------------------------------------------
 local DEFAULTS = {

@@ -99,7 +99,7 @@ A.OUTCOMES = {
 local HOLD_LABEL = "Hold up the quest"
 
 local function Q() return K.Quests end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function KindIcon(k) return A.KINDS[k] and A.KINDS[k].icon or "Interface\\Icons\\Spell_Nature_Lightning" end
 
 ---------------------------------------------------------------------------
@@ -1206,6 +1206,8 @@ A.Hooks = { OnXP = OnXP, OnHonor = OnHonor, OnSystem = OnSystem, OnLoot = OnLoot
 ---------------------------------------------------------------------------
 local tick = CreateFrame("Frame")
 tick.t, tick.n = 0, 0
+tick:Hide()   -- runs only while Quests are switched on (see LOGIN below)
+K:On("LOGIN", function() tick:SetShown(K:ExtOn("campaigns")) end)
 tick:SetScript("OnUpdate", function(self, elapsed)
   self.t = self.t + elapsed
   if self.t < 1 then return end

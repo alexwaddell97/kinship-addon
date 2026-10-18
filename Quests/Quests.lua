@@ -39,10 +39,7 @@ Q.ICONS = {
 ---------------------------------------------------------------------------
 -- Helpers
 ---------------------------------------------------------------------------
-local function Short(n)
-  if type(n) ~= "string" then return "?" end
-  return Ambiguate and Ambiguate(n, "none") or n
-end
+local Short = K.Short
 Q.Short = Short
 
 -- A string from anywhere (an edit box or the network), trimmed and capped.

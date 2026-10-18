@@ -27,7 +27,7 @@ local CLAIM_AGAIN = 600    -- seconds between a player's reminders
 
 local function Q() return K.Quests end
 local function I() return K.Items end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function Gold() return { 0.95, 0.76, 0.36 } end
 
 ---------------------------------------------------------------------------

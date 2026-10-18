@@ -162,13 +162,6 @@ function C.Token(n)
   return string.char(TOKEN_START + math.floor(n / TOKEN_MOD)) .. string.char(TOKEN_START + n % TOKEN_MOD)
 end
 
-function C.TokenNumber(token)
-  if type(token) ~= "string" or #token ~= 2 then return nil end
-  local a, b = token:byte(1) - TOKEN_START, token:byte(2) - TOKEN_START
-  if a < 0 or a >= TOKEN_MOD or b < 0 or b >= TOKEN_MOD then return nil end
-  return a * TOKEN_MOD + b
-end
-
 function C.NewToken()
   local t = C.Token(nextToken)
   nextToken = nextToken + 1

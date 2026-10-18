@@ -11,7 +11,7 @@ K.Language = L
 
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 
-local function S() return K.db.settings end
+local S = K.Settings
 
 -- Every chat edit box (one shared, or one per window in IM style).
 local function EditBoxes()

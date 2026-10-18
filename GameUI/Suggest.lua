@@ -15,7 +15,7 @@ local UI = K.UI
 
 local ROWS, ROW_H = 6, 30
 
-local function Short(n) return Ambiguate and Ambiguate(n or "", "none") or (n or "") end
+local function Short(n) return K.Short(n, "") end
 local function Clean(s) return strtrim(UI.Clean and UI.Clean(tostring(s or "")) or tostring(s or "")) end
 
 -- Everyone worth suggesting: { name, rp, tag }, best first, each once.

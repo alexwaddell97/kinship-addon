@@ -26,7 +26,7 @@ local CARD_W = CW - 14
 local INNER = CARD_W - 32
 local HALF = (INNER - 24) / 2
 
-local function S() return K.db.settings end
+local S = K.Settings
 
 ---------------------------------------------------------------------------
 -- Search: words, synonyms, typos

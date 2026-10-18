@@ -1,5 +1,13 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Under the hood
+- A tidy-up: unused code removed, and small helpers that were copied into
+  many files now live in one place.
+- Quest checks and quest map pins no longer tick in the background while
+  Quests are switched off.
+
 ## 1.2.1
 
 Small fixes after 1.2.0. No new files, so a /reload is enough.

@@ -36,7 +36,7 @@ local REASONS = {
   expired = "didn't answer in time",
 }
 
-local function Short(n) return I.Short(n) end
+local Short = I.Short
 local function Now() return time() end
 
 -- Outgoing offers are saved, so a reload mid-trade can't duplicate items.

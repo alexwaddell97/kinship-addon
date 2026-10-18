@@ -61,27 +61,6 @@ end
 ---------------------------------------------------------------------------
 -- IDs and full-ID paths
 ---------------------------------------------------------------------------
-local ID_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
--- A new root ID: month, day and time, then five random characters (15 in all).
-function E:NewID()
-  for _ = 1, 50 do
-    local tail = {}
-    for i = 1, 5 do
-      local n = math.random(1, #ID_CHARS)
-      tail[i] = ID_CHARS:sub(n, n)
-    end
-    local id = date("%m%d%H%M%S") .. table.concat(tail)
-    if not self.registry[id] then return id end
-  end
-end
-
--- Child IDs (inner objects, quests, steps): lowercase, anything but letters,
--- digits and _ becomes _.
-function E.ChildID(id)
-  return (tostring(id or ""):lower():gsub("[^%w_]", "_"))
-end
-
 function E.FullID(...)
   local parts = {}
   for i = 1, select("#", ...) do
@@ -102,8 +81,6 @@ function E.RootID(fullID)
   local at = fullID:find(E.SEP, 1, true)
   return at and fullID:sub(1, at - 1) or fullID
 end
-
-function E.Related(a, b) return E.RootID(a) == E.RootID(b) end
 
 -- A root ID we'll store under: printable, no separator, sensibly short.
 function E.ValidRootID(id)
@@ -156,7 +133,6 @@ end
 
 -- An object by full ID, or nil. Where it came from: "my" or "exchange".
 function E:Get(fullID) return self.registry[fullID], self.source[fullID] end
-function E:Exists(fullID) return self.registry[fullID] ~= nil end
 
 -- Calls fn(fullID, obj) for a root and everything inside it.
 function E.Walk(rootID, obj, fn, depth)
@@ -245,17 +221,6 @@ function E.IconTexture(icon)
   if icon:match("^%d+$") then return tonumber(icon) end
   if icon:find("[\\/]") then return icon end
   return "Interface\\Icons\\" .. icon
-end
-
--- Rows and columns of a container, from "5x4" or the SR / SC strings.
-function E.ContainerSize(obj)
-  local co = type(obj) == "table" and type(obj.CO) == "table" and obj.CO or EMPTY
-  local r, c = E.Num(co.SR), E.Num(co.SC)
-  if not (r and c) and type(co.SI) == "string" then
-    local a, b = co.SI:match("^(%d+)x(%d+)$")
-    r, c = tonumber(a), tonumber(b)
-  end
-  return r or 5, c or 4
 end
 
 ---------------------------------------------------------------------------
@@ -362,8 +327,6 @@ for _, id in ipairs({
   "aura_apply", "aura_remove", "aura_duration", "aura_var_set", "aura_run_workflow", "MISSING",
 }) do E.EFFECT_LEVEL[id] = 3 end
 
--- Modules adding effects later (Phase 1 onward) declare their level here.
-function E:SetEffectLevel(id, level) self.EFFECT_LEVEL[id] = level end
 function E.EffectLevel(id) return E.EFFECT_LEVEL[id] or E.SECURITY.LOW end
 
 -- Scan every workflow in a root and its inner objects. Returns the lowest
@@ -525,11 +488,6 @@ function E:Children(rootID)
   table.sort(out, function(a, b) return a.id < b.id end)
   return out
 end
-
--- Extended's "missing" placeholder, for IDs that resolve to nothing.
-E.MISSING = { missing = true, TY = "IT", BA = { IC = "INV_Misc_QuestionMark", NA = "Missing object",
-  DE = "Its details never reached you, or it was removed." } }
-function E:GetOrMissing(fullID) return self.registry[fullID] or self.MISSING end
 
 K:On("LOGIN", function()
   EnsureDB()

@@ -16,7 +16,7 @@ local RW = 696 - LW - 10
 local RIW = RW - 32
 
 local function Refresh() K.Journal:RefreshCurrent() end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function Err(msg)
   if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(msg, 1, 0.25, 0.2) else K:Print(msg) end
 end

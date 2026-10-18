@@ -15,7 +15,7 @@ local ADDONS = {
 local LIST_W, CW, CH = 404, 696, 466
 local NEARBY = 15 * 60
 
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 
 local function AddonLabel(va)
   local first = type(va) == "string" and va:match("^([^/;]+)")

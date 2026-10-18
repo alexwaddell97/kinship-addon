@@ -19,7 +19,7 @@ L.MAX_TITLE, L.MAX_BODY, L.MAX_SIGN = 60, 2000, 60
 local BOX_MAX = 200
 local RECV_LIMIT, RECV_WINDOW = 5, 600
 
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function Str(v, max) return type(v) == "string" and v:sub(1, max) or "" end
 
 -- Seal crests: an icon from the game's icon folder, or Kinship's monogram.

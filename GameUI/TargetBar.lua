@@ -18,7 +18,7 @@ local PORTRAIT = 44
 local GLANCE, BTN = 28, 28
 local NAME_MIN, NAME_MAX = 120, 210
 
-local function S() return K.db and K.db.settings or {} end
+local S = K.Settings
 
 local function TargetName()
   local n = GetUnitName("target", true)

@@ -23,7 +23,7 @@ K.QuestTracker = T
 
 local DEFAULT_ICON = "Interface\\Icons\\INV_Scroll_03"
 
-local function S() return K.db and K.db.settings or {} end
+local S = K.Settings
 local function On() return K.db ~= nil and K:ExtOn("campaigns") and K.Quests ~= nil end
 local function Debug(msg) K:CaughtError("quest tracker", msg) end
 

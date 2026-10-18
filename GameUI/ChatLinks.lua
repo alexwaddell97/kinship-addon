@@ -36,9 +36,7 @@ local function CleanName(n)
   return n
 end
 
-local function Plain(s)
-  return strtrim((tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|", "")))
-end
+local Plain = K.Plain
 
 function L.Token(name) return ("[Kinship: %s]"):format(name) end
 

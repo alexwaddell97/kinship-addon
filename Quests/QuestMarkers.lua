@@ -24,7 +24,7 @@ K.QuestMarkers = QM
 QM.SIZES = { { r = 0, label = "Exact spot" }, { r = 30, label = "Small area" }, { r = 100, label = "Wide area" } }
 QM.PIN_ICON = K.Art("IconPlace")
 
-local function S() return K.db and K.db.settings or {} end
+local S = K.Settings
 
 ---------------------------------------------------------------------------
 -- Levels
@@ -488,6 +488,8 @@ end
 QM.dist = {}   -- [marker] = rounded yards, read by the tracker
 local tick = CreateFrame("Frame")
 tick.a, tick.b = 0, 0
+tick:Hide()   -- runs only while Quests are switched on
+K:On("LOGIN", function() tick:SetShown(K:ExtOn("campaigns")) end)
 tick:SetScript("OnUpdate", function(self, elapsed)
   self.a, self.b = self.a + elapsed, self.b + elapsed
   if self.a >= 0.1 then

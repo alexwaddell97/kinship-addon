@@ -28,7 +28,7 @@ local POSTMARK = "~ Sealed in (%a+) wax(.-)" .. DOT .. "Kinship letter (%x+) ~%s
 local OLD_TAG = "{kinship:(%a+):([%w_%-]+):(%d+)/(%d+):(%x+)}%s*$"
 local MAX_PARTS = 9
 
-local function Short(n) return Ambiguate and Ambiguate(n or "?", "none") or (n or "?") end
+local Short = K.Short
 
 -- How much the game lets a mail hold
 local function Limits()

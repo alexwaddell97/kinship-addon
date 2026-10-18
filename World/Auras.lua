@@ -88,9 +88,9 @@ function A.Color(kind) return A.Kind(kind).color end
 ---------------------------------------------------------------------------
 -- Small helpers
 ---------------------------------------------------------------------------
-local function Now() return GetServerTime and GetServerTime() or time() end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
-local function S() return K.db and K.db.settings or {} end
+local Now = K.Now
+local Short = K.Short
+local S = K.Settings
 
 local function Cut(s, max)
   if K.Items then return K.Items.Cut(s, max) end

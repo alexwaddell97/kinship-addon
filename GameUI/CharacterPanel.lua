@@ -30,8 +30,8 @@ local PAD = 12
 -- The Roleplay tab's icon: a game icon, like the window's own tabs (a masked face, for a persona).
 local TAB_ICON = "Interface\\Icons\\Ability_Rogue_Disguise"
 
-local function S() return K.db.settings end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local S = K.Settings
+local Short = K.Short
 
 local function Next(list, current)
   for i, k in ipairs(list) do if k == current then return list[i % #list + 1] end end

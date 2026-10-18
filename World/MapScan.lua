@@ -16,8 +16,8 @@ local SCAN_COOLDOWN = 8     -- between your own scans
 local REPLY_GAP = 10        -- answer the same person at most this often
 local SCAN_ICON = "Interface\\Icons\\INV_Misc_Spyglass_02"
 
-local function S() return K.db.settings end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local S = K.Settings
+local Short = K.Short
 
 ---------------------------------------------------------------------------
 -- Privacy and your position

@@ -24,7 +24,7 @@ local DONE_WINDOW = 120     -- seconds after a trade in which its items are take
 local REQ = "trade"
 
 local function On() return K.db and K:ExtOn("inventory") end
-local function Short(n) return I.Short(n) end
+local Short = I.Short
 
 local function PartnerName()
   local n = GetUnitName and GetUnitName("NPC", true)

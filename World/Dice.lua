@@ -25,7 +25,7 @@ D.SHARES = {
   { key = "self",   label = "Just me" },
 }
 
-local function S() return K.db.settings end
+local S = K.Settings
 
 ---------------------------------------------------------------------------
 -- Parsing and rolling
@@ -133,7 +133,7 @@ local function TargetName()
   if Safe(n) and type(n) == "string" and n ~= "" then return n end
 end
 
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 
 function D:Share()
   local s = K.db and S().diceShare

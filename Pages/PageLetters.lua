@@ -22,7 +22,7 @@ local STATES = {
   failed      = { label = "Not sent",    color = { 0.90, 0.36, 0.30 } },
 }
 
-local function Short(n) return Ambiguate and Ambiguate(n or "?", "none") or (n or "?") end
+local Short = K.Short
 
 local page   -- the Letters page, once built
 local function SetKey(text)

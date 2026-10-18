@@ -189,14 +189,6 @@ end
 -- and stage, in Kinship's own window. Registered while Total RP 3 loads,
 -- the only time it takes new buttons.
 ---------------------------------------------------------------------------
-function T:HasKinship(unitID)
-  if not unitID then return false end
-  if K.NameKey(unitID) == K.NameKey(K:MyName()) then return true end
-  local e = K.Registry and K.Registry[K.NameKey(unitID) or ""]
-  local p = e and e.profile
-  return p ~= nil and (p.worn ~= nil or p.stage ~= nil or p.stance ~= nil or (p.crest or "") ~= "" or (p.houseMotto or "") ~= "")
-end
-
 local function HookTargetBar()
   local api, addon = rawget(_G, "TRP3_API"), rawget(_G, "TRP3_Addon")
   if not (api and api.RegisterCallback and addon and addon.Events and addon.Events.WORKFLOW_ON_LOADED) then return end

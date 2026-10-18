@@ -25,7 +25,7 @@ local ASK_GAP, ASK_AGAIN, STALE, QUEUE_MAX = 0.6, 300, 600, 40
 local TITLE_COLOR = { 0.56, 0.84, 0.80 }
 local DOT_SHIFT = 6   -- half the dot and its gap, so dot + name sit centred
 
-local function S() return K.db and K.db.settings end
+local S = K.Settings
 
 ---------------------------------------------------------------------------
 -- Who draws friendly plates?

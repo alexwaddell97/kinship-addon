@@ -27,7 +27,7 @@ local SWEEP = 3                            -- seconds a search sweeps for answer
 S.DEFAULT_ICON = "Interface\\Icons\\INV_Box_01"
 local BLIP = { own = { 0.96, 0.80, 0.40 }, other = { 0.40, 0.92, 0.82 }, hidden = { 0.78, 0.55, 0.98 } }
 
-local function Short(n) return I.Short(n) end
+local Short = I.Short
 
 ---------------------------------------------------------------------------
 -- Where you are

@@ -16,7 +16,7 @@ local W_CARD = 236
 local CANDIDATES = { "PVPUIFrame", "PVPFrame", "PVPParentFrame", "HonorFrame" }
 
 local function On() return K.db and K.db.settings.pvpCard ~= false and K.War end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function When(r) return math.max(r.last and r.last.t or 0, r.first and r.first.t or 0) end
 
 local function Rivals()

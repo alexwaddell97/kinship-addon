@@ -66,7 +66,7 @@ function W:IsRival(r)
   return r and ((r.wins or 0) + (r.losses or 0) + (r.draws or 0) + (r.parleys or 0) > 0 or r.grudge or (r.note or "") ~= "")
 end
 
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 
 -- Learn what we can about a player from a live unit.
 local function UnitInfo(unit)

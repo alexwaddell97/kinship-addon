@@ -87,10 +87,7 @@ function I.Num(v)
 end
 local Num = I.Num
 
-function I.Short(name)
-  if type(name) ~= "string" or name == "" then return "someone" end
-  return Ambiguate and Ambiguate(name, "none") or name
-end
+function I.Short(name) return K.Short(name, "someone") end
 
 function I.Error(msg)
   if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(msg, 1, 0.25, 0.2) else K:Print(msg) end

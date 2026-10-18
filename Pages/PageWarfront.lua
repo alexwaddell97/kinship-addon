@@ -13,7 +13,7 @@ local BODY_H = CH - TOP
 local LEFT_W = 300
 local FACTION_COLOR = { Horde = { 0.88, 0.30, 0.26 }, Alliance = { 0.30, 0.55, 0.92 } }
 
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 
 local function ClassName(class)
   return class and (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[class] or class:lower()) or nil

@@ -22,9 +22,7 @@ local ASK_PER_MINUTE = 12
 
 local function On() return K.db and K.db.settings.listNames ~= false end
 
-local function Plain(s)
-  return strtrim((tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|", "")))
-end
+local Plain = K.Plain
 
 -- Ask once a session for the profile of someone online we haven't met.
 local function Ask(name)

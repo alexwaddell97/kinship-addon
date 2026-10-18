@@ -47,7 +47,7 @@ local function Key(name)
   return key or name:lower()
 end
 
-local function Short(name) return Ambiguate and Ambiguate(name, "none") or name end
+local Short = K.Short
 
 local function RefreshJournal()
   local J = K.Journal

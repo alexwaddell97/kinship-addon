@@ -35,7 +35,7 @@ local EMPTY = {
   house = "No house gatherings yet. A family dinner, a feud to settle, a wedding: post one for your kin.",
   public = "Nothing nearby yet. Gatherings posted by Kinship users around you appear here, and more arrive as you meet people.",
 }
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 
 -- Dates: a gathering's day is noon on that day (see Sync.lua), so it reads
 -- as the same day almost everywhere.

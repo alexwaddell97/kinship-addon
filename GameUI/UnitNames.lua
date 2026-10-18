@@ -18,7 +18,7 @@ local Safe = K.Safe
 local N = {}
 K.UnitNames = N
 
-local function S() return K.db and K.db.settings or {} end
+local S = K.Settings
 
 -- EllesmereUI's frames by unit, and the game's own name strings by unit.
 local EUI_FRAMES = {
@@ -38,9 +38,7 @@ end
 -- Which names to swap
 ---------------------------------------------------------------------------
 -- Plain text: no colour codes or other escapes, so the frame keeps its look.
-local function Plain(s)
-  return strtrim((tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|", "")))
-end
+local Plain = K.Plain
 
 -- The roleplay name for a unit, or nil to leave the frame alone.
 local function RPName(unit)

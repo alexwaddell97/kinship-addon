@@ -44,8 +44,8 @@ AE.LIST = {
   { id = "rested",    label = "Well rested", desc = "After half an hour's rest at an inn or in a city." },
 }
 
-local function Now() return GetServerTime and GetServerTime() or time() end
-local function S() return K.db and K.db.settings or {} end
+local Now = K.Now
+local S = K.Settings
 
 -- Counters, per character: seconds swimming, unfed and awake.
 local function Box()

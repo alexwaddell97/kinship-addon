@@ -43,7 +43,7 @@ local ICON = "Interface\\Icons\\INV_Misc_Bag_08"
 local STASH_ICON = "Interface\\Icons\\INV_Box_02"
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 
-local function S() return K.db.settings end
+local S = K.Settings
 local function On() return K:ExtOn("inventory") end
 local function EUI() return _G.EllesmereUI end
 
@@ -981,7 +981,7 @@ local function BuildPane(look)
   return p
 end
 
-local function Short(n) return I.Short and I.Short(n) or tostring(n or "?") end
+local Short = I.Short
 
 function SA:RefreshPane()
   local p, St = self.pane, K.Stashes

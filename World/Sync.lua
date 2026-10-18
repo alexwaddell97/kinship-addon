@@ -46,7 +46,7 @@ local HOUSE_FANOUT = 12          -- house members whispered per summary
 
 local function Key(name) return K.NameKey(name) end
 local function MyKey() return Key(K:MyName()) end
-local function Short(n) return Ambiguate and Ambiguate(n, "none") or n end
+local Short = K.Short
 local function S_() return K.db and K.db.settings or {} end
 
 function S.GuildName()
