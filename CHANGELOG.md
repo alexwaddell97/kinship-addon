@@ -1,5 +1,13 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Fixed
+- Logging out from the game menu (Esc) no longer says Kinship was blocked
+  from an action. The Kinship button now sits just below the menu as a button
+  of its own, in the menu's own style, and Kinship doesn't touch the menu's
+  buttons at all, so they stay the game's.
+
 ## 1.2.2
 
 Fixes after 1.2.1. No new files, so a /reload is enough.

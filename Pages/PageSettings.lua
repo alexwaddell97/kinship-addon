@@ -562,7 +562,7 @@ K:RegisterSettings({ id = "general", title = "General", order = 90, keywords = "
     get = function() return not (K.db.minimap and K.db.minimap.hide) end,
     set = function(v) K:SetMinimapButton(v) end,
   })
-  card:Toggle("Game menu button", "A Kinship button in the game menu (Esc), under AddOns.", {
+  card:Toggle("Game menu button", "A Kinship button just below the game menu (Esc), in the same style as its buttons.", {
     get = function() return K.db.settings.gameMenuButton ~= false end,
     set = function(v) K.db.settings.gameMenuButton = v end,
   })

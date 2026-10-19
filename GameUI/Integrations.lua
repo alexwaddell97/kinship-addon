@@ -240,26 +240,123 @@ function SB:Update()
 end
 
 ---------------------------------------------------------------------------
--- A Kinship button in the game menu (Esc), just below AddOns. The menu adds
--- it as one of its own buttons, so the game lays it out and sizes the menu,
--- and whatever skins the menu (EllesmereUI, GW2 UI, ElvUI...) styles it like
--- the rest. Nothing of the menu's is moved or resized by Kinship.
+-- A Kinship button with the game menu (Esc), just below it. It's Kinship's
+-- own button: it only watches the menu open and close, and never adds to,
+-- moves or resizes anything of the menu's. The menu's buttons log you out,
+-- open Edit Mode and the like, and anything an addon does inside the menu
+-- can get those blocked as if the addon had pressed them.
+-- When it shows, it takes on the look of one of the menu's own buttons (its
+-- textures, size and font, read but never changed), so it matches the game's
+-- menu or whatever skins it: EllesmereUI, GW2 UI, ElvUI...
 ---------------------------------------------------------------------------
+-- One of the menu's own buttons to take the look from (AddOns if it's there).
+local function MenuSample(menu)
+  local pool, pick = menu.buttonPool, nil
+  if not (pool and pool.EnumerateActive) then return nil end
+  for b in pool:EnumerateActive() do
+    if b:IsShown() then
+      pick = pick or b
+      if b:GetText() == (ADDONS or "AddOns") then return b end
+    end
+  end
+  return pick
+end
+
+-- Copy a frame's visible textures onto our own (dst), placed the same way.
+local function CopyTextures(src, dst, list)
+  for _, r in ipairs({ src:GetRegions() }) do
+    if r:IsObjectType("Texture") and r:IsShown() and r:GetAlpha() > 0.01 then
+      local layer, sub = r:GetDrawLayer()
+      local t = dst:CreateTexture(nil, layer, nil, sub)
+      local atlas = r.GetAtlas and r:GetAtlas()
+      local file = r:GetTexture()
+      if atlas then
+        t:SetAtlas(atlas)
+      elseif file then
+        t:SetTexture(file)
+        t:SetTexCoord(r:GetTexCoord())
+      else
+        -- A plain colour: the game can't say which, so a thin line reads as an
+        -- edge and anything bigger as the button's dark face
+        local rw, rh = r:GetSize()
+        if (rw and rw <= 2) or (rh and rh <= 2) then t:SetColorTexture(1, 1, 1, 0.18)
+        else t:SetColorTexture(0.08, 0.08, 0.08, 0.85) end
+      end
+      if atlas or file then t:SetVertexColor(r:GetVertexColor()) end
+      t:SetAlpha(r:GetAlpha())
+      if r.GetBlendMode then t:SetBlendMode(r:GetBlendMode()) end
+      for i = 1, r:GetNumPoints() do
+        local point, _, relPoint, x, y = r:GetPoint(i)
+        t:SetPoint(point, dst, relPoint, x, y)
+      end
+      if r:GetNumPoints() == 0 then t:SetAllPoints(dst) end
+      if r:GetNumPoints() < 2 then t:SetSize(r:GetSize()) end
+      list[#list + 1] = t
+    end
+  end
+end
+
 local function GameMenuButton()
   local menu = rawget(_G, "GameMenuFrame")
-  if not (menu and type(menu.AddButton) == "function") then return end
-  local adding = false
-  hooksecurefunc(menu, "AddButton", function(self, text)
-    if adding or text ~= (ADDONS or "AddOns") then return end
-    if K.db.settings.gameMenuButton == false then return end
-    adding = true
-    local ok, err = pcall(self.AddButton, self, "Kinship", function()
-      HideUIPanel(self)
-      K.Journal:Toggle()
-    end)
-    adding = false
-    if not ok then K:CaughtError("game menu", err) end
+  if not (menu and menu.HookScript) then return end
+  local btn = CreateFrame("Button", "KinshipRP_GameMenuButton", UIParent)
+  btn:Hide()
+  btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  btn.text:SetPoint("CENTER")
+  btn.text:SetText("Kinship")
+  btn.hl = btn:CreateTexture(nil, "HIGHLIGHT")
+  btn.hl:SetAllPoints()
+  btn.hl:SetColorTexture(1, 1, 1, 0.08)
+  btn.look = {}
+  btn:SetScript("OnClick", function()
+    if not InCombatLockdown() then HideUIPanel(menu) end
+    K.Journal:Toggle()
   end)
+
+  -- Take on the look of the menu's own button, as it is right now.
+  local function Dress()
+    local sample = MenuSample(menu)
+    for _, t in ipairs(btn.look) do t:Hide() end
+    wipe(btn.look)
+    local w, h = 200, 35
+    if sample then
+      w, h = sample:GetSize()
+      CopyTextures(sample, btn, btn.look)
+      -- A skin's own frame inside the button (an inset with a border, say)
+      for _, child in ipairs({ sample:GetChildren() }) do
+        if child:IsShown() and child:GetAlpha() > 0.01 then
+          local holder = CreateFrame("Frame", nil, btn)
+          holder:SetAllPoints(btn)
+          holder:SetFrameLevel(btn:GetFrameLevel())
+          CopyTextures(child, holder, btn.look)
+          btn.look[#btn.look + 1] = holder
+        end
+      end
+      local fs = sample:GetFontString()
+      if fs then
+        local face, size, flags = fs:GetFont()
+        if face then btn.text:SetFont(face, size, flags or "") end
+        btn.text:SetTextColor(fs:GetTextColor())
+        btn.text:SetShadowOffset(fs:GetShadowOffset())
+      end
+    end
+    btn:SetSize(w, h)
+    btn:ClearAllPoints()
+    btn:SetPoint("TOP", menu, "BOTTOM", 0, -6)
+    btn:SetFrameStrata(menu:GetFrameStrata())
+    btn:SetFrameLevel(menu:GetFrameLevel() + 5)
+  end
+
+  menu:HookScript("OnShow", function()
+    if K.db.settings.gameMenuButton == false then btn:Hide() return end
+    -- A moment later: the menu has its buttons, and any skin has dressed them
+    C_Timer.After(0, function()
+      if not menu:IsShown() then return end
+      K.Try("game menu", Dress)
+      btn:Show()
+    end)
+  end)
+  menu:HookScript("OnHide", function() btn:Hide() end)
 end
 
 ---------------------------------------------------------------------------
