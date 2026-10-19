@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.2.3
+
+Fixes after 1.2.2. No new files, so a /reload is enough.
 
 ### Fixed
 - Logging out from the game menu (Esc) no longer says Kinship was blocked
