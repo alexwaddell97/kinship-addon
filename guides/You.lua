@@ -81,7 +81,7 @@ K:RegisterGuide({
     { title = "Make a start",
       text = "Begin with your Profile: a name, a few details and a line about what you're doing now go a long way. "
         .. "Every page has its own short tour the first time you open it. Come back any time with /kin, the "
-        .. "minimap button, or Kinship in the game menu (Esc)." },
+        .. "minimap button or a key of your own (Key Bindings > AddOns > Kinship RP)." },
   },
 })
 

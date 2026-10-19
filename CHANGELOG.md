@@ -4,9 +4,8 @@
 
 ### Fixed
 - Logging out from the game menu (Esc) no longer says Kinship was blocked
-  from an action. The Kinship button now sits just below the menu as a button
-  of its own, in the menu's own style, and Kinship doesn't touch the menu's
-  buttons at all, so they stay the game's.
+  from an action. The Kinship button in the game menu is gone: open Kinship
+  with /kin, the minimap button or a key binding.
 
 ## 1.2.2
 
