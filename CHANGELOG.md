@@ -1,5 +1,13 @@
 # Kinship RP changelog
 
+## 1.2.4
+
+A fix after 1.2.3. No new files, so a /reload is enough.
+
+### Fixed
+- Looting could raise an error in the quest checks when the game kept your
+  target's details hidden from addons. Kinship now leaves those alone.
+
 ## 1.2.3
 
 Fixes after 1.2.2. No new files, so a /reload is enough.

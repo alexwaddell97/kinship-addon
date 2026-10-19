@@ -1096,7 +1096,7 @@ end
 local function OnSystem(msg)
   -- Both duel lines are written with (winner, loser), in whatever order the language puts them.
   local args = Parse(msg, Patterns("duel", { "DUEL_WINNER_KNOCKOUT", "DUEL_WINNER_RETREAT" }, true))
-  if args and args[1] and args[2] and Short(args[1]) == UnitName("player") then A:Signal("duel", Short(args[2])) end
+  if args and args[1] and args[2] and K:IsMe(args[1]) and Safe(args[2]) then A:Signal("duel", Short(args[2])) end
 end
 
 ---------------------------------------------------------------------------
@@ -1189,7 +1189,14 @@ local function OnLoot()
         if Safe(g) and type(g) == "string" and not seen[g] then
           seen[g] = true
           local n = names[g]
-          if not n and UnitGUID("target") == g then n = UnitName("target") end
+          if not n then
+            -- The target's ID can come back hidden from addons: only compare one we can read
+            local tg = UnitGUID("target")
+            if Safe(tg) and tg == g then
+              local tn = UnitName("target")
+              if Safe(tn) then n = tn end
+            end
+          end
           if n and Safe(n) then A:Signal("loot", n, g) end
         end
       end
