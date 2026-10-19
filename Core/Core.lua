@@ -391,7 +391,7 @@ K.CONSENT_VALUES = {
 }
 
 local function NewProfile()
-  local _, surname = K.SplitName(K:PlayerName())
+  local _, surname = K.SplitName(K:CharacterName())   -- the whole name: the surname is the default house
   return {
     rpName = "", prefix = "", nickname = "",   -- full roleplay name, short title ("Lord"), nickname
     epithet = "", glance = "", pronouns = "", age = "", height = "", home = "",
@@ -407,7 +407,7 @@ K.BlankProfile = NewProfile
 function K:DisplayName(p)
   p = p or self:Profile()
   local n = strtrim(p.rpName or "")
-  if n == "" then n = self:PlayerName() end
+  if n == "" then n = self:CharacterName() end   -- the game's whole name, surname and all
   local prefix = strtrim(p.prefix or "")
   return prefix ~= "" and (prefix .. " " .. n) or n
 end

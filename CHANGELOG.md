@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Fixed
+- With no roleplay name set, your profile, tooltips and nameplates now use
+  your whole character name, surname and all, not just the first name. New
+  profiles also take your surname as the house again. (#1)
+- The Kinship button in the game menu is now one of the menu's own buttons,
+  so UI overhauls like GW2 UI, ElvUI and EllesmereUI style and place it like
+  the rest, and nothing else in the menu moves. (#2)
+
 ### Under the hood
 - A tidy-up: unused code removed, and small helpers that were copied into
   many files now live in one place.

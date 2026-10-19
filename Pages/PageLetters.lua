@@ -74,7 +74,7 @@ end
 
 local function DefaultSign()
   local house = K:HouseName()
-  return K:PlayerName() .. (house ~= "" and (", of House " .. house) or "")
+  return K:CharacterName() .. (house ~= "" and (", of House " .. house) or "")
 end
 
 K:RegisterPage({

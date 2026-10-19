@@ -143,7 +143,7 @@ function C:Publish()
   local compat = K:Compat()
   local p, my = K:Profile(), compat and {} or msp.my
   my.VA = "KinshipRP/" .. K.VERSION
-  my.NA = Clean(p.rpName) or K:PlayerName()
+  my.NA = Clean(p.rpName) or K:CharacterName()
   my.PX = Clean(p.prefix)
   my.NI = Clean(p.nickname)
   my.RA = Clean(p.race)
