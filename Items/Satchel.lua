@@ -1230,9 +1230,17 @@ end
 ---------------------------------------------------------------------------
 local function BagsShown()
   if not (On() and S().satchelWithBags ~= false) then return end
-  C_Timer.After(0, function()   -- once the bags have their final size and place
-    HookSearch()
-    if OpenBags() then SA:Open(true) end
+  HookSearch()
+  -- Straight away, beside the bags, if they already have their place...
+  local bags = OpenBags()
+  if bags and bags:GetLeft() and not SA:Visible() then K.Try("satchel", SA.Open, SA, true) end
+  -- ...and again a frame later, once they have their final size and place
+  C_Timer.After(0, function()
+    if OpenBags() then
+      if not SA:Visible() then SA:Open(true)
+      elseif SA.frame and SA.frame:IsShown() then SA:Dock()
+      elseif SA.strip and SA.strip:IsShown() then SA:DockStrip() end
+    end
     SA:PlaceButton()
   end)
 end
@@ -1468,7 +1476,7 @@ follow:SetScript("OnUpdate", function(_, elapsed)
   end
   if not b:IsShown() then
     since = since + elapsed
-    if since > 0.25 then since = 0; SA:PlaceButton() end
+    if since >= 0.05 then since = 0; SA:PlaceButton() end   -- as soon as the bar is back
     return
   end
   local a = b.hover and 1 or bar:GetEffectiveAlpha()

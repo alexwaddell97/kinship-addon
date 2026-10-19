@@ -6,6 +6,8 @@
 - Logging out from the game menu (Esc) no longer says Kinship was blocked
   from an action. The Kinship button in the game menu is gone: open Kinship
   with /kin, the minimap button or a key binding.
+- The satchel opens with your bags at once, instead of a moment after, and
+  its button by the bag bar comes back as soon as the bar does.
 
 ## 1.2.2
 
