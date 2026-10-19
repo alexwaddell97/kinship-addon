@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.2.2
+
+Fixes after 1.2.1. No new files, so a /reload is enough.
 
 ### Fixed
 - With no roleplay name set, your profile, tooltips and nameplates now use
