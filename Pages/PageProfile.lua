@@ -103,15 +103,18 @@ K:RegisterPage({
       return f
     end
     local L, R, FW, HW = 12, 162, 294, 144
-    add("epithet",   "Epithet  (e.g. \"the Wanderer\")", L, -38,  FW, 40)
-    add("glance",    "At a glance",                      L, -80,  FW, 255)
+    add("epithet",   "Epithet  (e.g. \"the Wanderer\")", L, -38,  FW, 40):Info("Epithet",
+      "A short line that follows your name, like \"the Wanderer\" or \"Captain of the Watch\". "
+      .. "It shows under your name on your tooltip, your profile and roleplay nameplates.")
+    add("glance",    "At a glance",                      L, -80,  FW, 255):Info("At a glance",
+      "A sentence or two on what people notice first about your character. It sits near the top of your profile.")
     add("pronouns",  "Pronouns",                         L, -122, HW, 20)
     add("age",       "Age",                              R, -122, HW, 20)
     add("height",    "Height",                           L, -164, HW, 20)
     add("home",      "Home",                             R, -164, HW, 40)
-    local house = add("house", "House (family name)",    L, -206, FW, 30)
-    UI.Tooltip(house.edit, "House", "Characters who share a family name can belong to the same house. " ..
-      "This starts as your character's last name, but you can change it.")
+    add("house", "House (family name)",                  L, -206, FW, 30):Info("House",
+      "Characters who share a family name can belong to the same house. "
+      .. "This starts as your character's last name, but you can change it.")
     add("motto",     "Motto",                            L, -248, FW, 90)
     add("currently", "Currently",                        L, -290, FW, 255)
     local hint = UI.Text(left, "\"Currently\" shows on your tooltip. Use it for what your character is doing right now.",
@@ -152,11 +155,16 @@ K:RegisterPage({
       fields[key] = f.edit
       return f
     end
-    addId("rpName",     "Full name  (leave empty to use your character's)", 0, 0,    IW, 60)
-    addId("prefix",     "Title  (e.g. \"Lord\", \"Sergeant\")",              0, -42,  HW2, 30)
-    addId("nickname",   "Nickname",                                          176, -42, HW2, 40)
+    addId("rpName",     "Full name  (leave empty to use your character's)", 0, 0,    IW, 60):Info("Full name",
+      "The name other players see, surname and all. Leave it empty and your character's own name is used.")
+    addId("prefix",     "Title  (e.g. \"Lord\", \"Sergeant\")",              0, -42,  HW2, 30):Info("Title",
+      "A word that goes in front of your name, like \"Lord\" or \"Sergeant\". "
+      .. "For a line after your name, use Epithet.")
+    addId("nickname",   "Nickname",                                          176, -42, HW2, 40):Info("Nickname",
+      "What friends call your character. It shows on your profile and never replaces your name.")
     addId("race",       "Race",                                              0, -84,  HW2, 40)
-    addId("class",      "Class or calling",                                  176, -84, HW2, 40)
+    addId("class",      "Class or calling",                                  176, -84, HW2, 40):Info("Class or calling",
+      "What your character does in the story, if that isn't their class, like \"Herbalist\" or \"Sellsword\".")
     addId("eyes",       "Eyes",                                              0, -126, HW2, 40)
     addId("birthplace", "Birthplace",                                        176, -126, HW2, 60)
     addId("ooc",        "Out of character note",                             0, -168, IW, 255)

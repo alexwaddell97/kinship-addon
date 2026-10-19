@@ -1,5 +1,12 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Changed
+- Profile fields that weren't obvious now have a small (i) beside them. Hover
+  it to see what the field is for and where it shows: Epithet, At a glance,
+  House, Full name, Title, Nickname, and Class or calling.
+
 ## 1.2.4
 
 A fix after 1.2.3. No new files, so a /reload is enough.
