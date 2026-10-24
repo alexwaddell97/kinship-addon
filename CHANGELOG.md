@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.2.5
+
+A small fix and some help text. No new files, so a /reload is enough.
 
 ### Fixed
 - Every /reload raised a "Binding header KINSHIPRP was attempted to be loaded
