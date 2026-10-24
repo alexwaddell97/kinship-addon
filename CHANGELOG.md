@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+- Every /reload raised a "Binding header KINSHIPRP was attempted to be loaded
+  more than once" warning (five of them). The Kinship key bindings now set
+  their header once.
+
 ### Changed
 - Profile fields that weren't obvious now have a small (i) beside them. Hover
   it to see what the field is for and where it shows: Epithet, At a glance,
