@@ -1,6 +1,6 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.3.0
 
 There's a new file (Groups), so restart the game rather than /reload.
 
