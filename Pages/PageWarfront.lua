@@ -1,6 +1,6 @@
 -- Kinship RP: Warfront page. Three tabs:
 --   Rivals            - everyone you've clashed with, and where it stands
---   Stance & consent  - how you like PvP stories to go (shared with others)
+--   Stance            - how you like PvP stories to go, and your boundaries (shared with others)
 --   Parley            - the emotes that cross the faction line
 
 local ADDON, ns = ...
@@ -237,7 +237,7 @@ local function RefreshRivals(tab)
 end
 
 ---------------------------------------------------------------------------
--- Stance & consent
+-- Stance (and a look at your boundaries, which live on your profile)
 ---------------------------------------------------------------------------
 local function BuildStance(tab)
   local left = UI.Panel(tab)
@@ -301,40 +301,39 @@ local function BuildStance(tab)
   right:SetPoint("TOPLEFT", left, "TOPRIGHT", 10, 0)
   right:SetPoint("BOTTOMRIGHT")
   local rw = CW - 350 - 32
-  local rh = UI.Section(right, "Consent")
+  local rh = UI.Section(right, "Boundaries")
   rh:SetPoint("TOPLEFT", 21, -15)
-  local rintro = UI.Text(right, "What your character can go through in a story with you. \"Ask\" means check with you out of character first.",
-    "Small", "subtle", rw)
+  local rintro = UI.Text(right, "What your character can go through in a story with you. "
+    .. "They're part of your profile, so they apply to every story, not only PvP.", "Small", "subtle", rw)
   rintro:SetPoint("TOPLEFT", 16, -38)
   rintro:SetSpacing(2)
 
+  -- What you've set, at a glance; changing it is on your profile
   tab.consent = {}
-  local vitems = {}
-  for _, v in ipairs(K.CONSENT_VALUES) do vitems[#vitems + 1] = { key = v.key, label = v.label, color = v.color } end
   for i, f in ipairs(K.CONSENT) do
-    local y = -82 - (i - 1) * 52
+    local y = -82 - (i - 1) * 40
     local l = UI.Text(right, f.label, "Body", "heading")
     l:SetPoint("TOPLEFT", 16, y)
-    local dsc = UI.Text(right, f.desc, "Small", "subtle", rw - 150)
-    dsc:SetPoint("TOPLEFT", l, "BOTTOMLEFT", 0, -3)
-    local seg = UI.Segments(right, vitems, 46, function(v) K:SetConsent(f.key, v) end)
-    seg:SetPoint("TOPRIGHT", -16, y + 2)
-    if K:Compat() then for _, b in ipairs(seg.buttons) do b:Disable() end end   -- Total RP 3's, shown here
-    seg.field = f.key
-    tab.consent[i] = seg
+    local v = UI.Chip(right)
+    v:SetPoint("TOPRIGHT", -16, y + 2)
+    v.field = f.key
+    tab.consent[i] = v
   end
-  local foot = UI.Text(right, K:Compat()
-    and "Total RP 3 shares these as your RP style while it runs, so set them there. Kinship shows what it shares."
-    or ("Shared through the standard roleplay fields, so Total RP 3, MyRolePlay and XRP users see it too. "
-    .. "Players of the other faction only receive it if they're your Battle.net friend."), "Small", "subtle", rw)
-  foot:SetPoint("BOTTOMLEFT", 16, 14)
-  foot:SetSpacing(2)
+  local edit = UI.Button(right, "Change in your profile", 170, 26)
+  edit:SetPoint("TOPLEFT", 16, -82 - #K.CONSENT * 40 - 6)
+  edit:SetScript("OnClick", function() K:OpenProfileSection("boundaries") end)
+  tab.editBounds = edit
 end
 
 local function RefreshStance(tab)
   for _, b in ipairs(tab.stances) do b:Paint() end
   local consent = K:Profile().consent or {}
-  for _, seg in ipairs(tab.consent) do seg:Select(consent[seg.field]) end
+  local by = {}
+  for _, v in ipairs(K.CONSENT_VALUES) do by[v.key] = v end
+  for _, chip in ipairs(tab.consent) do
+    local v = by[consent[chip.field]]
+    chip:Set(v and v.label or "Not set", v and v.color or K:Theme().subtle)
+  end
 end
 
 ---------------------------------------------------------------------------
@@ -429,7 +428,7 @@ K:RegisterPage({
 
   build = function(c)
     c.tab = 1
-    c.tabs = UI.TabBar(c, { "Rivals", "Stance & consent", "Parley" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabs = UI.TabBar(c, { "Rivals", "Stance", "Parley" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
     c.tabs:SetPoint("TOPLEFT", -10, 2)
     c.stanceChip = UI.Chip(c, "Small", true)
     c.stanceChip:SetPoint("TOPRIGHT", 0, -4)

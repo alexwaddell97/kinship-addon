@@ -122,7 +122,7 @@ local function SavePreset(name)
   if name == "" then return end
   local existed = K.db.glancePresets[name] ~= nil
   if K.Persona:SavePreset(name) then
-    UI.Toast({ icon = K.Art("IconNote"), title = existed and "Preset updated" or "Preset saved",
+    UI.Toast({ icon = K.Art("IconNote"), title = existed and "Set updated" or "Set saved",
       text = ("\"%s\" keeps these glances for any of your characters."):format(name), duration = 4 })
   end
 end
@@ -140,28 +140,69 @@ StaticPopupDialogs["KINSHIPRP_GLANCE_PRESET"] = {
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
 
+local function SaveGlance(g)
+  local ok, replaced = P:SaveToLibrary(g)
+  if ok then
+    Refresh()
+    UI.Toast({ icon = K.Art("IconNote"), title = replaced and "Saved glance updated" or "Glance saved",
+      text = "Add it to any profile, on any character, from Saved glances.", duration = 4 })
+  elseif g and P.HasContent(g) then
+    K:Print(("Your saved glances are full (%d). Remove one to make room."):format(P.MAX_LIBRARY))
+  end
+end
+
+-- Adds a saved glance and selects it; false when all five are taken.
+local function UseSaved(c, e)
+  local i = P:AddFromLibrary(e)
+  if not i then K:Print(("You already have %d glances. Remove one to make room."):format(P.MAX_GLANCES)) return false end
+  c.gsel = i
+  Refresh()
+  return true
+end
+
+local function SavedLabel(e)
+  local t = strtrim(e.title or "")
+  return P.IconMarkup(e.icon, 16) .. "  " .. (t ~= "" and t or "Untitled")
+end
+
 local function PresetMenu(owner, c)
   UI.Menu(owner, function(root)
-    root:CreateTitle("Glance presets")
-    root:CreateButton("Save these glances as...", function() StaticPopup_Show("KINSHIPRP_GLANCE_PRESET") end)
-    local names = P:PresetNames()
+    -- Single glances, kept to reuse
+    root:CreateTitle("Saved glances")
+    local g = c.gsel and P:MyGlances()[c.gsel]
+    if g and P.HasContent(g) then root:CreateButton("Save this glance for reuse", function() SaveGlance(g) end) end
+    local lib = P:Library()
+    if #lib == 0 then
+      root:CreateTitle("None saved yet")
+    else
+      local full = #P:MyGlances() >= P.MAX_GLANCES
+      local add = root:CreateButton(full and "Add a saved glance (all five in use)" or "Add a saved glance")
+      for _, e in ipairs(lib) do add:CreateButton(SavedLabel(e), function() UseSaved(c, e) end) end
+      local del = root:CreateButton("Forget a saved glance")
+      for _, e in ipairs(lib) do del:CreateButton(SavedLabel(e), function() P:RemoveFromLibrary(e); Refresh() end) end
+    end
+
+    -- Whole sets
     root:CreateDivider()
+    root:CreateTitle("Glance sets")
+    root:CreateButton("Save these glances as a set...", function() StaticPopup_Show("KINSHIPRP_GLANCE_PRESET") end)
+    local names = P:PresetNames()
     if #names == 0 then
-      root:CreateTitle("No presets saved yet")
+      root:CreateTitle("No sets saved yet")
       return
     end
-    root:CreateTitle("Load (replaces your glances)")
+    root:CreateTitle("Load a set (replaces your glances)")
     for _, name in ipairs(names) do
       root:CreateButton(name, function()
         if P:LoadPreset(name) then
           c.gsel = 1
-          UI.Toast({ icon = K.Art("IconNote"), title = "Glances loaded", text = ("From \"%s\"."):format(name), duration = 3 })
+          UI.Toast({ icon = K.Art("IconNote"), title = "Glances loaded", text = ("From the set \"%s\"."):format(name), duration = 3 })
           Refresh()
         end
       end)
     end
     root:CreateDivider()
-    local del = root:CreateButton("Delete a preset")
+    local del = root:CreateButton("Delete a set")
     for _, name in ipairs(names) do del:CreateButton(name, function() P:DeletePreset(name) end) end
   end)
 end
@@ -315,10 +356,13 @@ local function BuildGlances(tab, c)
   dl:SetPoint("TOPLEFT", 17, -118)
   e.count = UI.Text(e, "", "Label", "subtle")
   e.count:SetPoint("TOPRIGHT", -17, -118)
-  e.text = UI.TextArea(e, EDIT_W - 32, 146, P.MAX_TEXT, function(text)
+  e.text = UI.TextArea(e, EDIT_W - 32, 104, P.MAX_TEXT, function(text)
     local g = G(); if g then g.text = text; K:Fire("PROFILE") end
   end)
   e.text:SetPoint("TOPLEFT", 16, -132)
+  e.textHint = UI.Text(e, "A sentence or two reads best: it's what someone sees in a moment, on a tooltip.",
+    "Small", "subtle", EDIT_W - 34)
+  e.textHint:SetPoint("TOPLEFT", 17, -242)
   e.text.edit:HookScript("OnTextChanged", function(self) e.count:SetText(("%d / %d"):format(self:GetNumLetters(), P.MAX_TEXT)) end)
 
   e.left = UI.Button(e, "Move left", 92, 24)
@@ -336,8 +380,13 @@ local function BuildGlances(tab, c)
     P:RemoveGlance(i)
   end)
   UI.Tooltip(e.remove, "Remove this glance", "The others move along to fill the gap.")
+  e.save = UI.Button(e, "Save for reuse", 104, 24)
+  e.save:SetPoint("RIGHT", e.remove, "LEFT", -6, 0)
+  e.save:SetScript("OnClick", function() SaveGlance(G()) end)
+  UI.Tooltip(e.save, "Save for reuse", "Keeps a copy in Saved glances, so you can add it to any profile on any character.")
 
-  e.body = { e.head, e.active, e.iconBtn, e.title, e.titleHint, dl, e.count, e.text, e.left, e.right, e.remove }
+  e.body = { e.head, e.active, e.iconBtn, e.title, e.titleHint, dl, e.count, e.text, e.textHint,
+    e.left, e.right, e.save, e.remove }
   e.empty = EmptyState(e, "IconNote",
     "Add your first glance: something people notice the moment they see you. A scar, a scent, a sigil.", 320, 40)
   e.add = UI.Button(e.empty, "Add a glance", 130, 26)
@@ -347,6 +396,14 @@ local function BuildGlances(tab, c)
     if not P:AddGlance() then c.gsel = nil end
     Refresh()
     tab.editor.title.edit:SetFocus()
+  end)
+  e.fromSaved = UI.Button(e.empty, "Add a saved glance", 150, 26)
+  e.fromSaved:SetPoint("TOP", e.add, "BOTTOM", 0, -6)
+  e.fromSaved:SetScript("OnClick", function(self)
+    UI.Menu(self, function(root)
+      root:CreateTitle("Saved glances")
+      for _, x in ipairs(P:Library()) do root:CreateButton(SavedLabel(x), function() UseSaved(c, x) end) end
+    end)
   end)
 
   -- Preview ------------------------------------------------------------------
@@ -435,6 +492,7 @@ local function RefreshGlances(tab, c)
   local g = c.gsel and list[c.gsel]
   for _, w in ipairs(e.body) do w:SetShown(g ~= nil) end
   e.empty:SetShown(g == nil)
+  e.fromSaved:SetShown(#P:Library() > 0)
   if g ~= tab.loaded then
     tab.loaded = g
     e.title.edit:ClearFocus()
@@ -448,6 +506,7 @@ local function RefreshGlances(tab, c)
     if not e.title.edit:HasFocus() then e.title.edit:SetText(g.title or ""); e.title.edit:SetCursorPosition(0) end
     if not e.text.edit:HasFocus() then e.text.edit:SetText(g.text or ""); e.text.edit:SetCursorPosition(0) end
     e.active:Refresh()
+    e.save:SetEnabled(P.HasContent(g))
     e.left:SetEnabled(c.gsel > 1)
     e.right:SetEnabled(c.gsel < n)
   end
@@ -1088,10 +1147,11 @@ K:RegisterPage({
     else
       UI.Tooltip(c.preview, "Preview", "See your profile the way other players will.")
     end
-    c.presets = UI.Button(c, "Glance presets", 130, 24)
+    c.presets = UI.Button(c, "Saved glances", 130, 24)
     c.presets:SetPoint("RIGHT", c.preview, "LEFT", -6, 0)
     c.presets:SetScript("OnClick", function(self) PresetMenu(self, c) end)
-    UI.Tooltip(c.presets, "Glance presets", "Save your glances under a name and swap between sets, on any character.")
+    UI.Tooltip(c.presets, "Saved glances", "Keep single glances to add to any profile, or save all five as a set "
+      .. "and swap between sets, on any character.")
     c.frames = {}
     for i = 1, K.Auras and 4 or 3 do
       local f = CreateFrame("Frame", nil, c)

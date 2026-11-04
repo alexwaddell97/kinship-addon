@@ -56,6 +56,7 @@ local DEFAULTS = {
   chronicle  = {},          -- [charGUID] = { entries = {}, zones = {}, instances = {} }
   kin        = {},          -- [charGUID] = { [nameKey] = kinEntry }
   houses     = {},          -- [houseKey] = { crest, motto, desc }
+  groups     = {},          -- [groupKey] = { crest, motto, desc, members }   (Groups.lua)
   gatherings = {},          -- gatherings (yours and your guild's)
   gatherTomb = {},          -- [id] = time a gathering was removed (stops it coming back)
   registry   = {},          -- [nameKey] = { name, profile, t } other players' shared profiles

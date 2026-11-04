@@ -310,7 +310,8 @@ end
 
 -- A small (i) that explains something when you hover it. It sits just to
 -- the right of `beside` (usually a label) unless you place it yourself.
-function UI.Info(parent, beside, title, body)
+-- role is the theme colour for the dot ("subtle" unless given).
+function UI.Info(parent, beside, title, body, role)
   local b = CreateFrame("Button", nil, parent)
   b:SetSize(13, 13)
   if beside then b:SetPoint("LEFT", beside, "RIGHT", 4, 0) end
@@ -319,10 +320,9 @@ function UI.Info(parent, beside, title, body)
   local i = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   i:SetPoint("CENTER", 0.5, 0)
   i:SetText("i")
-  UI:OnTheme(function(t)
-    dot:SetVertexColor(unpack(t.subtle))
-    i:SetTextColor(1, 1, 1)
-  end)
+  i:SetTextColor(1, 1, 1)
+  if UI.INK[role] then dot:SetVertexColor(unpack(UI.INK[role]))
+  else UI:OnTheme(function(t) dot:SetVertexColor(unpack(t[role] or t.subtle)) end) end
   dot:SetAlpha(0.7)
   b:SetScript("OnEnter", function() dot:SetAlpha(1) end)
   b:SetScript("OnLeave", function() dot:SetAlpha(0.7) end)
@@ -896,7 +896,7 @@ function UI.Field(parent, label, width, maxLetters, onChange, style)
   eb:SetScript("OnTextChanged", function(self, user) if user and onChange then onChange(self:GetText()) end end)
   holder.edit = eb
   -- holder:Info(title, body) puts a small (i) after the label.
-  function holder:Info(title, body) self.info = UI.Info(self, self.label, title, body); return self end
+  function holder:Info(title, body) self.info = UI.Info(self, self.label, title, body, role); return self end
   return holder
 end
 

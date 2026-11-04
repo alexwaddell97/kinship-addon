@@ -42,6 +42,7 @@ Pages\PageCompanions.lua
 Pages\PageChronicle.lua
 Pages\PageKin.lua
 Pages\PageDirectory.lua
+Profile\Groups.lua
 Pages\PageHouse.lua
 Pages\PageGatherings.lua
 Quests\QuestMarkers.lua

@@ -41,6 +41,7 @@ local FIELD_OF = {
   ooc = "CO", epithet = "NT", house = "NH", pronouns = "PN", age = "AG", height = "AH", home = "HH",
   motto = "MO", currently = "CU", appearance = "DE", history = "HI", personality = "KP", glance = "KG",
   crest = "KC", houseMotto = "KM", houseHistory = "KH",
+  group = "KO", groupRole = "KR", groupCrest = "KE", groupMotto = "KB", groupStory = "KD",
 }
 
 -- Personality has no standard MSP field, so for other addons it rides at the
@@ -134,8 +135,11 @@ local function ValidCrest(path)
   return path
 end
 
+C.ValidCrest = ValidCrest
+
 -- Alongside Total RP 3 Kinship writes only the fields that are its own; it
 -- writes the rest (name, description, glances, RP style and so on).
+-- Fields added through K:AddProfileField name theirs in def.own.
 local OWN_FIELDS = { "KC", "KM", "KH", "KW", "KU", "KS", "KQ" }
 
 function C:Publish()
@@ -179,7 +183,7 @@ function C:Publish()
     if def.publish then K.Try("profile field", def.publish, my, p) end
   end
   if compat then
-    for _, f in ipairs(OWN_FIELDS) do msp.my[f] = my[f] end
+    for _, f in ipairs(Merge(OWN_FIELDS, "own")) do msp.my[f] = my[f] end
     if not msp.my.VA or msp.my.VA == "" then return end   -- Total RP 3 hasn't set out its profile yet
   end
   local ok, err = pcall(msp.Update, msp)
@@ -256,7 +260,7 @@ function C:OnReceived(name)
     end
     -- Fields they've emptied: empty here too, so nothing stale lingers.
     for k, src in pairs(FIELD_OF) do
-      if fields[src] == "" then p[k] = (k == "crest") and nil or "" end
+      if fields[src] == "" then p[k] = (k == "crest" or k == "groupCrest") and nil or "" end
     end
     -- Consent, answer by answer: a cleared answer must not keep an old "yes".
     p.consent = type(p.consent) == "table" and p.consent or {}

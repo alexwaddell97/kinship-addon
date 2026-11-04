@@ -47,6 +47,15 @@ local function AddProfileLines(tooltip, name, p, other)
     tooltip:AddLine(("|T%s:14:14|t of House %s%s"):format(crest, strtrim(UI.Clean(p.house)), family and "  |cff5fd35f(your house)|r" or ""),
       0.94, 0.82, 0.54)
   end
+  local group = strtrim(C(p.group))
+  if group ~= "" then
+    local g = K.db.groups[group:lower()]
+    local crest = (other and p.groupCrest) or (g and g.crest) or K.GROUP_CREST
+    local role = strtrim(C(p.groupRole))
+    local ours = other and K:GroupKey() == group:lower() and K:GroupState(name) == "recognised"
+    tooltip:AddLine(("|T%s:14:14|t %s%s%s"):format(crest, role ~= "" and (role .. ", ") or "", group,
+      ours and "  |cff5fd35f(your group)|r" or ""), 0.94, 0.82, 0.54)
+  end
   local s = K.STATUS[p.status]
   if s then tooltip:AddLine(s.label, unpack(s.color)) end
   local lv = K.Experience and K.Experience.Notable(p)

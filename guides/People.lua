@@ -37,7 +37,7 @@ K:RegisterGuide({
       text = "Show only those seen in the last quarter of an hour, those in character, those looking for roleplay, or your own Kin. Choose Everyone to see the whole Directory again.",
       target = function(c) return c.filters end },
     { title = "Find a name",
-      text = "Search by character name, roleplay name, house or epithet. Handy when you remember a face from last night's tavern but not quite the name, or want everyone of one house.",
+      text = "Search by character name, roleplay name, house, group or epithet. Handy when you remember a face from last night's tavern but not quite the name, or want everyone of one house.",
       target = function(c) return c.searchBox or c.filters end },
     { title = "More with a right-click",
       text = "The gem shows whether someone is in character, and the tag which addon they use. Right-click a name to write to them, add them to your Kin, name your relationship or ignore them.",
@@ -82,10 +82,11 @@ K:RegisterGuide({
 -- House
 ---------------------------------------------------------------------------
 K:RegisterGuide({
-  id = "house", page = "house", title = "Your house",
+  id = "house", page = "house", title = "Your house and group",
   steps = {
     { title = "A family name",
       text = "A house is a family built on a shared name. Set a house name on your profile to found one; your other characters, and anyone else who shares that name, can join it.",
+      before = Tab(1),
       target = function(c) return Shown(c.none) or c.hero end },
     { title = "Your crest",
       text = "Click the crest to choose your house's arms from shields, beasts, blades and stars. It's pressed into the wax of every letter you seal, so your family is known before a word is read.",
@@ -102,6 +103,11 @@ K:RegisterGuide({
     { title = "Recognise or ignore",
       text = "Click Recognise to welcome someone in, or right-click to ignore a claim. Anyone can write a house name, so these choices are yours alone, and only you see them.",
       target = function(c) return c.members end },
+    { title = "A group of your own",
+      text = "Not everyone you stand with is family. A group is a company, an order or an RP guild: name it here to found it, "
+        .. "or use the same name as others to join them. It has its own banner, motto, story and members, and your place in it shows on your tooltip.",
+      before = Tab(2),
+      target = function(c) return Shown(c.group.none) or c.group.hero end },
   },
 })
 

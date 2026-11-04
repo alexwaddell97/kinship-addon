@@ -461,8 +461,23 @@ function V:ShowTab(i)
       end
       if #bits > 0 then houseText = table.concat(bits, "\n") end
     end
+    -- Their group: their place in it, its motto and story (yours from the House page)
+    local groupName, groupText = strtrim(pr.group or ""), nil
+    if groupName ~= "" then
+      local g = d.mine and K:Group() or nil
+      local function T(s) s = strtrim(s or ""); return other and UI.Clean(s) or UI.Escape(s) end
+      local role = T(d.mine and K:GroupRole() or pr.groupRole)
+      local motto = T(d.mine and g and g.motto or pr.groupMotto)
+      local story = T(d.mine and g and g.desc or pr.groupStory)
+      local bits = {}
+      if role ~= "" then bits[#bits + 1] = role end
+      if motto ~= "" then bits[#bits + 1] = '"' .. motto .. '"' end
+      if story ~= "" then bits[#bits + 1] = story end
+      groupText = #bits > 0 and table.concat(bits, "\n") or "A member."
+    end
     text = Paragraphs({ { "Right now", effects }, { "At a glance", pr.glance }, { "Identity", table.concat(who, "  \194\183  ") },
       { "Motto", pr.motto }, { "House " .. (other and houseName or UI.Escape(houseName)), houseText },
+      { other and UI.Clean(groupName) or UI.Escape(groupName), groupText },
       { "Boundaries", table.concat(bounds, "  \194\183  ") }, { "Out of character", pr.ooc } })
   elseif i == 2 then
     local other = not d.mine

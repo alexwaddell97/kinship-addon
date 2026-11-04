@@ -75,9 +75,9 @@ K:RegisterGuide({
         .. "on your tooltip and profile, and the chip at the top right of this page shows yours.",
       before = Tab(2),
       target = function(c) return c.frames[2].stances[1]:GetParent() end },
-    { title = "Consent",
-      text = "Yes, Ask or No for injury, death, capture, crime and romance. It's shared through the standard "
-        .. "roleplay fields (MSP), so other RP addons read it, and Kinship's wounds and captures always respect it.",
+    { title = "Your boundaries",
+      text = "Yes, Ask or No for injury, death, capture, crime and romance, at a glance. They're part of your profile, "
+        .. "so they count in every story; the button takes you there to change them.",
       before = Tab(2),
       target = function(c) return c.frames[2].consent[1]:GetParent() end },
     { title = "Across the line",

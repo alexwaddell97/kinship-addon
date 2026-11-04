@@ -816,7 +816,7 @@ K:RegisterSettings({ id = "auras", title = "Effects", order = 16,
   card:Segments("From other players", {
     { key = "ask", label = "Ask me" }, { key = "group", label = "Trust my group" }, { key = "never", label = "Never" },
   }, function() return S().auraAccept or "ask" end, function(v) K.db.settings.auraAccept = v end, 110)
-  card:Note("Wounds always follow your Injury boundary, and captures your Capture boundary (Warfront > Stance & consent): "
+  card:Note("Wounds always follow your Injury boundary, and captures your Capture boundary (Profile > Boundaries): "
     .. "\"No\" turns them away and \"Ask\" always asks, whatever you choose here.")
   card:Button("Reset the effects bar position", function()
     K.db.settings.auraBarPos = nil

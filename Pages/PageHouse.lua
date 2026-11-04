@@ -235,11 +235,15 @@ local function BuildChooser()
       if b.path then b.icon:SetTexture(b.path); self:PaintCell(b) end
     end
     self.medal:SetCrest(self.choice)
-    local h = K:House()
-    self.house:SetText("House " .. (K:HouseName() or ""))
+    local kind = self.kind
+    local h = kind.Record()
+    self.head:SetText(kind.arms)
+    self.house:SetText(kind.Title(kind.Name()))
     local motto = h and strtrim(h.motto or "") or ""
     self.motto:SetText(motto ~= "" and ("\"" .. UI.Escape(motto) .. "\"") or "")
     self.name:SetText(CrestName(self.choice))
+    -- Only a house's crest goes on your seal
+    for _, w in ipairs({ self.seal, self.sealBtn, self.sealNote }) do w:SetShown(kind.seal) end
     self.seal:SetSeal(UI.SEAL_COLORS[self.sealKey].key, self.choice)
     self.use:SetEnabled(self.choice ~= nil)
   end
@@ -247,10 +251,11 @@ local function BuildChooser()
   return m
 end
 
--- current: the crest now; onPick(path) when one is chosen.
-local function ShowPicker(current, onPick)
+-- current: the crest now; onPick(path) when one is chosen; kind: whose
+-- crest it is (HOUSE or GROUP, below).
+local function ShowPicker(current, onPick, kind)
   local m = chooser or BuildChooser()
-  m.onPick = onPick
+  m.onPick, m.kind = onPick, kind
   m.choice = current
   m.note:SetText("")
   m.field.edit:SetText("")
@@ -342,159 +347,270 @@ function K:HouseMembers()
   return recognised, claims
 end
 
+
+---------------------------------------------------------------------------
+-- The page: two tabs built the same way, your house (a family, on a shared
+-- surname) and your group (a company, an order, an RP guild).
+---------------------------------------------------------------------------
+local TOP, PANE_H = 40, 466 - 40
+
+local HOUSE = {
+  arms = "Your arms", seal = true, event = "HOUSE",
+  Name = function() return K:HouseName() end,
+  Record = function() return K:House() end,
+  Title = function(name) return "House " .. name end,
+  Members = function() return K:HouseMembers() end,
+  SetMember = function(key, name, state) K:SetHouseMember(key, name, state) end,
+  crestTip = "Click to choose your house's crest.",
+  mottoTip = "A few words your house lives by.",
+  story = "The house's story",
+  recognise = "Recognise as family",
+  claims = "Claims to be of this house",
+  membersNote = "Anyone can write a house name into their profile. Recognise the people who truly belong; only you see these choices.",
+}
+
+local GROUP = {
+  arms = "Your banner", seal = false, event = "HOUSE",
+  Name = function() return K:GroupName() end,
+  Record = function() return K:Group() end,
+  Title = function(name) return name end,
+  Members = function() return K:GroupMembers() end,
+  SetMember = function(key, name, state) K:SetGroupMember(key, name, state) end,
+  crestTip = "Click to choose your group's banner.",
+  mottoTip = "A few words your group stands for.",
+  story = "The group's story",
+  recognise = "Recognise as a member",
+  claims = "Claims to belong",
+  membersNote = "Anyone can write a group name into their profile. Recognise the people who truly belong; only you see these choices.",
+}
+
+-- Shared by both tabs: crest, name, motto, story and members.
+local function BuildPane(c, kind)
+  local pane = CreateFrame("Frame", nil, c)
+  pane:SetPoint("TOPLEFT", 0, -TOP)
+  pane:SetSize(696, PANE_H)
+  pane.kind = kind
+
+  -- Hero: the crest in a gold ring, the name and its motto ----------------------
+  local hero = CreateFrame("Frame", nil, pane)
+  hero:SetPoint("TOPLEFT")
+  hero:SetPoint("TOPRIGHT")
+  hero:SetHeight(104)
+  pane.hero = hero
+  pane.crest = Medallion(hero, 100, true)
+  pane.crest:SetPoint("LEFT", 2, 0)
+  local ring = pane.crest
+  pane.crest:HookScript("OnEnter", function(self) self:SetLit(true) end)
+  pane.crest:HookScript("OnLeave", function(self) self:SetLit(false) end)
+  pane.crest:SetScript("OnClick", function()
+    local r = kind.Record()
+    ShowPicker(r and r.crest, function(path)
+      local rec = kind.Record()
+      if rec then rec.crest = path; K:Fire(kind.event); K.Journal:RefreshCurrent() end
+    end, kind)
+  end)
+  UI.Tooltip(pane.crest, kind.arms, kind.crestTip)
+
+  pane.title = UI.Text(hero, "", "GameFontNormalHuge", "deskHeading", kind.seal and 560 or 440)
+  pane.title:SetPoint("TOPLEFT", ring, "TOPRIGHT", 22, -6)
+  pane.title:SetWordWrap(false)
+  pane.summary = UI.Text(hero, "", "GameFontHighlightSmall", "deskSubtle")
+  pane.summary:SetPoint("TOPLEFT", pane.title, "BOTTOMLEFT", 1, -5)
+  pane.motto = UI.Field(hero, "Motto", kind.seal and 400 or 380, 90, function(text)
+    local r = kind.Record(); if r then r.motto = text; K:Fire(kind.event) end
+  end, "desk")
+  pane.motto:SetPoint("TOPLEFT", ring, "TOPRIGHT", 22, -54)
+  UI.Tooltip(pane.motto.edit, "Motto", kind.mottoTip)
+
+  local rule = UI.Line(hero)
+  rule:SetPoint("TOPLEFT", hero, "BOTTOMLEFT", 0, -10)
+  rule:SetPoint("TOPRIGHT", hero, "BOTTOMRIGHT", 0, -10)
+  UI:OnTheme(function(t) rule:SetVertexColor(unpack(t.line)) end)
+
+  -- Not in one yet: an empty crest ring, waiting for a name ----------------------
+  pane.none = CreateFrame("Frame", nil, pane)
+  pane.none:SetAllPoints()
+  local nring = Medallion(pane.none, 100)
+  nring:SetPoint("TOP", 0, -50)
+  nring:SetCrest("Interface\\Icons\\INV_Misc_QuestionMark")
+  nring.icon:SetDesaturated(true)
+  nring.icon:SetAlpha(0.45)
+  nring:SetAlpha(0.7)
+  pane.noneTitle = UI.Text(pane.none, "", "GameFontNormalLarge", "deskHeading")
+  pane.noneTitle:SetPoint("TOP", nring, "BOTTOM", 0, -20)
+  pane.noneText = UI.Text(pane.none, "", "QuestFont", "deskText", 420)
+  pane.noneText:SetPoint("TOP", pane.noneTitle, "BOTTOM", 0, -10)
+  pane.noneText:SetJustifyH("CENTER")
+  pane.noneText:SetSpacing(3)
+
+  -- Details --------------------------------------------------------------
+  local bodyTop = 124
+  pane.body = CreateFrame("Frame", nil, pane)
+  pane.body:SetPoint("TOPLEFT", 0, -bodyTop)
+  pane.body:SetPoint("BOTTOMRIGHT", 0, 0)
+  local bodyH = PANE_H - bodyTop
+
+  local about = UI.Panel(pane.body)
+  about:SetPoint("TOPLEFT", 0, 0)
+  about:SetSize(380, bodyH)
+  local ah = UI.Section(about, kind.story)
+  ah:SetPoint("TOPLEFT", 21, -13)
+  pane.desc = UI.TextArea(about, 348, bodyH - 54, 2000, function(text)
+    local r = kind.Record(); if r then r.desc = text; K:Fire(kind.event) end
+  end)
+  pane.desc:SetPoint("TOPLEFT", 16, -38)
+
+  pane.members = UI.List(pane.body, 306, bodyH - 62, 28, "", function(row)
+    row.icon = row:CreateTexture(nil, "ARTWORK")
+    row.icon:SetSize(18, 18)
+    row.icon:SetPoint("LEFT", 6, 0)
+    row.btn = UI.Button(row, "", 82, 18)
+    row.btn:SetPoint("RIGHT", -2, 0)
+    row.role = UI.Text(row, "", "GameFontHighlightSmall", "subtle")
+    row.role:SetPoint("RIGHT", row.btn, "LEFT", -6, 0)
+    row.name = UI.Text(row, "", "GameFontHighlight", "text")
+    row.name:SetPoint("LEFT", 30, 0)
+    row.name:SetPoint("RIGHT", row.role, "LEFT", -4, 0)
+    row.name:SetWordWrap(false)
+    row.header = UI.Text(row, "", "GameFontNormalSmall", "section")
+    row.header:SetPoint("LEFT", 8, -2)
+    row:SetScript("OnClick", function(self, button)
+      local m = self.item
+      if not m or m.header then return end
+      if button == "RightButton" and not m.mine then
+        UI.Menu(self, function(root)
+          root:CreateTitle(m.name)
+          root:CreateButton("View profile", function() K:ViewProfile(m.raw or m.name) end)
+          if m.state == "recognised" then
+            root:CreateButton("Stop recognising", function() kind.SetMember(m.key, m.name, nil) end)
+          else
+            root:CreateButton(kind.recognise, function() kind.SetMember(m.key, m.name, "recognised") end)
+          end
+          root:CreateButton("|cffff6060Ignore this claim|r", function() kind.SetMember(m.key, m.name, "ignored") end)
+        end)
+      else
+        K:ViewProfile(m.raw or m.name)
+      end
+    end)
+    row.btn:SetScript("OnClick", function()
+      local m = row.item
+      kind.SetMember(m.key, m.name, m.state == "recognised" and nil or "recognised")
+    end)
+  end)
+  pane.members:SetPoint("TOPRIGHT", 0, -24)
+  local mh = UI.Section(pane.body, "Members", true)
+  mh:SetPoint("BOTTOMLEFT", pane.members, "TOPLEFT", 7, 7)
+  pane.membersNote = UI.Text(pane.body, kind.membersNote, "GameFontHighlightSmall", "deskSubtle", 300)
+  pane.membersNote:SetPoint("TOPLEFT", pane.members, "BOTTOMLEFT", 2, -6)
+  return pane
+end
+
+local function RefreshPane(pane)
+  local kind = pane.kind
+  local name, rec = kind.Name(), kind.Record()
+  pane.none:SetShown(rec == nil)
+  for _, w in ipairs({ pane.body, pane.hero }) do w:SetShown(rec ~= nil) end
+  if not rec then return end
+  pane.title:SetText(kind.Title(name))
+  pane.crest:SetCrest(rec.crest)
+  if not pane.motto.edit:HasFocus() then pane.motto.edit:SetText(rec.motto or "") end
+  if not pane.desc.edit:HasFocus() then pane.desc.edit:SetText(rec.desc or "") end
+
+  -- Your own characters always belong. Everyone else is a claim until you
+  -- recognise them: anyone can type a name into their profile.
+  local recognised, claims = kind.Members()
+  local summary = #recognised == 1 and "1 member" or (#recognised .. " members")
+  if #claims > 0 then summary = summary .. ("  ·  %d %s"):format(#claims, #claims == 1 and "claim" or "claims") end
+  pane.summary:SetText(summary)
+  local items = {}
+  items[#items + 1] = { header = "Recognised" }
+  for _, m in ipairs(recognised) do items[#items + 1] = m end
+  if #claims > 0 then
+    items[#items + 1] = { header = kind.claims }
+    for _, m in ipairs(claims) do items[#items + 1] = m end
+  end
+  pane.members:SetItems(items, function(row, m)
+    local isHeader = m.header ~= nil
+    row.header:SetShown(isHeader)
+    row.icon:SetShown(not isHeader); row.name:SetShown(not isHeader); row.role:SetShown(not isHeader)
+    row.btn:SetShown(not isHeader and not m.mine)
+    if isHeader then row.header:SetText(m.header) return end
+    row.icon:SetTexture(m.mine and K.ICON or (K.Art("IconKin")))
+    row.icon:SetDesaturated(m.state ~= "recognised" and not m.mine)
+    row.name:SetText(m.name)
+    row.role:SetText(m.role or "")
+    row.btn:SetText(m.state == "recognised" and "Remove" or "Recognise")
+  end)
+end
+
 K:RegisterPage({
-  id = "house", title = "House", heading = "House",
-  subtitle = "Your family, built on the name you share.",
+  id = "house", title = "House", heading = "House & group",
+  subtitle = "Your family, and any company or order you belong to.",
 
   build = function(c)
-    -- Hero: the crest in a gold ring, the house name and its motto ------------------
-    local hero = CreateFrame("Frame", nil, c)
-    hero:SetPoint("TOPLEFT")
-    hero:SetPoint("TOPRIGHT")
-    hero:SetHeight(104)
-    c.hero = hero
-    c.crest = Medallion(hero, 100, true)
-    c.crest:SetPoint("LEFT", 2, 0)
-    local ring = c.crest
-    c.crest:HookScript("OnEnter", function(self) self:SetLit(true) end)
-    c.crest:HookScript("OnLeave", function(self) self:SetLit(false) end)
-    c.crest:SetScript("OnClick", function(self)
-      local cur = K:House() and K:House().crest
-      ShowPicker(cur, function(path) local h = K:House(); if h then h.crest = path; K:Fire("HOUSE"); K.Journal:RefreshCurrent() end end)
-    end)
-    UI.Tooltip(c.crest, "House crest", "Click to choose your house's crest.")
+    c.tab = 1
+    c.tabs = UI.TabBar(c, { "House", "Group" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabs:SetPoint("TOPLEFT", -10, 2)
 
-    c.title = UI.Text(hero, "", "GameFontNormalHuge", "deskHeading", 560)
-    c.title:SetPoint("TOPLEFT", ring, "TOPRIGHT", 22, -6)
-    c.title:SetWordWrap(false)
-    c.summary = UI.Text(hero, "", "GameFontHighlightSmall", "deskSubtle")
-    c.summary:SetPoint("TOPLEFT", c.title, "BOTTOMLEFT", 1, -5)
-    c.motto = UI.Field(hero, "Motto", 400, 90, function(text) local h = K:House(); if h then h.motto = text; K:Fire("HOUSE") end end, "desk")
-    c.motto:SetPoint("TOPLEFT", ring, "TOPRIGHT", 22, -54)
-    UI.Tooltip(c.motto.edit, "House motto", "A few words your house lives by.")
-
-    local rule = UI.Line(hero)
-    rule:SetPoint("TOPLEFT", hero, "BOTTOMLEFT", 0, -10)
-    rule:SetPoint("TOPRIGHT", hero, "BOTTOMRIGHT", 0, -10)
-    UI:OnTheme(function(t) rule:SetVertexColor(unpack(t.line)) end)
-
-    -- No house yet: an empty crest ring, waiting for a name -----------------------
-    c.none = CreateFrame("Frame", nil, c)
-    c.none:SetAllPoints()
-    local nring = Medallion(c.none, 100)
-    nring:SetPoint("TOP", 0, -70)
-    nring:SetCrest("Interface\\Icons\\INV_Misc_QuestionMark")
-    nring.icon:SetDesaturated(true)
-    nring.icon:SetAlpha(0.45)
-    nring:SetAlpha(0.7)
-    local noneTitle = UI.Text(c.none, "No house yet", "GameFontNormalLarge", "deskHeading")
-    noneTitle:SetPoint("TOP", nring, "BOTTOM", 0, -20)
-    local noneText = UI.Text(c.none, K:Compat()
+    -- House: its name comes from your profile (your surname, to start with)
+    local h = BuildPane(c, HOUSE)
+    h.noneTitle:SetText("No house yet")
+    h.noneText:SetText(K:Compat()
       and "In Total RP 3, edit your Characteristics and add a House name under Additional Information to found a house. Other characters who share that name can join it."
       or ("Set a house name on your Profile page to found a house. " ..
-      "Other characters who share that name can join it."), "QuestFont", "deskText", 400)
-    noneText:SetPoint("TOP", noneTitle, "BOTTOM", 0, -10)
-    noneText:SetJustifyH("CENTER")
-    noneText:SetSpacing(3)
-    local go = UI.Button(c.none, K:Compat() and "Open Total RP 3" or "Go to Profile", 140, 24)
-    go:SetPoint("TOP", noneText, "BOTTOM", 0, -18)
+      "Other characters who share that name can join it."))
+    local go = UI.Button(h.none, K:Compat() and "Open Total RP 3" or "Go to Profile", 140, 24)
+    go:SetPoint("TOP", h.noneText, "BOTTOM", 0, -18)
     go:SetScript("OnClick", function() K:OpenProfileEditor() end)
 
-    -- House details --------------------------------------------------------
-    local bodyTop = 124
-    c.body = CreateFrame("Frame", nil, c)
-    c.body:SetPoint("TOPLEFT", 0, -bodyTop)
-    c.body:SetPoint("BOTTOMRIGHT", 0, 0)
-    local bodyH = 466 - bodyTop
+    -- Group: named right here, with your place in it
+    local g = BuildPane(c, GROUP)
+    g.noneTitle:SetText("No group yet")
+    g.noneText:SetText("A company, an order, an RP guild: anything you belong to that isn't a family. "
+      .. "Name one to found it, or use the same name as others to join them.")
+    g.join = UI.Field(g.none, "Group name", 240, K.MAX_GROUP_NAME, nil, "desk")
+    g.join:SetPoint("TOP", g.noneText, "BOTTOM", -59, -18)
+    g.joinBtn = UI.Button(g.none, "Found or join", 110, 23)
+    g.joinBtn:SetPoint("BOTTOMLEFT", g.join.edit, "BOTTOMRIGHT", 8, 0)
+    local function join()
+      local name = strtrim(g.join.edit:GetText() or "")
+      if name == "" then return end
+      g.join.edit:ClearFocus()
+      g.join.edit:SetText("")
+      K:SetGroup(name)
+      K.Journal:RefreshCurrent()
+    end
+    g.joinBtn:SetScript("OnClick", join)
+    g.join.edit:SetScript("OnEnterPressed", join)
 
-    local about = UI.Panel(c.body)
-    about:SetPoint("TOPLEFT", 0, 0)
-    about:SetSize(380, bodyH)
-    local ah = UI.Section(about, "The house's story")
-    ah:SetPoint("TOPLEFT", 21, -13)
-    c.desc = UI.TextArea(about, 348, bodyH - 54, 2000, function(text) local h = K:House(); if h then h.desc = text; K:Fire("HOUSE") end end)
-    c.desc:SetPoint("TOPLEFT", 16, -38)
-
-    c.members = UI.List(c.body, 306, bodyH - 62, 28, "", function(row)
-      row.icon = row:CreateTexture(nil, "ARTWORK")
-      row.icon:SetSize(18, 18)
-      row.icon:SetPoint("LEFT", 6, 0)
-      row.btn = UI.Button(row, "", 82, 18)
-      row.btn:SetPoint("RIGHT", -2, 0)
-      row.role = UI.Text(row, "", "GameFontHighlightSmall", "subtle")
-      row.role:SetPoint("RIGHT", row.btn, "LEFT", -6, 0)
-      row.name = UI.Text(row, "", "GameFontHighlight", "text")
-      row.name:SetPoint("LEFT", 30, 0)
-      row.name:SetPoint("RIGHT", row.role, "LEFT", -4, 0)
-      row.name:SetWordWrap(false)
-      row.header = UI.Text(row, "", "GameFontNormalSmall", "section")
-      row.header:SetPoint("LEFT", 8, -2)
-      row:SetScript("OnClick", function(self, button)
-        local m = self.item
-        if not m or m.header then return end
-        if button == "RightButton" and not m.mine then
-          UI.Menu(self, function(root)
-            root:CreateTitle(m.name)
-            root:CreateButton("View profile", function() K:ViewProfile(m.raw or m.name) end)
-            if m.state == "recognised" then
-              root:CreateButton("Stop recognising", function() K:SetHouseMember(m.key, m.name, nil) end)
-            else
-              root:CreateButton("Recognise as family", function() K:SetHouseMember(m.key, m.name, "recognised") end)
-            end
-            root:CreateButton("|cffff6060Ignore this claim|r", function() K:SetHouseMember(m.key, m.name, "ignored") end)
-          end)
-        else
-          K:ViewProfile(m.raw or m.name)
-        end
-      end)
-      row.btn:SetScript("OnClick", function()
-        local m = row.item
-        K:SetHouseMember(m.key, m.name, m.state == "recognised" and nil or "recognised")
-      end)
+    g.role = UI.Field(g.hero, "Your place in it", 150, K.MAX_GROUP_ROLE, function(text) K:SetGroupRole(text) end, "desk")
+    g.role:SetPoint("TOPRIGHT", 0, -54)
+    g.role:Info("Your place in it", "What you are in the group, like \"Sergeant\", \"Founder\" or \"Recruit\". "
+      .. "It shows beside your name in the members list, and on your tooltip.")
+    g.leave = UI.Button(g.hero, "Leave", 70, 22)
+    g.leave:SetPoint("TOPRIGHT", 0, -4)
+    g.leave:SetScript("OnClick", function()
+      K:SetGroup("")
+      K.Journal:RefreshCurrent()
     end)
-    c.members:SetPoint("TOPRIGHT", 0, -24)
-    local mh = UI.Section(c.body, "Members", true)
-    mh:SetPoint("BOTTOMLEFT", c.members, "TOPLEFT", 7, 7)
-    c.membersNote = UI.Text(c.body, "", "GameFontHighlightSmall", "deskSubtle", 300)
-    c.membersNote:SetPoint("TOPLEFT", c.members, "BOTTOMLEFT", 2, -6)
+    UI.Tooltip(g.leave, "Leave the group", "Takes it off your profile. Its crest and story stay saved here, "
+      .. "so naming it again brings them back.")
+
+    c.panes = { h, g }
+    -- The house tour lights these
+    c.hero, c.none, c.crest, c.motto, c.desc, c.members = h.hero, h.none, h.crest, h.motto, h.desc, h.members
+    c.group = g
   end,
 
   refresh = function(c)
-    local name = K:HouseName()
-    local house = K:House()
-    c.none:SetShown(house == nil)
-    for _, w in ipairs({ c.body, c.hero }) do w:SetShown(house ~= nil) end
-    if not house then return end
-    c.title:SetText("House " .. name)
-    c.crest:SetCrest(house.crest)
-    if not c.motto.edit:HasFocus() then c.motto.edit:SetText(house.motto or "") end
-    if not c.desc.edit:HasFocus() then c.desc.edit:SetText(house.desc or "") end
-
-    -- Your own characters are always family. Everyone else is a claim until
-    -- you recognise them: anyone can type a house name into their profile.
-    local recognised, claims = K:HouseMembers()
-    local summary = #recognised == 1 and "1 member" or (#recognised .. " members")
-    if #claims > 0 then summary = summary .. ("  ·  %d %s"):format(#claims, #claims == 1 and "claim" or "claims") end
-    c.summary:SetText(summary)
-    local items = {}
-    items[#items + 1] = { header = "Recognised" }
-    for _, m in ipairs(recognised) do items[#items + 1] = m end
-    if #claims > 0 then
-      items[#items + 1] = { header = "Claims to be of this house" }
-      for _, m in ipairs(claims) do items[#items + 1] = m end
+    c.tabs:Select(c.tab)
+    for i, pane in ipairs(c.panes) do pane:SetShown(i == c.tab) end
+    if c.shownTab ~= c.tab then
+      if c.shownTab then UI.FadeIn(c.panes[c.tab], 0.2) end
+      c.shownTab = c.tab
     end
-    c.members:SetItems(items, function(row, m)
-      local isHeader = m.header ~= nil
-      row.header:SetShown(isHeader)
-      row.icon:SetShown(not isHeader); row.name:SetShown(not isHeader); row.role:SetShown(not isHeader)
-      row.btn:SetShown(not isHeader and not m.mine)
-      if isHeader then row.header:SetText(m.header) return end
-      row.icon:SetTexture(m.mine and K.ICON or (K.Art("IconKin")))
-      row.icon:SetDesaturated(m.state ~= "recognised" and not m.mine)
-      row.name:SetText(m.name)
-      row.role:SetText(m.role or "")
-      row.btn:SetText(m.state == "recognised" and "Remove" or "Recognise")
-    end)
-    c.membersNote:SetText("Anyone can write a house name into their profile. Recognise the people who truly belong; only you see these choices.")
+    local pane = c.panes[c.tab]
+    RefreshPane(pane)
+    if pane == c.group and not c.group.role.edit:HasFocus() then c.group.role.edit:SetText(K:GroupRole()) end
   end,
 })

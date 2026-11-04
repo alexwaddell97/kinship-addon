@@ -1,5 +1,30 @@
 # Kinship RP changelog
 
+## Unreleased
+
+There's a new file (Groups), so restart the game rather than /reload.
+
+### Added
+- Groups, alongside Houses. A house is a family on a shared surname; a group
+  is anything else you belong to: a company, an order, an RP guild. Found or
+  join one on the new Group tab of the House page, then give it a banner,
+  motto and story, and say what you are in it ("Sergeant", "Founder"). Members
+  and claims work as they do for houses, and the group shows on your tooltip,
+  your profile and in Directory search.
+- Saved glances. Save any glance for reuse and add it to any profile on any
+  character from Saved glances (the button above, which also still keeps
+  whole sets of glances).
+- Letters remember how you sign them. Whatever you last signed with on a
+  profile is where your next letter starts; clear it to send one unsigned.
+
+### Changed
+- Boundaries (consent) now live on your Profile page, in a Boundaries tab
+  beside Identity, since they cover every story and decide what effects
+  others can give you. The Warfront's Stance tab shows them at a glance with
+  a button to change them.
+- The glance description box is smaller, with a nudge to keep it to a
+  sentence or two.
+
 ## 1.2.5
 
 A small fix and some help text. No new files, so a /reload is enough.

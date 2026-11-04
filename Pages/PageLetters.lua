@@ -72,9 +72,20 @@ local function DefaultCrest()
   return h and h.crest or "monogram"
 end
 
-local function DefaultSign()
+local function NameSign()
   local house = K:HouseName()
   return K:CharacterName() .. (house ~= "" and (", of House " .. house) or "")
+end
+
+-- New letters start with the sign-off you last used on this profile, or
+-- your name if you've only ever signed with that.
+local function DefaultSign()
+  return K:Profile().letterSign or NameSign()
+end
+
+local function RememberSign(sign)
+  sign = strtrim(sign or "")
+  K:Profile().letterSign = (sign ~= NameSign()) and sign or nil
 end
 
 K:RegisterPage({
@@ -324,7 +335,9 @@ K:RegisterPage({
         end
       end)
     end)
-    w.sign = UI.Field(w, "Signed", IW - 96, L.MAX_SIGN, nil, "ink")
+    w.sign = UI.Field(w, "Signed", IW - 96, L.MAX_SIGN, nil, "ink"):Info("Signed",
+      "How the letter is signed. Whatever you sign with is remembered, and your next letter starts with it. "
+      .. "Clear it to send a letter unsigned.")
     w.sign:SetPoint("BOTTOMLEFT", 28, 64)
 
     -- Seal: colour swatches and the crest pressed into it (click the seal to change)
@@ -369,6 +382,7 @@ K:RegisterPage({
       local letter, err = L:Send(w.to.edit:GetText(), w.title.edit:GetText(), w.body.edit:GetText(),
         w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, key = c.key, enclosed = c.enclosed })
       if not letter then K:Print(err) return end
+      RememberSign(w.sign.edit:GetText())
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
       c.box, c.selected, c.mode = "out", letter, "read"
       K.Journal:RefreshCurrent()

@@ -33,7 +33,15 @@ local SECTIONS = {
   { key = "appearance",  label = "Appearance",  hint = "How others see your character: build, face, clothing, the way they carry themselves." },
   { key = "personality", label = "Personality", hint = "Temperament, habits, what they care about, how they treat others." },
   { key = "history",     label = "History",     hint = "Where they come from and what brought them here. Write as much or as little as you like." },
+  { key = "boundaries",  label = "Boundaries",  hint = "What your character can go through in a story with you. \"Ask\" means check with you out of character first." },
 }
+
+-- Other pages open the profile at a section with K:OpenProfileSection("boundaries").
+local wantSection
+function K:OpenProfileSection(key)
+  wantSection = key
+  if K.Journal then K.Journal:Open("profile") end
+end
 
 K:RegisterPage({
   id = "profile", trp3 = "hide", title = "Profile", heading = "Your character",
@@ -127,7 +135,8 @@ K:RegisterPage({
     right:SetPoint("TOPLEFT", left, "TOPRIGHT", 8, 0)
     right:SetPoint("BOTTOMRIGHT", 0, 0)
     c.section = "identity"
-    c.sectionTabs = UI.Segments(right, SECTIONS, 86, function(key) c.section = key; c:LoadSection() end)
+    c.sectionTabs = UI.Segments(right, SECTIONS, 68, function(key) c.section = key; c:LoadSection() end)
+    c.sectionTabs:Fit(68)
     c.sectionTabs:SetPoint("TOPLEFT", 14, -12)
     c.sectionHint = UI.Text(right, "", "GameFontHighlightSmall", "subtle", 340)
     c.sectionHint:SetPoint("TOPLEFT", 16, -44)
@@ -173,15 +182,49 @@ K:RegisterPage({
     idHint:SetPoint("TOPLEFT", 2, -216)
     idHint:SetSpacing(2)
 
+    -- Boundaries: consent for injury, death, capture and the rest
+    local bd = CreateFrame("Frame", nil, right)
+    bd:SetPoint("TOPLEFT", 14, -72)
+    bd:SetPoint("BOTTOMRIGHT", -14, 12)
+    c.bounds = bd
+    c.consent = {}
+    local vitems = {}
+    for _, v in ipairs(K.CONSENT_VALUES) do vitems[#vitems + 1] = { key = v.key, label = v.label, color = v.color } end
+    for i, f in ipairs(K.CONSENT) do
+      local y = -4 - (i - 1) * 48
+      local l = UI.Text(bd, f.label, "Body", "heading")
+      l:SetPoint("TOPLEFT", 2, y)
+      local dsc = UI.Text(bd, f.desc, "Small", "subtle", IW - 150)
+      dsc:SetPoint("TOPLEFT", l, "BOTTOMLEFT", 0, -3)
+      local seg = UI.Segments(bd, vitems, 46, function(v) K:SetConsent(f.key, v) end)
+      seg:SetPoint("TOPRIGHT", 0, y + 2)
+      if K:Compat() then for _, b in ipairs(seg.buttons) do b:Disable() end end   -- Total RP 3's, shown here
+      seg.field = f.key
+      c.consent[i] = seg
+    end
+    local bdFoot = UI.Text(bd, K:Compat()
+      and "Total RP 3 shares these as your RP style while it runs, so set them there. Kinship shows what it shares."
+      or ("Wounds and captures from effects follow these, so no one is given what they haven't agreed to. "
+      .. "Shared through the standard roleplay fields, so Total RP 3, MyRolePlay and XRP users see them too."),
+      "GameFontHighlightSmall", "subtle", IW)
+    bdFoot:SetPoint("BOTTOMLEFT", 2, 0)
+    bdFoot:SetSpacing(2)
+
     function c:LoadSection()
       for _, s in ipairs(SECTIONS) do if s.key == self.section then self.sectionHint:SetText(s.hint) end end
       self.sectionTabs:Select(self.section)
-      local isId = self.section == "identity"
+      local isId, isBd = self.section == "identity", self.section == "boundaries"
+      local writing = not (isId or isBd)
       self.identity:SetShown(isId)
-      self.area:SetShown(not isId)
-      self.count:SetShown(not isId)
-      if self.toolbar then self.toolbar:SetShown(not isId) end
-      if isId then return end
+      self.bounds:SetShown(isBd)
+      self.area:SetShown(writing)
+      self.count:SetShown(writing)
+      if self.toolbar then self.toolbar:SetShown(writing) end
+      if isBd then
+        local consent = K:Profile().consent or {}
+        for _, seg in ipairs(self.consent) do seg:Select(consent[seg.field]) end
+      end
+      if not writing then return end
       self.area.edit:SetText(K:Profile()[self.section] or "")
       self.area.edit:SetCursorPosition(0)
     end
@@ -198,6 +241,7 @@ K:RegisterPage({
     for key, eb in pairs(c.fields) do
       if not eb:HasFocus() then eb:SetText(p[key] or ""); eb:SetCursorPosition(0) end
     end
+    if wantSection then c.section, wantSection = wantSection, nil end
     if not c.area.edit:HasFocus() then c:LoadSection() end
   end,
 })

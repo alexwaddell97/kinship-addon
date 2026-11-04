@@ -40,7 +40,8 @@ local function Matches(e, filter, search)
   -- New roleplayers, and those happy to help them
   if filter == "help" and p.rpExp ~= "new" and p.rpExp ~= "mentor" then return false end
   if search ~= "" then
-    local hay = ((p.rpName or "") .. " " .. e.name .. " " .. (p.house or "") .. " " .. (p.epithet or "")):lower()
+    local hay = ((p.rpName or "") .. " " .. e.name .. " " .. (p.house or "") .. " " .. (p.group or "") .. " "
+      .. (p.epithet or "")):lower()
     if not hay:find(search, 1, true) then return false end
   end
   return true

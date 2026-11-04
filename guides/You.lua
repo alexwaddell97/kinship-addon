@@ -101,12 +101,12 @@ K:RegisterGuide({
         .. "so others know whether to come over in character or just say hello.",
       target = function(c) return Around(c.gem, c.status) end },
     { title = "The details",
-      text = "Quick facts: epithet, pronouns, age, height, home and house. Keep Currently fresh: it sits on your tooltip "
-        .. "and tells people what your character is doing right now.",
+      text = "Quick facts: epithet, pronouns, age, height, home and house. Not sure what one is for? Hover the small (i) "
+        .. "beside it. Keep Currently fresh: it sits on your tooltip and tells people what your character is doing right now.",
       target = function(c) return Up(c.fields.epithet, 2) end },
-    { title = "Four kinds of writing",
-      text = "Identity, Appearance, Personality and History. Write as much or as little as you like: these are what people open "
-        .. "when a first glance has made them curious about your character.",
+    { title = "Who they are, in depth",
+      text = "Identity, Appearance, Personality, History and Boundaries. Write as much or as little as you like: these are "
+        .. "what people open when a first glance has made them curious about your character.",
       target = function(c) return c.sectionTabs end },
     { title = "Identity",
       text = "Your full name, title and nickname, plus race, class and more. Leave the name empty to use your character's own; "
@@ -120,7 +120,14 @@ K:RegisterGuide({
         .. "icons and dividers, and everything saves as you type.",
       target = function(c) return Up(c.sectionTabs) end,
       before = function(c)
-        if c.section == "identity" then c.section = "appearance"; c:LoadSection() end
+        if c.section == "identity" or c.section == "boundaries" then c.section = "appearance"; c:LoadSection() end
+      end },
+    { title = "Boundaries",
+      text = "Yes, Ask or No for injury, death, capture, crime and romance. Others see them before a story turns rough, "
+        .. "other RP addons read them too, and Kinship's wounds and captures always respect them.",
+      target = function(c) return c.bounds end,
+      before = function(c)
+        if c.section ~= "boundaries" then c.section = "boundaries"; c:LoadSection() end
       end },
     { title = "Profiles and preview",
       text = "Keep a separate profile for each story or character idea, and switch between them in one click. Preview, beside it, "
@@ -148,12 +155,13 @@ K:RegisterGuide({
       before = Tab(1) },
     { title = "Shaping a glance",
       text = "Give each glance an icon, a few words of title and a line or two on what people notice. Move it left or right to reorder, "
-        .. "or switch off Show to others to keep it aside without deleting it.",
+        .. "switch off Show to others to keep it aside, or Save for reuse to add it to other profiles later.",
       target = function(c) return c.frames[1].editor end,
       before = Tab(1) },
     { title = "As others see it",
       text = "See your glances on someone's target bar and in the tooltip when they hover. "
-        .. "Glance presets, above, keeps sets under a name to swap in a click: travelling clothes, court dress, after the battle.",
+        .. "Saved glances, above, adds ones you've kept to any profile, and keeps whole sets to swap in a click: "
+        .. "travelling clothes, court dress, after the battle.",
       target = function(c) return Around(c.presets, c.frames[1].preview) end,
       before = Tab(1) },
     { title = "Personality traits",

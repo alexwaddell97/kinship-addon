@@ -336,6 +336,48 @@ function P:DeletePreset(name)
 end
 
 ---------------------------------------------------------------------------
+-- Saved glances (account-wide, in K.db.glanceLibrary): single glances kept
+-- to drop into any profile, on any character.
+---------------------------------------------------------------------------
+P.MAX_LIBRARY = 60
+
+function P:Library()
+  local lib = K.db.glanceLibrary or {}
+  table.sort(lib, function(a, b) return (a.title or ""):lower() < (b.title or ""):lower() end)
+  return lib
+end
+
+-- Saves a copy; one with the same title is replaced.
+function P:SaveToLibrary(g)
+  if not (g and self.HasContent(g)) then return false end
+  local lib = K.db.glanceLibrary
+  local title = Trim(g.title)
+  local entry = { title = title, text = g.text or "", icon = g.icon, t = time() }
+  for i, e in ipairs(lib) do
+    if Trim(e.title):lower() == title:lower() then lib[i] = entry; K:Fire("GLANCE_PRESETS"); return true, true end
+  end
+  if #lib >= self.MAX_LIBRARY then return false end
+  lib[#lib + 1] = entry
+  K:Fire("GLANCE_PRESETS")
+  return true
+end
+
+-- Adds a saved glance to your profile; nil when all five are taken.
+function P:AddFromLibrary(e)
+  local list = self:MyGlances()
+  if not e or #list >= self.MAX_GLANCES then return nil end
+  list[#list + 1] = { title = e.title or "", text = e.text or "", icon = e.icon, active = true }
+  K:Fire("PROFILE")
+  return #list
+end
+
+function P:RemoveFromLibrary(e)
+  for i, x in ipairs(K.db.glanceLibrary) do
+    if x == e then table.remove(K.db.glanceLibrary, i); K:Fire("GLANCE_PRESETS"); return end
+  end
+end
+
+---------------------------------------------------------------------------
 -- Theme music
 ---------------------------------------------------------------------------
 function P:PlayMusic(id)
@@ -596,6 +638,7 @@ end
 ---------------------------------------------------------------------------
 K:On("LOGIN", function()
   K.db.glancePresets = K.db.glancePresets or {}
+  K.db.glanceLibrary = K.db.glanceLibrary or {}
 
   -- Drop curated music this client doesn't have.
   local known = C_UIFileAsset and C_UIFileAsset.IsKnownFile
