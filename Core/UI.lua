@@ -469,6 +469,36 @@ function UI.Segments(parent, items, width, onSelect)
     end
     self:SetSize(x, h)
   end
+  -- Exactly `total` wide, each segment as wide as its words plus an even
+  -- share of what's left. If the words don't fit, the smaller label font is
+  -- tried, and failing that the segments split it evenly (and trim).
+  function holder:FitTo(total)
+    local n = #self.buttons
+    local function measure()
+      local tw, sum = {}, 0
+      for i, b in ipairs(self.buttons) do
+        tw[i] = math.ceil((b.text.GetUnboundedStringWidth and b.text:GetUnboundedStringWidth() or b.text:GetStringWidth()) or 0)
+        sum = sum + tw[i]
+      end
+      return tw, sum
+    end
+    local tw, sum = measure()
+    if sum + 10 * n > total then
+      for _, b in ipairs(self.buttons) do b.text:SetFontObject(UI.FONTS.Label) end
+      tw, sum = measure()
+    end
+    local share = (total - sum) / n
+    local x = 0
+    for i, b in ipairs(self.buttons) do
+      local bw = share >= 8 and (tw[i] + share) or (total / n)
+      if i == n then bw = total - x end
+      b:SetWidth(bw)
+      b:ClearAllPoints()
+      b:SetPoint("LEFT", x, 0)
+      x = x + bw
+    end
+    self:SetSize(total, h)
+  end
   UI:OnTheme(function() holder:Paint() end)
   return holder
 end

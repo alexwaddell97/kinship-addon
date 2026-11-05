@@ -136,7 +136,7 @@ K:RegisterPage({
     right:SetPoint("BOTTOMRIGHT", 0, 0)
     c.section = "identity"
     c.sectionTabs = UI.Segments(right, SECTIONS, 68, function(key) c.section = key; c:LoadSection() end)
-    c.sectionTabs:Fit(68)
+    c.sectionTabs:FitTo(342)   -- the panel's width inside its margins; five tabs must fit whatever the font
     c.sectionTabs:SetPoint("TOPLEFT", 14, -12)
     c.sectionHint = UI.Text(right, "", "GameFontHighlightSmall", "subtle", 340)
     c.sectionHint:SetPoint("TOPLEFT", 16, -44)

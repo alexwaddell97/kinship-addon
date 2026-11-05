@@ -1,5 +1,11 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Fixed
+- The Profile page's writing tabs ran past the edge of the panel once
+  Boundaries joined them, with some fonts. They now always fit.
+
 ## 1.3.0
 
 There's a new file (Groups), so restart the game rather than /reload.
