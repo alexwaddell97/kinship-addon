@@ -29,9 +29,9 @@ jobs:
 
       - name: Check the code
         run: |
-          if ! luacheck . --formatter plain --codes > luacheck.txt; then
-            cat luacheck.txt
-            msg=$(sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g' luacheck.txt)
+          if ! luacheck . --formatter plain --codes > "$RUNNER_TEMP/luacheck.txt"; then
+            cat "$RUNNER_TEMP/luacheck.txt"
+            msg=$(sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g' "$RUNNER_TEMP/luacheck.txt")
             echo "::error title=luacheck found problems::$msg"
             exit 1
           fi
@@ -57,7 +57,7 @@ jobs:
           v="${GITHUB_REF_NAME#v}"
           awk -v head="## $v" '$0 == head { on = 1; next } /^## / && on { exit } on' CHANGELOG.md > changelog.md
           cp changelog.md notes.md
-          printf '\n---\nUnzip into `World of Warcraft\\_classic_beta_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
+          printf '\n---\nUnzip into `World of Warcraft\\_forever_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
 
       - uses: softprops/action-gh-release@v3
         with:

@@ -1,10 +1,11 @@
 -- Kinship RP: roleplay quests in the game's own quest places.
 --
--- Objective tracker: a "Roleplay Quests" section in the game's objective
--- tracker (the one EllesmereUI's quest tracker reskins; it skins sections
--- addons add, so this one matches). Each tracked Kinship quest shows with its
--- own icon, its title and its objectives, ticked as they're done. Click to
--- open it in the journal; right-click to stop tracking.
+-- Objective tracker: a "Roleplay Quests" section just below the game's
+-- objective tracker, in its fonts and colours. It's Kinship's own frame,
+-- never part of the game's tracker, so nothing Kinship does can spread into
+-- the tracker's own sections. Each tracked Kinship quest shows with its own
+-- icon, its title and its objectives, ticked as they're done. Click to open
+-- it in the journal; right-click to stop tracking; click the heading to fold it.
 --
 -- Quest log: a "Roleplay" tab beside the quest log's own tabs (Quests, Map
 -- Legend...). It lays a Kinship card over the quest list showing your
@@ -41,13 +42,6 @@ end
 ---------------------------------------------------------------------------
 -- The objective tracker section
 ---------------------------------------------------------------------------
-local module
-
-local function DoneColor()
-  local c = _G.OBJECTIVE_TRACKER_COLOR
-  return c and (c.Complete or c["Complete"]) or nil
-end
-
 -- A round icon to the left of a block's title, set in a dark disc with a
 -- thin gold edge, the size of the game's own quest buttons.
 local function BlockIcon(block, icon)
@@ -137,154 +131,246 @@ local function ActionButton(block, e)
   b:Show()
 end
 
-local function Layout(self)
-  if S().questTracker == false then return end
-  for _, e in ipairs(Quests(true)) do
-    local block = self:GetBlock(e.id)
-    if not block then return end
-    block.kinshipId = e.id
-    local QM = K.QuestMarkers
-    -- Like the game's own: "[12] Murloc Gills", all in the colour for its level.
-    local title = e.title or "?"
-    local lvl = QM and QM.LevelText(e)
-    if lvl then title = ("[%s] %s"):format(lvl, title) end
-    local hex = lvl and QM.LevelHex(e)
-    if hex then title = ("|cff%s%s|r"):format(hex, title) end
-    -- Distances only when asked for (they're always in the tooltip).
-    local showFar = S().questTrackerDistance == true
-    local far = showFar and QM and e.marker and QM.TrackerDistance(e.marker)
-    if far then title = title .. "  |cff9ab8b8" .. far .. "|r" end
-    block:SetHeader(title)
-    local QA = K.QuestAuto
-    local shown = 0
-    for i, o in ipairs(e.objectives or {}) do
-      -- Hidden ones appear once done; in order, the ones not yet open wait.
-      if not QA or (QA.Visible(e, i) and (o.done or QA.Open(e, i))) then
-        shown = shown + 1
-        local text = (QA and QA.CounterPrefix(e, i) or "") .. o.text
-        if o.opt then text = text .. "  |cff9ab8b8(optional)|r" end
-        if QA and QA.Standby(e, i) then text = text .. "  |cff9ab8b8(backup)|r" end
-        if o.failed and not o.done then
-          text = text .. "  |cffc0473a(" .. (QA and QA.FailText(o) or "failed"):lower() .. ")|r"
-        else
-          local progress = QA and not o.done and QA.ProgressText(e, i)
-          if progress then text = text .. "  |cff9ab8b8" .. progress .. "|r" end
-        end
-        local d = showFar and QM and o.marker and not o.done and QM.TrackerDistance(o.marker)
-        if d then text = text .. "  |cff9ab8b8" .. d .. "|r" end
-        block:AddObjective(i, text, nil, nil, _G.OBJECTIVE_DASH_STYLE_SHOW, o.done and DoneColor() or nil)
-      end
-    end
-    if shown == 0 then
-      block:AddObjective("none", e.giver ~= "" and ("From " .. e.giver) or "No objectives", nil, nil, _G.OBJECTIVE_DASH_STYLE_HIDE)
-    end
-    if not self:LayoutBlock(block) then return end
-    BlockIcon(block, e.icon)
-    ActionButton(block, e)
-  end
-end
-
+-- The section is Kinship's own frame, laid just below the game's tracker
+-- and moved along after each of its updates. It is never added to the
+-- game's tracker or asked to redraw it: anything an addon does inside the
+-- tracker's update spreads to the game's own sections (a scenario's aura
+-- check, say) and the game then blocks them.
 local TITLE = "Roleplay Quests"
+local WIDTH, HEADER_H, GAP = 248, 26, 10
 
--- The section's title: the tracker reads headerText when a section is made,
--- which is before we can set it, so write it onto the header as well.
-local function ApplyTitle(m)
-  m.headerText = TITLE
-  local header = m.Header
-  if not header then return end
-  local fs = header.Text or header.TitleText or header.HeaderText
-  if not fs then
-    for _, r in ipairs({ header:GetRegions() }) do
-      if r.IsObjectType and r:IsObjectType("FontString") then fs = r break end
-    end
-  end
-  if fs and fs:GetText() ~= TITLE then fs:SetText(TITLE) end
+local function Font(names, fallback)
+  for _, n in ipairs(names) do if _G[n] then return _G[n] end end
+  return fallback
 end
 
-local function BuildModule()
-  if module then return module end
+local function Color(c, r, g, b)
+  if type(c) == "table" then return c.r or c[1] or r, c.g or c[2] or g, c.b or c[3] or b end
+  return r, g, b
+end
+
+local frame
+local function Frame()
+  if frame then return frame end
+  local f = CreateFrame("Frame", "KinshipRPQuestTracker", UIParent)
+  f:SetSize(WIDTH, HEADER_H)
+  f:SetFrameStrata("LOW")
+  f:Hide()
+  local head = CreateFrame("Button", nil, f)
+  head:SetPoint("TOPLEFT")
+  head:SetPoint("TOPRIGHT")
+  head:SetHeight(HEADER_H)
+  head.text = head:CreateFontString(nil, "OVERLAY")
+  head.text:SetFontObject(Font({ "ObjectiveTrackerHeaderFont", "GameFontNormalMed2" }, GameFontNormal))
+  head.text:SetPoint("LEFT", 8, 0)
+  head.text:SetText(TITLE)
+  head.line = head:CreateTexture(nil, "ARTWORK")
+  head.line:SetColorTexture(0.86, 0.68, 0.30, 0.45)
+  head.line:SetHeight(1)
+  head.line:SetPoint("BOTTOMLEFT", 4, 2)
+  head.line:SetPoint("BOTTOMRIGHT", -4, 2)
+  head.toggle = head:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  head.toggle:SetPoint("RIGHT", -8, 0)
+  head:SetScript("OnClick", function()
+    f.collapsed = not f.collapsed
+    T:Refresh()
+  end)
+  f.head = head
+  f.blocks = {}
+  frame = f
+  return f
+end
+
+local function OnBlockClick(block, mouseButton)
+  local id = block.kinshipId
+  if not id then return end
+  if mouseButton == "RightButton" then
+    UI.Menu(block, function(root)
+      local e = K.Quests:Log()[id]
+      root:CreateTitle(e and e.title or "Quest")
+      root:CreateButton("Open in your journal", function() K.Quests:Open(id) end)
+      local QA = K.QuestAuto
+      for i in ipairs(e and e.objectives or {}) do
+        local label, fn, menuText = nil, nil, nil
+        if QA then label, fn, menuText = QA.Action(e, i) end
+        if label then root:CreateButton(menuText or label, fn) end
+      end
+      root:CreateButton("Stop tracking", function() K.Quests:Track(id, false) end)
+    end)
+  else
+    K.Quests:Open(id)
+  end
+end
+
+local function OnBlockEnter(block)
+  local e = block.kinshipId and K.Quests:Log()[block.kinshipId]
+  if not e then return end
+  GameTooltip:SetOwner(block, "ANCHOR_LEFT")
+  GameTooltip:SetText(("|T%s:16:16:0:0:64:64:5:59:5:59|t  %s"):format(tostring(e.icon or DEFAULT_ICON), UI.Escape(e.title or "")), 1, 0.82, 0)
+  if e.giver and e.giver ~= "" then GameTooltip:AddLine("From " .. UI.Escape(e.giver), 0.8, 0.8, 0.8) end
+  local done, total = K.Quests.Progress(e)
+  if total > 0 then GameTooltip:AddLine(("%d/%d done"):format(done, total), 0.55, 0.80, 1) end
+  -- How far the pins are
+  local QM, QA = K.QuestMarkers, K.QuestAuto
+  if QM then
+    local function Far(mk)
+      local d = QM.Distance(mk)
+      return d and QM.DistText(d) or QM.Label(mk) or "?"
+    end
+    if e.marker then GameTooltip:AddDoubleLine("The quest", Far(e.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72) end
+    for i, o in ipairs(e.objectives or {}) do
+      if o.marker and not o.done and (not QA or (QA.Visible(e, i) and QA.Open(e, i))) then
+        GameTooltip:AddDoubleLine(UI.Escape(o.text), Far(o.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72)
+      end
+    end
+  end
+  GameTooltip:AddLine("Click to open. Right-click for more.", 0.62, 0.62, 0.62)
+  GameTooltip:Show()
+end
+
+local function Block(f, i)
+  local b = f.blocks[i]
+  if b then return b end
+  b = CreateFrame("Button", nil, f)
+  b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  b:SetWidth(WIDTH)
+  b.HeaderText = b:CreateFontString(nil, "OVERLAY")
+  b.HeaderText:SetFontObject(Font({ "ObjectiveTrackerLineFont", "ObjectiveFont" }, GameFontNormal))
+  b.HeaderText:SetPoint("TOPLEFT", 30, 0)
+  b.HeaderText:SetWidth(WIDTH - 36)
+  b.HeaderText:SetJustifyH("LEFT")
+  b.HeaderText:SetWordWrap(true)
+  b.lines = {}
+  b:SetScript("OnClick", OnBlockClick)
+  b:SetScript("OnEnter", OnBlockEnter)
+  b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  f.blocks[i] = b
+  return b
+end
+
+local function Line(b, j)
+  local l = b.lines[j]
+  if l then return l end
+  l = b:CreateFontString(nil, "OVERLAY")
+  l:SetFontObject(Font({ "ObjectiveTrackerLineFont", "ObjectiveFont" }, GameFontHighlightSmall))
+  l:SetWidth(WIDTH - 46)
+  l:SetJustifyH("LEFT")
+  l:SetWordWrap(true)
+  b.lines[j] = l
+  return l
+end
+
+-- One quest: "[12] Murloc Gills" in the colour for its level, then its
+-- objectives, the way the game writes its own.
+local function PaintBlock(b, e)
+  b.kinshipId = e.id
+  local QM, QA = K.QuestMarkers, K.QuestAuto
+  local title = e.title or "?"
+  local lvl = QM and QM.LevelText(e)
+  if lvl then title = ("[%s] %s"):format(lvl, title) end
+  local hex = lvl and QM.LevelHex(e)
+  if hex then title = ("|cff%s%s|r"):format(hex, title) end
+  -- Distances only when asked for (they're always in the tooltip).
+  local showFar = S().questTrackerDistance == true
+  local far = showFar and QM and e.marker and QM.TrackerDistance(e.marker)
+  if far then title = title .. "  |cff9ab8b8" .. far .. "|r" end
+  b.HeaderText:SetText(title)
+
+  local rows = {}
+  for i, o in ipairs(e.objectives or {}) do
+    -- Hidden ones appear once done; in order, the ones not yet open wait.
+    if not QA or (QA.Visible(e, i) and (o.done or QA.Open(e, i))) then
+      local text = (QA and QA.CounterPrefix(e, i) or "") .. o.text
+      if o.opt then text = text .. "  |cff9ab8b8(optional)|r" end
+      if QA and QA.Standby(e, i) then text = text .. "  |cff9ab8b8(backup)|r" end
+      if o.failed and not o.done then
+        text = text .. "  |cffc0473a(" .. (QA and QA.FailText(o) or "failed"):lower() .. ")|r"
+      else
+        local progress = QA and not o.done and QA.ProgressText(e, i)
+        if progress then text = text .. "  |cff9ab8b8" .. progress .. "|r" end
+      end
+      local d = showFar and QM and o.marker and not o.done and QM.TrackerDistance(o.marker)
+      if d then text = text .. "  |cff9ab8b8" .. d .. "|r" end
+      rows[#rows + 1] = { text = "- " .. text, done = o.done }
+    end
+  end
+  if #rows == 0 then rows[1] = { text = (e.giver or "") ~= "" and ("From " .. e.giver) or "No objectives" } end
+
+  local y = -(math.ceil(b.HeaderText:GetStringHeight()) + 3)
+  local tc = _G.OBJECTIVE_TRACKER_COLOR
+  for j, row in ipairs(rows) do
+    local l = Line(b, j)
+    l:ClearAllPoints()
+    l:SetPoint("TOPLEFT", 40, y)
+    l:SetText(row.text)
+    if row.done then l:SetTextColor(Color(tc and tc.Complete, 0.6, 0.6, 0.6))
+    else l:SetTextColor(Color(tc and tc.Normal, 0.8, 0.8, 0.8)) end
+    l:Show()
+    y = y - math.ceil(l:GetStringHeight()) - 2
+  end
+  for j = #rows + 1, #b.lines do b.lines[j]:Hide() end
+  b:SetHeight(-y)
+  BlockIcon(b, e.icon)
+  ActionButton(b, e)
+end
+
+-- Just below whatever the game's tracker is showing; on its own on the
+-- right of the screen when there's no game tracker to sit under.
+local function Place(f)
+  f:ClearAllPoints()
   local otf = _G.ObjectiveTrackerFrame
-  if not otf or not otf.AddModule then Debug("no objective tracker that takes sections") return nil end
-  local ok, m = pcall(CreateFrame, "Frame", "KinshipRPQuestTrackerModule", UIParent, "ObjectiveTrackerModuleTemplate")
-  if not ok or not m then Debug("couldn't make a tracker section") return nil end
-  m.uiOrder = 950   -- after the game's own sections
-  if m.SetHeader then pcall(m.SetHeader, m, TITLE) end
-  K.Try("quest tracker", ApplyTitle, m)
-
-  -- Never let an error out into the game's tracker update.
-  function m:LayoutContents()
-    K.Try("quest tracker", ApplyTitle, self)
-    if self.kinshipBroken then return end
-    local fine, err = pcall(Layout, self)
-    if not fine then
-      self.kinshipBroken = true
-      Debug(err)
-    end
-  end
-
-  function m:OnBlockHeaderClick(block, mouseButton)
-    local id = block and block.kinshipId
-    if not id then return end
-    if mouseButton == "RightButton" then
-      UI.Menu(block, function(root)
-        local e = K.Quests:Log()[id]
-        root:CreateTitle(e and e.title or "Quest")
-        root:CreateButton("Open in your journal", function() K.Quests:Open(id) end)
-        local QA = K.QuestAuto
-        for i in ipairs(e and e.objectives or {}) do
-          local label, fn, menuText = nil, nil, nil
-          if QA then label, fn, menuText = QA.Action(e, i) end
-          if label then root:CreateButton(menuText or label, fn) end
-        end
-        root:CreateButton("Stop tracking", function() K.Quests:Track(id, false) end)
-      end)
-    else
-      K.Quests:Open(id)
-    end
-  end
-
-  function m:OnBlockHeaderEnter(block)
-    local e = block and block.kinshipId and K.Quests:Log()[block.kinshipId]
-    if not e then return end
-    GameTooltip:SetOwner(block, "ANCHOR_LEFT")
-    GameTooltip:SetText(("|T%s:16:16:0:0:64:64:5:59:5:59|t  %s"):format(tostring(e.icon or DEFAULT_ICON), UI.Escape(e.title or "")), 1, 0.82, 0)
-    if e.giver and e.giver ~= "" then GameTooltip:AddLine("From " .. UI.Escape(e.giver), 0.8, 0.8, 0.8) end
-    local done, total = K.Quests.Progress(e)
-    if total > 0 then GameTooltip:AddLine(("%d/%d done"):format(done, total), 0.55, 0.80, 1) end
-    -- How far the pins are
-    local QM, QA = K.QuestMarkers, K.QuestAuto
-    if QM then
-      local function Far(mk)
-        local d = QM.Distance(mk)
-        return d and QM.DistText(d) or QM.Label(mk) or "?"
-      end
-      if e.marker then GameTooltip:AddDoubleLine("The quest", Far(e.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72) end
-      for i, o in ipairs(e.objectives or {}) do
-        if o.marker and not o.done and (not QA or (QA.Visible(e, i) and QA.Open(e, i))) then
-          GameTooltip:AddDoubleLine(UI.Escape(o.text), Far(o.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72)
-        end
+  if otf and otf:IsVisible() then
+    local below, low
+    for _, m in ipairs(type(otf.modules) == "table" and otf.modules or {}) do
+      if type(m) == "table" and m.IsVisible and m:IsVisible() and m.GetBottom then
+        local bottom = m:GetBottom()
+        if bottom and (not low or bottom < low) then below, low = m, bottom end
       end
     end
-    GameTooltip:AddLine("Click to open. Right-click for more.", 0.62, 0.62, 0.62)
-    GameTooltip:Show()
+    if below then f:SetPoint("TOPLEFT", below, "BOTTOMLEFT", 0, -GAP)
+    elseif otf.Header then f:SetPoint("TOPLEFT", otf.Header, "BOTTOMLEFT", 0, -GAP)
+    else f:SetPoint("TOPLEFT", otf, "TOPLEFT", 0, -30) end
+  else
+    f:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -90, -280)
   end
-  function m:OnBlockHeaderLeave() GameTooltip:Hide() end
+end
 
-  local added
-  local mgr = _G.ObjectiveTrackerManager
-  if mgr and mgr.SetModuleContainer then added = pcall(mgr.SetModuleContainer, mgr, m, otf) end
-  if not added then added = pcall(otf.AddModule, otf, m) end
-  if not added then Debug("the tracker wouldn't take the section") return nil end
-  module = m
-  return m
+local hooked
+local function Hook()
+  local otf = _G.ObjectiveTrackerFrame
+  if hooked or not (otf and otf.Update) then return end
+  hooked = true
+  -- Runs after the game's update has finished, so nothing here reaches it.
+  hooksecurefunc(otf, "Update", function() if frame and frame:IsShown() then Place(frame) end end)
 end
 
 function T:Refresh()
-  local m = BuildModule()
-  if not m then return end
-  m.kinshipBroken = nil
-  if m.MarkDirty then pcall(m.MarkDirty, m)
-  elseif _G.ObjectiveTrackerFrame and _G.ObjectiveTrackerFrame.Update then pcall(_G.ObjectiveTrackerFrame.Update, _G.ObjectiveTrackerFrame) end
+  local list = (On() and S().questTracker ~= false) and Quests(true) or {}
+  if #list == 0 then
+    if frame then frame:Hide() end
+    return
+  end
+  local f = Frame()
+  Hook()
+  local fine, err = pcall(function()
+    f.head.toggle:SetText(f.collapsed and "+" or "-")
+    local y = -HEADER_H - 4
+    for i, e in ipairs(list) do
+      local b = Block(f, i)
+      b:SetShown(not f.collapsed)
+      if not f.collapsed then
+        PaintBlock(b, e)
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", 0, y)
+        y = y - b:GetHeight() - 8
+      end
+    end
+    for i = #list + 1, #f.blocks do f.blocks[i]:Hide() end
+    f:SetHeight(f.collapsed and HEADER_H or -y)
+    Place(f)
+    f:Show()
+  end)
+  if not fine then Debug(err); f:Hide() end
 end
 
 -- Quests.lua's settings used to offer a position reset for a floating tracker.

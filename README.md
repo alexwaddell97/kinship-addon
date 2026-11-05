@@ -50,7 +50,7 @@ Kinship never loads or depends on Total RP 3. It only notices when it's there.
 Download the latest version from CurseForge, or the zip from the latest [release](https://github.com/alexwaddell97/kinship-addon/releases/latest), and unzip it into:
 
 ```
-World of Warcraft\_classic_beta_\Interface\AddOns\KinshipRP
+World of Warcraft\_forever_\Interface\AddOns\KinshipRP
 ```
 
 The folder must be called `KinshipRP`. If you clone this repository instead, clone it into that folder name:

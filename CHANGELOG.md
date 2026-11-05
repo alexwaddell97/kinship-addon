@@ -1,5 +1,15 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Fixed
+- Levelling up (and other tracker updates) could raise "Auras cannot be
+  accessed when secret while tainted by 'KinshipRP'" from the game's
+  objective tracker. Roleplay Quests is now Kinship's own section just below
+  the tracker, in the same fonts and colours, so nothing Kinship does reaches
+  the game's own sections. Click its heading to fold it.
+- Releases no longer include an empty luacheck.txt.
+
 ## 1.3.1
 
 A fix after 1.3.0. No new files, so a /reload is enough.

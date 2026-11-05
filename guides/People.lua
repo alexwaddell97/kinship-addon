@@ -236,7 +236,7 @@ K:RegisterGuide({
       target = function(c) return c.frames[3].card end,
       before = Tab(3) },
     { title = "Out in the world",
-      text = "Tracked quests also sit in your objective tracker under Roleplay Quests, each with its own icon, and the quest log has a Roleplay tab listing them all. Settings > Quests switches either off." },
+      text = "Tracked quests also sit just below your objective tracker, under Roleplay Quests, each with its own icon, and the quest log has a Roleplay tab listing them all. Settings > Quests switches either off." },
     { title = "Levels and markers",
       text = "When writing, give a quest a level and pin where it happens, or pin each objective. Pins show on the world map and minimap, and the tracker counts down the yards as you go." },
     { title = "Objectives that tick themselves",
