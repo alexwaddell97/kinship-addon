@@ -252,7 +252,7 @@ local function Line(b, j)
   local l = b.lines[j]
   if l then return l end
   l = b:CreateFontString(nil, "OVERLAY")
-  l:SetFontObject(Font({ "ObjectiveTrackerLineFont", "ObjectiveFont" }, GameFontHighlightSmall))
+  l:SetFontObject(Font({ "ObjectiveTrackerLineFont", "ObjectiveFont" }, _G.GameFontHighlightSmall))
   l:SetWidth(WIDTH - 46)
   l:SetJustifyH("LEFT")
   l:SetWordWrap(true)
