@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.3.1
+
+A fix after 1.3.0. No new files, so a /reload is enough.
 
 ### Fixed
 - The Profile page's writing tabs ran past the edge of the panel once
