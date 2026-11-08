@@ -1,7 +1,7 @@
 -- Kinship RP: roleplay names on unit frames. Your player frame shows your
 -- roleplay name, and your target and focus frames show theirs once their
 -- profile has arrived, where the frame shows the character name: the
--- roleplay name in roleplay gold, the character name kept after it in grey,
+-- roleplay name in its own colour, the character name kept after it in grey,
 -- "Aldric Vane (Leeroy)", so you can always see who to whisper or invite.
 --
 -- Works with EllesmereUI's unit frames (it paints names into "text zones";
@@ -40,7 +40,8 @@ end
 -- Plain text: no colour codes or other escapes, so the frame keeps its look.
 local Plain = K.Plain
 
--- The roleplay name for a unit, or nil to leave the frame alone.
+-- The roleplay name for a unit and its profile, or nil to leave the frame
+-- alone.
 local function RPName(unit)
   if not UnitExists(unit) then return nil end
   local isPlayer = UnitIsPlayer(unit)
@@ -49,7 +50,7 @@ local function RPName(unit)
   if Safe(me) and me then
     local p = K:Profile()
     if strtrim(p.rpName or "") == "" then return nil end
-    return Plain(K:DisplayName(p))
+    return Plain(K:DisplayName(p)), p
   end
   if S().rpUnitNamesOthers == false then return nil end
   local name = GetUnitName(unit, true)
@@ -59,7 +60,7 @@ local function RPName(unit)
   local rp = p and Plain(UI.Clean(p.rpName or "")) or ""
   if rp == "" then return nil end
   local prefix = Plain(UI.Clean(p.prefix or ""))
-  return K.Titled(prefix, rp)
+  return K.Titled(prefix, rp), p
 end
 
 -- The forms the game's name can take on a frame: with surname first (Forever
@@ -78,7 +79,7 @@ end
 -- put in and the game name it went around.
 local function Swap(text, unit)
   if not Safe(text) or type(text) ~= "string" or text == "" then return nil end
-  local rp = RPName(unit)
+  local rp, p = RPName(unit)
   if not rp then return nil end
   -- Already swapped (the frame asked twice): the first name would match
   -- inside the roleplay name itself ("Vax" in "Lord Vax Orius").
@@ -86,7 +87,7 @@ local function Swap(text, unit)
   for _, g in ipairs(GameNames(unit) or {}) do
     local i, j = text:find(g, 1, true)
     if i then
-      local seg = K.BothNames(rp, g)
+      local seg = K.BothNames(rp, g, K.NameHexOf(p))
       return text:sub(1, i - 1) .. seg .. text:sub(j + 1), seg, g
     end
   end
@@ -247,7 +248,7 @@ K:On("REGISTRY", function(key)
 end)
 
 K:RegisterSettings({ id = "unitNames", title = "Unit frames", order = 41, build = function(card)
-  card:Toggle("Roleplay names on unit frames", "Your player frame shows your roleplay name in roleplay gold, with your character's name after it.", {
+  card:Toggle("Roleplay names on unit frames", "Your player frame shows your roleplay name in its colour, with your character's name after it.", {
     get = function() return S().rpUnitNames ~= false end,
     set = function(v) K.db.settings.rpUnitNames = v; N:Refresh() end,
   })

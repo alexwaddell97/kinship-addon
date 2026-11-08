@@ -1,8 +1,8 @@
 -- Kinship RP: roleplay names on friendly player nameplates, with a status dot
 -- (IC / LFRP / OOC), an optional epithet line and your relationship's colour.
 --
--- The roleplay name sits just above the plate's own name, in roleplay gold,
--- and the character's name stays where the plate draws it: you can always
+-- The roleplay name sits just above the plate's own name, in the colour its
+-- player chose (roleplay gold if none), and the character's name stays where the plate draws it: you can always
 -- see who to whisper or invite. That's the same on the game's own plates and
 -- on EllesmereUI Nameplates (whose text is never touched). Other
 -- plate addons that draw friendly plates themselves (Plater's friendly module,
@@ -281,15 +281,15 @@ local function RingColor(def)
 end
 
 -- Draw a friendly plate's overlay over the plate's own name (anchor).
--- d = { text, epithet, status, ring = {r,g,b,a}, kin = colour|nil,
--- rival = colour|nil }. rec remembers which name we faded. Also used by the
+-- d = { text, epithet, status, ring = {r,g,b,a}, color = {r,g,b}|nil,
+-- kin = colour|nil, rival = colour|nil }. rec remembers which name we faded. Also used by the
 -- preview (/kin plates), so what you see there is what plates draw.
 local function Draw(o, anchor, d, rec)
   local s = S()
   MatchFont(o.name, anchor, 0)
   MatchFont(o.title, anchor, -2)
   SetClamped(o.name, d.text)
-  local c = K.RP_NAME_COLOR
+  local c = d.color or K.RP_NAME_COLOR
   o.name:SetTextColor(c[1], c[2], c[3], 1)
   o.ring:SetVertexColor(unpack(d.ring))
   local st = K.STATUS[d.status] or K.STATUS.ooc
@@ -418,6 +418,7 @@ local function Paint(unit, rec)
   local kin, rival = Marks(name)
   Draw(Overlay(plate), anchor, {
     text = text, epithet = Plain(p.epithet), status = p.status, sameName = same,
+    color = { K.NameColorOf(p) },
     ring = { RingColor(K.RelationOf and K:RelationOf(name)) }, kin = kin, rival = rival,
   }, rec)
 end
@@ -488,6 +489,7 @@ function P:PaintPreview()
   local samples = {
     { char = K:MyName() or "Vax Orus", text = myName ~= "" and myName or "Lord John Dynamo",
       epithet = myName ~= "" and Plain(me.epithet) or "the Deviant", status = me.status or "ic",
+      color = myName ~= "" and { K.NameColorOf(me) } or nil,
       kin = rel("friend", { 0.42, 0.82, 0.46 }), relKey = "friend" },
     { char = "Mirabel Thorn", text = "Mira Ashveil", epithet = "", status = "lfrp",
       kin = rel("family", { 0.96, 0.70, 0.26 }), rival = grudge("rival"), relKey = "family" },
@@ -504,7 +506,7 @@ function P:PaintPreview()
     else
       local def = d.relKey and K.RelationDef and K:RelationDef(d.relKey)
       Draw(o, pl.name, { text = d.text, epithet = d.epithet, status = d.status,
-        ring = { RingColor(def) }, kin = d.kin, rival = d.rival }, pl.rec)
+        color = d.color, ring = { RingColor(def) }, kin = d.kin, rival = d.rival }, pl.rec)
     end
   end
 end
@@ -691,7 +693,7 @@ function P:Describe()
       or ("|cff%sOn, with the game's own nameplates.|r "):format(ok)
     local under = s.platesBrackets ~= false and "the character's name becomes \"(Name)\" where the plate had it"
       or "the plate's own name stays underneath"
-    text = which .. "The roleplay name sits above in gold and " .. under .. "."
+    text = which .. "The roleplay name sits above and " .. under .. "."
     if mode == "ellesmere" then text = text .. " EllesmereUI's sizes, bars and colours stay as you set them." end
     local okC, shown = pcall(function() return C_CVar.GetCVarBool("nameplateShowFriends") end)
     if okC and shown == false then
@@ -708,7 +710,11 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
       set = function(v) S()[key] = v; P:RefreshAll() end,
     }
   end
-  card:Toggle("Roleplay nameplates", "Kinship's touches on players' nameplates: roleplay names in gold (or their character name, with any title, if they don't use one), a dot for IC, LFRP or OOC, and the marks below. Off, every plate is left as the game draws it.", opt("plates"))
+  card:Toggle("Roleplay nameplates", "Kinship's touches on players' nameplates: roleplay names in their own colour or gold (or their character name, with any title, if they don't use one), a dot for IC, LFRP or OOC, and the marks below. Off, every plate is left as the game draws it.", opt("plates"))
+  card:Toggle("Players' own name colours", "Names on plates, tooltips and unit frames in the colour each player chose for theirs (very dark ones are lightened so you can read them). Off, every roleplay name is in roleplay gold.", {
+    get = function() return S().ownNameColors ~= false end,
+    set = function(v) S().ownNameColors = v; P:RefreshAll() end,
+  })
   card:Toggle("Character name in brackets", "Under the roleplay name, their character's name as \"(Name)\" in a softer grey, where the plate shows it.", opt("platesBrackets"))
   card:Toggle("Kin and rival marks", "A small icon after their name for your Kin and your rivals, in your relationship's or standing's colour. Rivals are marked on enemy players' plates too.", opt("platesIcons"))
   card:Toggle("Show epithets", "Their epithet in small letters under the name, like \"the Wandering Blade\". Titles like \"Lord\" always show as part of the name.", opt("platesTitles"))

@@ -740,10 +740,10 @@ K:RegisterSettings({ id = "items", title = "Items & stashes", order = 40,
     set = function(v) K.db.settings.satchelButton = v; if K.Satchel then K.Satchel:PlaceButton() end end,
   })
   card:Toggle("Open the satchel with your bags", "Your roleplay satchel opens and closes with your game bags, docked beside them.", {
-    get = function() return K.db.settings.satchelWithBags ~= false end,
-    set = function(v) K.db.settings.satchelWithBags = v end,
+    get = function() return K.db.settings.satchelOpensWithBags == true end,
+    set = function(v) K.db.settings.satchelOpensWithBags = v or nil end,
   })
-  card:Toggle("Keep the satchel minimised", "It still comes up with your bags, but as a thin strip beside them, until you click it. Handy when you're not roleplaying.", {
+  card:Toggle("Keep the satchel minimised", "When it opens, it comes up as a thin strip beside your bags until you click it. Handy when you're not roleplaying.", {
     get = function() return K.db.settings.satchelMin and true or false end,
     set = function(v) if K.Satchel then K.Satchel:SetCollapsed(v) else K.db.settings.satchelMin = v or nil end end,
   })

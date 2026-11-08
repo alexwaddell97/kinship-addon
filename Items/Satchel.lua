@@ -1,6 +1,6 @@
 -- Kinship RP: the roleplay satchel. Your Kinship items in a small bag of
 -- their own beside your game bags: a button by the bag bar, and a window
--- that opens and closes with your bags, docked to their side.
+-- docked to their side that can open and close with your bags.
 --
 -- It takes on the look of whichever bags you use:
 --   ellesmere  EllesmereUI Bags: its textured dark window, fine borders, flat
@@ -22,8 +22,8 @@
 -- EllesmereUI's mouseover and combat settings for the bag bar).
 --
 -- The minimise button narrows the satchel to a thin strip of the same
--- height beside your bags. Minimised, it still comes up with your bags but
--- stays out of the way until you click it (the satchel button, the key
+-- height beside your bags. Minimised, it still comes up with your bags
+-- (when set to) but stays out of the way until you click it (the satchel button, the key
 -- binding and /kin satchel open it in full too).
 --
 -- Kinship items are Kinship's own records, not game items, so they live here
@@ -1236,7 +1236,7 @@ local function TieToBags()
 end
 
 local function BagsShown()
-  if not (On() and S().satchelWithBags ~= false) then return end
+  if not (On() and S().satchelOpensWithBags) then return end
   TieToBags()
   HookSearch()
   -- Straight away, beside the bags, if they already have their place...
@@ -1497,7 +1497,9 @@ end)
 K:On("LOGIN", function()
   local s = S()
   if s.satchelButton == nil then s.satchelButton = true end
-  if s.satchelWithBags == nil then s.satchelWithBags = true end
+  -- Opening with the bags is off unless chosen (the old setting, on for
+  -- everyone, is left behind).
+  s.satchelWithBags = nil
   -- Bag addons set up their frames at login too: look a little later.
   C_Timer.After(2, function() HookBags(); SA:PlaceButton() end)
   C_Timer.After(6, function() HookBags(); SA:PlaceButton() end)

@@ -9,13 +9,14 @@ local Safe = K.Safe
 -- Tooltips
 ---------------------------------------------------------------------------
 -- The roleplay name (with its short title) on the tooltip's first line, in
--- roleplay gold, and the character's own name on the right of it in grey.
-local function SetNameLine(tooltip, text, char)
+-- its player's colour or roleplay gold, and the character's own name on the
+-- right of it in grey.
+local function SetNameLine(tooltip, text, char, p)
   local base = tooltip.GetName and tooltip:GetName() or ""
   local fs = _G[base .. "TextLeft1"]
   if not (fs and text and text ~= "") then return end
   fs:SetText(text)
-  fs:SetTextColor(unpack(K.RP_NAME_COLOR))
+  fs:SetTextColor(K.NameColorOf(p))
   if not char or char == "" or char:lower() == text:lower() then return end
   local right = _G[base .. "TextRight1"]
   if right then
@@ -32,10 +33,10 @@ local function AddProfileLines(tooltip, name, p, other)
   if other then
     local rp = strtrim(C(p.rpName))
     if rp ~= "" then
-      SetNameLine(tooltip, K.Titled(C(p.prefix), rp), K:CharacterName(name))
+      SetNameLine(tooltip, K.Titled(C(p.prefix), rp), K:CharacterName(name), p)
     end
   elseif strtrim(p.rpName or "") ~= "" then
-    SetNameLine(tooltip, K:DisplayName(p), K:CharacterName())
+    SetNameLine(tooltip, K:DisplayName(p), K:CharacterName(), p)
   end
   if p.epithet and p.epithet ~= "" then tooltip:AddLine(C(p.epithet), 0.30, 0.72, 0.68) end
   local who = strtrim(C(p.race) .. " " .. C(p.class))

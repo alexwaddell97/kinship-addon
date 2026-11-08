@@ -27,6 +27,14 @@
   nothing in them are dimmed.
 - For players of other RP addons, the Looks tab is called Description, since
   that's where their main writing (Total RP 3's "About") arrives.
+- Roleplay names on nameplates, tooltips and unit frames are in the colour
+  each player chose for theirs (in Kinship or Total RP 3), lightened if too
+  dark to read, instead of always gold. Gold is still used when they haven't
+  chosen one; "Players' own name colours" under Nameplates turns it back to
+  gold for everyone.
+- The satchel no longer opens with your bags unless you ask it to: turn on
+  "Open the satchel with your bags" under Items & stashes. Its button by your
+  bags and the key binding open it as before.
 
 ### Added
 - More of what Total RP 3 players share now shows on their profile: weight,
