@@ -1,5 +1,5 @@
 -- Kinship RP: the target bar. When you target a roleplayer, a slim bar shows
--- their portrait or profile icon, roleplay name, status, stance and
+-- their portrait or profile icon, roleplay name, status and
 -- relationship, their glances and effects, and a row of actions. The actions are the
 -- buttons features register with K:RegisterTargetButton (view the profile,
 -- write a letter, roll dice, give an item, set a relationship, ignore...).
@@ -16,7 +16,10 @@ local WHITE = "Interface\\Buttons\\WHITE8X8"
 local H = 58
 local PORTRAIT = 44
 local GLANCE, BTN = 28, 28
-local NAME_MIN, NAME_MAX = 120, 210
+-- The name column grows to fit the name and the line under it (the bar
+-- widens with it), up to NAME_MAX. Wide enough for an epithet, status,
+-- stance and relationship in the Blizzard look's wider letters.
+local NAME_MIN, NAME_MAX = 120, 330
 
 local S = K.Settings
 
@@ -45,8 +48,15 @@ local function RoundButton(parent, size)
   b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   UI.Round(b.icon)
   local function paint(p)
-    local u = K:Theme().ui
-    b.ring:SetVertexColor(u[1], u[2], u[3], 0.35 + 0.65 * p)
+    local t = K:Theme()
+    local u = t.ui
+    if t.skin == "blizzard" then
+      -- A bronze ring that warms to gold, as the game's round buttons do.
+      local e = t.chromeEdge
+      b.ring:SetVertexColor(e[1] + (u[1] - e[1]) * p, e[2] + (u[2] - e[2]) * p, e[3] + (u[3] - e[3]) * p, 0.9 + 0.1 * p)
+    else
+      b.ring:SetVertexColor(u[1], u[2], u[3], 0.35 + 0.65 * p)
+    end
     b.icon:SetSize(size + 2 * p, size + 2 * p)
   end
   b.paint = paint
@@ -92,7 +102,12 @@ function B:Build()
   f.line:SetHeight(1)
   f.line:SetPoint("BOTTOMLEFT", 1, 1)
   f.line:SetPoint("BOTTOMRIGHT", -1, 1)
+  -- The Blizzard look: the HUD's bronze box (made once; flat when the client has none).
+  f.hud = UI.Skin.Hud(f, 12)
   UI:OnTheme(function(t)
+    local hud = t.skin == "blizzard" and f.hud
+    if f.hud then f.hud:SetShown(hud) end
+    f.bg:SetShown(not hud); f.edge:SetShown(not hud); f.line:SetShown(not hud)
     f.bg:SetColorTexture(unpack(t.chrome))
     f.edge:SetColor(unpack(t.chromeEdge))
     f.line:SetVertexColor(t.ui[1], t.ui[2], t.ui[3], 0.45)
@@ -247,13 +262,8 @@ function B:Update()
   if me then
     text = K:DisplayName(p)
   else
-    local rp = p and strtrim(C(p.rpName)) or ""
-    if rp ~= "" then
-      local prefix = strtrim(C(p.prefix))
-      text = K.Titled(prefix, rp)
-    else
-      text = char
-    end
+    -- Their roleplay name, or their own under a title ("Lady Mira Moonshadow").
+    text = (K:ShownName(p, char)) or char
   end
   if hasRP and char ~= "" and char:lower() ~= text:lower() then
     text = text .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r"
@@ -268,7 +278,7 @@ function B:Update()
   if ignored then r, g, b = 0.55, 0.55, 0.55 end
   f.name:SetTextColor(r, g, b)
 
-  -- Status, stance and relationship on the line below
+  -- Status and relationship on the line below
   local bits = {}
   if ignored then
     bits[1] = "Ignored"
@@ -277,8 +287,7 @@ function B:Update()
     if epithet ~= "" then bits[#bits + 1] = epithet end
     local st = p.status and K.STATUS[p.status]
     if st then bits[#bits + 1] = ("|cff%s%s|r"):format(Hex(st.color), st.short or st.label) end
-    local stance = p.stance and K.STANCES[p.stance]
-    if stance then bits[#bits + 1] = ("|cff%s%s|r"):format(Hex(stance.color), stance.short or stance.label) end
+    -- War stance is left to the tooltip: there's no room for it here.
     local lv = K.Experience and K.Experience.Notable(p)
     if lv then bits[#bits + 1] = ("|cff%s%s|r"):format(Hex(lv.color), lv.short) end
   else

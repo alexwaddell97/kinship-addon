@@ -166,7 +166,7 @@ K:RegisterPage({
     end
     addId("rpName",     "Full name  (leave empty to use your character's)", 0, 0,    IW, 60):Info("Full name",
       "The name other players see, surname and all. Leave it empty and your character's own name is used.")
-    addId("prefix",     "Title  (e.g. \"Lord\", \"Sergeant\")",              0, -42,  HW2, 30):Info("Title",
+    addId("prefix",     "Title  (e.g. \"Lord\")",                            0, -42,  HW2, 30):Info("Title",
       "A word that goes in front of your name, like \"Lord\" or \"Sergeant\". "
       .. "For a line after your name, use Epithet.")
     addId("nickname",   "Nickname",                                          176, -42, HW2, 40):Info("Nickname",

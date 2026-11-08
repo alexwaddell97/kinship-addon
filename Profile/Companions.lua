@@ -418,6 +418,7 @@ K:AddTooltipLines(function(tooltip, unit, name, profile, isMe)
   for _, a in ipairs(Auras(unit)) do
     for _, c in ipairs(mounts) do
       if C:IsBound(c, a.name) then
+        if K.TooltipFull and not K:TooltipFull() then K:TooltipMore(); return end   -- shown with Shift
         AddSection(tooltip, c, nil, true)
         return
       end

@@ -346,8 +346,7 @@ local function AddHelpButton()
   if not f or J.helpButton then return end
   local b = CreateFrame("Button", nil, f)
   b:SetSize(22, 22)
-  b:SetPoint("TOPRIGHT", -38, -7)
-  b:SetFrameLevel(f:GetFrameLevel() + 10)
+  UI.SeatCornerButton(f, b, -38, -7)
   b.ring = UI.Circle(b, 22, "ARTWORK", 0)
   b.ring:SetPoint("CENTER")
   b.hole = UI.Circle(b, 19, "ARTWORK", 1)
@@ -393,9 +392,13 @@ hooksecurefunc(J, "Show", function(self)
   end
   C_Timer.After(0.35, function()
     if not J:IsShowing(id) then return end
-    -- One question first (RPExperience.lua), then the tours.
-    local X = K.Experience
-    if X and X:NeedsAsking() then X:Ask(J.frame, Go) else Go() end
+    -- A question or two first (the look, PageSettings.lua; roleplay
+    -- experience, RPExperience.lua), then the tours.
+    local X, L = K.Experience, K.LookChoice
+    local function Experience()
+      if X and X:NeedsAsking() then X:Ask(J.frame, Go) else Go() end
+    end
+    if L and L:NeedsAsking() then L:Ask(J.frame, Experience) else Experience() end
   end)
 end)
 

@@ -423,6 +423,25 @@ function K:DisplayName(p)
   return K.Titled(prefix, n)
 end
 
+-- The name a profile goes by out in the world, plain text: its roleplay
+-- name with its title, or, when it leaves the roleplay name empty (plenty of
+-- people play under their character's own, and Forever's have two parts),
+-- the character's name with the title before it ("Operative Brennan Black").
+-- char is that character's name (yours if nil). Second value: true when it's
+-- the character's own name, so there's no need to show it again beside it.
+-- Nil when there's nothing beyond the game's own name to show.
+function K:ShownName(p, char)
+  if not p then return nil end
+  local Clean = self.UI and self.UI.Clean or tostring
+  local prefix = K.Plain(Clean(p.prefix or ""))
+  local rp = K.Plain(Clean(p.rpName or ""))
+  if rp ~= "" then return K.Titled(prefix, rp), false end
+  if prefix == "" then return nil end
+  char = char or self:CharacterName()
+  if type(char) ~= "string" or char == "" then return nil end
+  return K.Titled(prefix, char), true
+end
+
 -- Out in the world (tooltips, nameplates, unit frames, chat) a roleplay name
 -- is in the colour its player chose for it, or roleplay gold when they didn't,
 -- and always has the character's own name beside it in grey: the name

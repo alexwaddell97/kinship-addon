@@ -455,6 +455,7 @@ K:AddTooltipLines(function(tooltip, unit, name, profile, isMe)
   if not K.db or S().auraTooltip == false then return end
   local list = A:Of(name, isMe)
   if #list == 0 then return end
+  if K.TooltipFull and not K:TooltipFull() then K:TooltipMore(); return end   -- shown with Shift
   tooltip:AddLine(A.Summary(list, not isMe, 3), 1, 1, 1, true)
 end)
 

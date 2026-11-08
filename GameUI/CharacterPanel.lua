@@ -198,11 +198,24 @@ local function BuildPane()
   pane.edge:SetPoint("TOPLEFT", pane.bg)
   pane.edge:SetPoint("BOTTOMRIGHT", pane.bg)
   pane.edge.b = UI.Border(pane.edge)
+  -- The Blizzard look: the game's rock backdrop over the solid colour (so it
+  -- stays opaque) and the inset panes' border, made once.
+  pane.rock = pane.back:CreateTexture(nil, "BACKGROUND", nil, 1)
+  pane.rock:SetAllPoints(pane.bg)
+  pane.rock:SetTexture(UI.Skin.ROCK, "REPEAT", "REPEAT")
+  pane.rock:SetHorizTile(true); pane.rock:SetVertTile(true)
+  pane.rock:Hide()
+  pane.inset = UI.Skin.Inset(pane.edge)
   UI:OnTheme(function(t)
     -- Fully solid: the window colour is a touch see-through, which let the
     -- stats text underneath ghost through this pane.
     pane.bg:SetVertexColor(t.chrome[1], t.chrome[2], t.chrome[3], 1)
     pane.edge.b:SetColor(unpack(t.chromeEdge))
+    local skin = t.skin == "blizzard"
+    pane.rock:SetShown(skin)
+    pane.rock:SetVertexColor(0.5, 0.5, 0.5, 0.85)
+    if pane.inset then pane.inset:SetShown(skin) end
+    pane.edge.b:SetShown(not (skin and pane.inset))
   end)
 
   -- Who you are (fixed at the top) ----------------------------------------------
@@ -555,13 +568,14 @@ end
 
 local function MyTitle()
   local p = K:Profile()
-  if strtrim(p.rpName or "") == "" then return nil end
+  local shown, own = K:ShownName(p)
+  if not shown then return nil end
   local P = K.Persona
   local r, g, b
   if P then r, g, b = P.NameColor(p) end
-  local name = UI.Escape(K:DisplayName(p))
+  local name = UI.Escape(shown)
   local char = K:CharacterName()
-  local tail = char:lower() ~= name:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
+  local tail = not own and char:lower() ~= name:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
   return (r and Coloured(name, r, g, b) or name) .. tail
 end
 
@@ -572,15 +586,14 @@ local function TheirTitle()
   if not Safe(name) or not name or K:IsIgnored(name) then return nil end
   local reg = K:ProfileOf(name)
   local p = reg and reg.profile
-  local rp = p and strtrim(UI.Clean(p.rpName or "")) or ""
-  if rp == "" then return nil end
-  local prefix = strtrim(UI.Clean(p.prefix or ""))
-  local text = K.Titled(prefix, rp)
+  local char = K:CharacterName(name)
+  local shown, own = K:ShownName(p, char)
+  if not shown then return nil end
+  local text = UI.Escape(shown)
   local P = K.Persona
   local r, g, b
   if P then r, g, b = P.NameColor(p) end
-  local char = K:CharacterName(name)
-  local tail = char:lower() ~= text:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
+  local tail = not own and char:lower() ~= text:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
   return (r and Coloured(text, r, g, b) or text) .. tail
 end
 
@@ -831,13 +844,28 @@ function CP:BuildTheirs()
   f.bg:SetAllPoints()
   f.bg:SetTexture(WHITE)
   f.edge = UI.Border(f)
-  UI:OnTheme(function(t)
-    f.bg:SetVertexColor(unpack(t.chrome))
-    f.edge:SetColor(unpack(t.chromeEdge))
-  end)
+  -- The Blizzard look: rock body and the game windows' metal rim, made once.
+  f.rock = f:CreateTexture(nil, "BACKGROUND", nil, 1)
+  f.rock:SetAllPoints()
+  f.rock:SetTexture(UI.Skin.ROCK, "REPEAT", "REPEAT")
+  f.rock:SetHorizTile(true); f.rock:SetVertTile(true)
+  f.rock:Hide()
+  f.rim = UI.Skin.Rim(f)
   f.close = UI.CloseButton(f, false, 20)
   f.close:SetPoint("TOPRIGHT", -6, -6)
   f.close:SetScript("OnClick", function() f:Hide(); f.dismissed = true end)
+  if f.rim then f.close:SetFrameLevel(f.rim:GetFrameLevel() + 1) end
+  UI:OnTheme(function(t)
+    local rim = t.skin == "blizzard" and f.rim and true or false
+    f.bg:SetVertexColor(unpack(t.chrome))
+    f.edge:SetColor(unpack(t.chromeEdge))
+    f.edge:SetShown(not rim)
+    if f.rim then f.rim:SetShown(rim) end
+    f.rock:SetShown(rim)
+    f.rock:SetVertexColor(0.5, 0.5, 0.5, 0.85)
+    f.close:ClearAllPoints()
+    if rim then f.close:SetPoint("TOPRIGHT", -3, -3) else f.close:SetPoint("TOPRIGHT", -6, -6) end
+  end)
 
   f.med = Medallion(f, 40)
   f.med:SetPoint("TOPLEFT", PAD, -PAD - 2)
@@ -852,16 +880,25 @@ function CP:BuildTheirs()
 
   f.rows = {}
   local y = -66
-  for _, label in ipairs({ "Status", "Stance", "House", "Pronouns" }) do
+  local order = { "Status", "Stance", "House", "Pronouns" }
+  for _, label in ipairs(order) do
     local r = Line(f, label)
-    r:SetPoint("TOPLEFT", PAD, y)
     r:SetPoint("RIGHT", -PAD, 0)
     f.rows[label] = r
-    y = y - 20
   end
   f.glances = IconRow(f, 5, 24, "")
-  f.glances:SetPoint("TOPLEFT", PAD, y - 6)
   f.glances:SetPoint("RIGHT", -PAD, 0)
+  -- Under the metal rim, the top steps down clear of its title band.
+  UI:OnTheme(function(t)
+    local drop = (t.skin == "blizzard" and f.rim) and 14 or 0
+    f.med:SetPoint("TOPLEFT", PAD, -PAD - 2 - drop)
+    local ry = y - drop
+    for _, label in ipairs(order) do
+      f.rows[label]:SetPoint("TOPLEFT", PAD, ry)
+      ry = ry - 20
+    end
+    f.glances:SetPoint("TOPLEFT", PAD, ry - 6)
+  end)
   for _, m in ipairs(f.glances.icons) do
     m:SetScript("OnEnter", function(self)
       UI.Tween(self, 1, 0.1, function(p) self:Paint(p) end)
@@ -925,8 +962,7 @@ function CP:RefreshTheirs()
     SetPortraitTexture(f.med.icon, unit)
     f.med.icon:SetTexCoord(0, 1, 0, 1)
   end
-  local rp = p and strtrim(C(p.rpName)) or ""
-  f.name:SetText(rp ~= "" and K.Titled(C(p.prefix), rp) or Short(name))
+  f.name:SetText((K:ShownName(p, Short(name))) or Short(name))
   f.name:SetTextColor(NameRGB(p, unit))
   f.epithet:SetText(p and C(p.epithet) or "")
   local st = p and K.STATUS[p.status]

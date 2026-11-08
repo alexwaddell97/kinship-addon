@@ -108,8 +108,18 @@ local function Pill(eb)
   b.icon:SetPoint("LEFT", 7, 0)
   b.text = UI.Text(b, "", "Label", "deskText")
   b.text:SetPoint("LEFT", b.icon, "RIGHT", 5, 0)
+  -- The Blizzard look: the game's red button (made once; flat when the client has none).
+  local red = UI.Skin.RedButton(b)
   local function paint(p)
     local t = K:Theme()
+    local art = red(t.skin == "blizzard" and (b.down and "pushed" or "normal") or nil)
+    b.bg:SetShown(not art); b.edge:SetShown(not art); b.bar:SetShown(not art)
+    if art then
+      if p > 0.5 then b.text:SetTextColor(1, 1, 1) else b.text:SetTextColor(1, 0.82, 0) end
+      b.text:SetAlpha(1)
+      return
+    end
+    b.text:SetTextColor(unpack(t.deskText))
     b.bg:SetVertexColor(UI.Mix(t.chrome, t.btnHover, p))
     b.edge:SetColor(UI.Mix(t.chromeEdge, t.btnEdgeHover, p))
     b.bar:SetVertexColor(t.ui[1], t.ui[2], t.ui[3], 0.6 + 0.4 * p)
@@ -128,7 +138,9 @@ local function Pill(eb)
     end
     GameTooltip:Show()
   end)
-  b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.15, paint); GameTooltip:Hide() end)
+  b:SetScript("OnLeave", function(self) self.down = nil; UI.Tween(self, 0, 0.15, paint); GameTooltip:Hide() end)
+  b:SetScript("OnMouseDown", function(self) self.down = true; paint(UI.Progress(self)) end)
+  b:SetScript("OnMouseUp", function(self) self.down = nil; paint(UI.Progress(self)) end)
   b:SetScript("OnClick", function(self, button)
     if button == "RightButton" then
       UI.Menu(self, function(root)

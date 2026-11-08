@@ -128,6 +128,12 @@ function J:Build()
   f.heading:SetPoint("TOPLEFT", SIDE + 20, -16)
   f.sub = UI.Text(f, "", "Small", "deskSubtle", CW - 40)
   f.sub:SetPoint("TOPLEFT", f.heading, "BOTTOMLEFT", 1, -5)
+  -- Under the Blizzard look's metal rim, the headers step down clear of its title band.
+  UI:OnTheme(function(t)
+    local rim = t.skin == "blizzard" and f.rim
+    logo:SetPoint("TOPLEFT", 16, rim and -28 or -18)
+    f.heading:SetPoint("TOPLEFT", SIDE + 20, rim and -32 or -16)
+  end)
   local rule = UI.Line(f)
   rule:SetPoint("TOPLEFT", SIDE, -HEAD)
   rule:SetPoint("TOPRIGHT", 0, -HEAD)

@@ -40,8 +40,9 @@ end
 -- Plain text: no colour codes or other escapes, so the frame keeps its look.
 local Plain = K.Plain
 
--- The roleplay name for a unit and its profile, or nil to leave the frame
--- alone.
+-- The roleplay name for a unit, its profile and whether it's the character's
+-- own name under a title ("Operative Brennan Black"), or nil to leave the
+-- frame alone.
 local function RPName(unit)
   if not UnitExists(unit) then return nil end
   local isPlayer = UnitIsPlayer(unit)
@@ -49,18 +50,18 @@ local function RPName(unit)
   local me = UnitIsUnit(unit, "player")
   if Safe(me) and me then
     local p = K:Profile()
-    if strtrim(p.rpName or "") == "" then return nil end
-    return Plain(K:DisplayName(p)), p
+    local shown, own = K:ShownName(p)
+    if not shown then return nil end
+    return Plain(shown), p, own
   end
   if S().rpUnitNamesOthers == false then return nil end
   local name = GetUnitName(unit, true)
   if not Safe(name) or not name or K:IsIgnored(name) then return nil end
   local reg = K:ProfileOf(name)
   local p = reg and reg.profile
-  local rp = p and Plain(UI.Clean(p.rpName or "")) or ""
-  if rp == "" then return nil end
-  local prefix = Plain(UI.Clean(p.prefix or ""))
-  return K.Titled(prefix, rp), p
+  local shown, own = K:ShownName(p, K:CharacterName(name))
+  if not shown then return nil end
+  return Plain(shown), p, own
 end
 
 -- The forms the game's name can take on a frame: with surname first (Forever
@@ -79,7 +80,7 @@ end
 -- put in and the game name it went around.
 local function Swap(text, unit)
   if not Safe(text) or type(text) ~= "string" or text == "" then return nil end
-  local rp, p = RPName(unit)
+  local rp, p, own = RPName(unit)
   if not rp then return nil end
   -- Already swapped (the frame asked twice): the first name would match
   -- inside the roleplay name itself ("Vax" in "Lord Vax Orius").
@@ -87,7 +88,8 @@ local function Swap(text, unit)
   for _, g in ipairs(GameNames(unit) or {}) do
     local i, j = text:find(g, 1, true)
     if i then
-      local seg = K.BothNames(rp, g, K.NameHexOf(p))
+      -- Their own name under a title needs no copy of itself beside it.
+      local seg = own and ("|cff" .. K.NameHexOf(p) .. rp .. "|r") or K.BothNames(rp, g, K.NameHexOf(p))
       return text:sub(1, i - 1) .. seg .. text:sub(j + 1), seg, g
     end
   end

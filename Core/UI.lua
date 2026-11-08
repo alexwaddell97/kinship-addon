@@ -61,10 +61,59 @@ local THEMES = {
     btnText      = { 0.95, 0.89, 0.73 },       btnTextHover = { 1, 0.96, 0.86 },
     thumb = { 0.30, 0.20, 0.08, 0.40 }, track = { 0.30, 0.20, 0.08, 0.08 },
   },
+  -- The game's own windows: a bronze metal rim, red buttons, gold headings
+  -- and dark inset cards. skin = "blizzard" tells widgets to wear the
+  -- client's frame art (copied from its templates, see the Skin section).
+  blizzard = {
+    light = false, font = "classic", shadow = 1, skin = "blizzard",
+    chrome     = { 0.055, 0.052, 0.050, 0.97 },
+    chromeEdge = { 0.62, 0.48, 0.27, 0.60 },     -- bronze
+    bar        = { 0, 0, 0, 0.28 },
+    deskBg     = { 0, 0, 0, 0.14 },
+    line       = { 0.62, 0.48, 0.27, 0.32 },
+    ui         = { 1, 0.82, 0 },
+    navText    = { 0.95, 0.93, 0.88 },
+    stageTop   = { 0.14, 0.13, 0.12 }, stageBottom = { 0.025, 0.024, 0.022 },
+    -- Dark inset cards with light text
+    panel      = { 0.025, 0.024, 0.022, 0.82 },
+    panelEdge  = { 0.62, 0.48, 0.27, 0.42 },
+    text       = { 0.93, 0.92, 0.89 },
+    subtle     = { 0.68, 0.66, 0.62 },
+    heading    = { 1, 0.82, 0 },
+    accent     = { 1, 0.70, 0.22 },             -- amber, apart from the gold headings
+    section    = { 1, 0.82, 0 },
+    sectionBg  = { 1, 0.82, 0, 0.08 },
+    field      = { 0, 0, 0, 0.50 },
+    fieldEdge  = { 0.62, 0.48, 0.27, 0.42 },
+    hover      = { 1, 0.82, 0, 0.07 },
+    stripe     = { 1, 1, 1, 0.03 },
+    select     = { 1, 0.82, 0, 0.14 },
+    deskHeading = { 1, 0.82, 0 },
+    deskText    = { 0.93, 0.92, 0.89 },
+    deskSubtle  = { 0.70, 0.68, 0.64 },
+    deskAccent  = { 1, 0.78, 0.38 },
+    deskField     = { 0, 0, 0, 0.45 },
+    deskFieldEdge = { 0.62, 0.48, 0.27, 0.40 },
+    deskSectionBg = { 0, 0, 0, 0.32 },
+    dim           = { 0, 0, 0, 0.70 },
+    -- Flat stand-ins for the red buttons, used where the client's art is missing
+    btn          = { 0.36, 0.05, 0.03, 1 },    btnHover     = { 0.48, 0.08, 0.05, 1 },
+    btnEdge      = { 0.70, 0.55, 0.30, 0.65 }, btnEdgeHover = { 0.95, 0.80, 0.45, 0.90 },
+    btnText      = { 1, 0.82, 0 },             btnTextHover = { 1, 1, 1 },
+    segBg        = { 0, 0, 0, 0.45 },          -- segmented choices sit dark, not red
+    thumb = { 0.62, 0.48, 0.27, 0.55 }, track = { 1, 1, 1, 0.05 },
+  },
 }
 
--- One look. K:Theme() stays the way every widget reads its colours.
-function K:Theme() return THEMES.classic end
+UI.THEMES = THEMES   -- read-only, for previews of each look
+
+-- The chosen look (Settings > Look); Kinship's own until saved data has loaded.
+-- Every widget reads its colours through K:Theme().
+function K:Theme()
+  local s = K.db and K.db.settings
+  return s and THEMES[s.uiTheme] or THEMES.classic
+end
+function UI.Skinned() return K:Theme().skin == "blizzard" end
 
 -- Fixed dark-on-cream colours (the "ink" style), for text that should not follow the look.
 UI.INK = {
@@ -152,6 +201,208 @@ end
 UI:ApplyFonts(K:Theme())
 
 K:On("LOGIN", function() UI:ApplyTheme() end)
+
+---------------------------------------------------------------------------
+-- Skin: the client's own frame art for the Blizzard look. Nothing is
+-- shipped: a hidden button is made from each of the game's templates once,
+-- and the art it wears (atlas, or file and texcoords) is copied onto ours,
+-- so WoW Forever's own art shows wherever it differs from retail. Each piece
+-- is made once and only shown or hidden when the look changes; anything the
+-- client lacks falls back to the flat look.
+---------------------------------------------------------------------------
+local Skin = {}
+UI.Skin = Skin
+
+-- What a texture is drawing right now, or nil.
+local function Snap(tex)
+  if not tex then return nil end
+  local atlas = tex.GetAtlas and tex:GetAtlas()
+  if atlas and atlas ~= "" then return { atlas = atlas, blend = tex:GetBlendMode() } end
+  local file = tex:GetTexture()
+  if not file then return nil end
+  return { file = file, coords = { tex:GetTexCoord() }, blend = tex:GetBlendMode() }
+end
+
+-- Draw a snapped look on one of our textures (hidden when there is none).
+function Skin.Paint(tex, s)
+  if not s then tex:Hide() return end
+  if s.atlas then
+    tex:SetAtlas(s.atlas)
+  else
+    tex:SetTexture(s.file)
+    tex:SetTexCoord(unpack(s.coords))
+  end
+  tex:SetBlendMode(s.blend or "BLEND")
+  tex:Show()
+end
+
+local refs = {}
+local function Ref(template, w, h)
+  if refs[template] == nil then
+    refs[template] = false
+    local ok, b = pcall(CreateFrame, "Button", nil, UIParent, template)
+    if ok and b then
+      b:Hide()
+      b:SetSize(w, h)
+      refs[template] = b
+    end
+  end
+  return refs[template] or nil
+end
+
+-- A state script on the reference, run safely (it swaps its own art).
+local function Fire(b, script, ...)
+  local fn = b:GetScript(script)
+  if fn then pcall(fn, b, ...) end
+end
+
+-- The red panel button: { normal, pushed, disabled } each { L, M, R }, plus
+-- the highlight and the end pieces' width. False when the client has none.
+local buttonArt
+function Skin.ButtonArt()
+  if buttonArt == nil then
+    buttonArt = false
+    local b = Ref("UIPanelButtonTemplate", 110, 22)
+    if b and b.Left and b.Middle and b.Right then
+      local function take() return { Snap(b.Left), Snap(b.Middle), Snap(b.Right) } end
+      local art = { capW = b.Left:GetWidth() }
+      art.normal = take()
+      Fire(b, "OnMouseDown", "LeftButton"); art.pushed = take(); Fire(b, "OnMouseUp", "LeftButton")
+      b:Disable(); Fire(b, "OnDisable"); art.disabled = take()
+      b:Enable(); Fire(b, "OnEnable")
+      art.highlight = Snap(b:GetHighlightTexture())
+      if not (art.capW and art.capW > 1) then art.capW = 12 end
+      if art.normal[1] and art.normal[2] and art.normal[3] then buttonArt = art end
+    end
+  end
+  return buttonArt or nil
+end
+
+-- The red X: { normal, pushed, disabled, highlight }, or false.
+local closeArt
+function Skin.CloseArt()
+  if closeArt == nil then
+    closeArt = false
+    local b = Ref("UIPanelCloseButton", 24, 24)
+    if b then
+      local art = {
+        normal = Snap(b:GetNormalTexture()), pushed = Snap(b:GetPushedTexture()),
+        disabled = Snap(b:GetDisabledTexture()), highlight = Snap(b:GetHighlightTexture()),
+      }
+      if art.normal then closeArt = art end
+    end
+  end
+  return closeArt or nil
+end
+
+-- The metal rim of the game's windows, on `f` (nil when the client can't
+-- draw it). It's a frame above f's content, so the rim overlaps its edges;
+-- the top carries a title band about 24 units deep.
+-- One of the game's nine-slice layouts on a frame above `f`'s content, or
+-- nil when the client lacks the layout or its art.
+local function NineSlice(f, layout, lift)
+  local NS = rawget(_G, "NineSliceUtil")
+  if not (NS and NS.ApplyLayoutByName) then return nil end
+  local ok, ns = pcall(CreateFrame, "Frame", nil, f, "NineSlicePanelTemplate")
+  if not ok or not ns then return nil end
+  ns:SetAllPoints()
+  local piece = pcall(NS.ApplyLayoutByName, ns, layout) and (ns.TopLeftCorner or ns.TopEdge)
+  if not (piece and ((piece.GetAtlas and piece:GetAtlas()) or piece:GetTexture())) then
+    ns:Hide()
+    return nil
+  end
+  ns:EnableMouse(false)
+  ns:SetFrameLevel(f:GetFrameLevel() + lift)
+  return ns
+end
+
+function Skin.Rim(f) return NineSlice(f, "ButtonFrameTemplateNoPortrait", 40) end
+
+-- The thin inner border of the game's inset panes (the character sheet's
+-- stats, for one), just above `f`'s content. Nil when the client has none.
+function Skin.Inset(f) return NineSlice(f, "InsetFrameTemplate", 5) end
+
+Skin.ROCK = "Interface\\FrameGeneral\\UI-Background-Rock"
+
+-- The red button's art on a button of ours: three pieces and a highlight,
+-- made once. Returns paint(state): state "normal", "pushed" or "disabled"
+-- draws it, nil hides it; paint returns whether the art is showing.
+function Skin.RedButton(b)
+  local pieces = {}
+  for i = 1, 3 do
+    pieces[i] = b:CreateTexture(nil, "BACKGROUND", nil, 1)
+    pieces[i]:Hide()
+  end
+  pieces[1]:SetPoint("TOPLEFT"); pieces[1]:SetPoint("BOTTOMLEFT")
+  pieces[3]:SetPoint("TOPRIGHT"); pieces[3]:SetPoint("BOTTOMRIGHT")
+  pieces[2]:SetPoint("TOPLEFT", pieces[1], "TOPRIGHT")
+  pieces[2]:SetPoint("BOTTOMRIGHT", pieces[3], "BOTTOMLEFT")
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:Hide()
+  return function(state)
+    local art = state and Skin.ButtonArt()
+    if not art then
+      for i = 1, 3 do pieces[i]:Hide() end
+      hl:Hide()
+      return false
+    end
+    local set = art[state] or art.normal
+    for i = 1, 3 do Skin.Paint(pieces[i], set[i] or art.normal[i]) end
+    pieces[1]:SetWidth(art.capW); pieces[3]:SetWidth(art.capW)
+    Skin.Paint(hl, art.highlight)
+    return true
+  end
+end
+
+-- The slim bronze box of the game's HUD (the action bars' and micro menu's
+-- frame: a dark body inside a bronze line), cut from the client's own
+-- "UI-HUD-ActionBar-Frame" art into nine pieces drawn on `parent` itself,
+-- its corners `corner` units a side. Returns { SetShown = fn(on) }, or nil
+-- when the client has no such art (the caller keeps its flat look).
+-- The art is 55 units a side. Its corners (the chamfer and where the line
+-- runs straight again) end 12 units in; drawn at their own size (corner 12)
+-- the 2-unit line stays whole. Shrinking them thins it below a pixel, and
+-- parts of the frame fade out as if cut off.
+local HUD_ATLAS, HUD_CUT = "UI-HUD-ActionBar-Frame", 12 / 55
+local hudInfo
+local function HudInfo()
+  if hudInfo == nil then
+    hudInfo = false
+    local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(HUD_ATLAS)
+    if info and info.file and info.leftTexCoord then hudInfo = info end
+  end
+  return hudInfo or nil
+end
+function Skin.Hud(parent, corner, sub)
+  local info = HudInfo()
+  if not info then return nil end
+  corner = corner or 12
+  local L, R, T, B = info.leftTexCoord, info.rightTexCoord, info.topTexCoord, info.bottomTexCoord
+  local us = { L, L + (R - L) * HUD_CUT, R - (R - L) * HUD_CUT, R }
+  local vs = { T, T + (B - T) * HUD_CUT, B - (B - T) * HUD_CUT, B }
+  local p = {}
+  for row = 1, 3 do
+    for col = 1, 3 do
+      local t = parent:CreateTexture(nil, "BACKGROUND", nil, sub or 2)
+      if not pcall(t.SetTexture, t, info.file) then return nil end
+      t:SetTexCoord(us[col], us[col + 1], vs[row], vs[row + 1])
+      t:Hide()
+      p[(row - 1) * 3 + col] = t
+    end
+  end
+  -- 1 2 3 / 4 5 6 / 7 8 9
+  for _, i in ipairs({ 1, 3, 7, 9 }) do p[i]:SetSize(corner, corner) end
+  p[1]:SetPoint("TOPLEFT"); p[3]:SetPoint("TOPRIGHT"); p[7]:SetPoint("BOTTOMLEFT"); p[9]:SetPoint("BOTTOMRIGHT")
+  p[2]:SetPoint("TOPLEFT", p[1], "TOPRIGHT"); p[2]:SetPoint("BOTTOMRIGHT", p[3], "BOTTOMLEFT")
+  p[8]:SetPoint("TOPLEFT", p[7], "TOPRIGHT"); p[8]:SetPoint("BOTTOMRIGHT", p[9], "BOTTOMLEFT")
+  p[4]:SetPoint("TOPLEFT", p[1], "BOTTOMLEFT"); p[4]:SetPoint("BOTTOMRIGHT", p[7], "TOPRIGHT")
+  p[6]:SetPoint("TOPLEFT", p[3], "BOTTOMLEFT"); p[6]:SetPoint("BOTTOMRIGHT", p[9], "TOPRIGHT")
+  p[5]:SetPoint("TOPLEFT", p[1], "BOTTOMRIGHT"); p[5]:SetPoint("BOTTOMRIGHT", p[9], "TOPLEFT")
+  local box = { pieces = p }
+  function box:SetShown(on) for i = 1, 9 do p[i]:SetShown(on and true or false) end end
+  return box
+end
 
 ---------------------------------------------------------------------------
 -- Pixel-perfect lines and borders (four 1px strips, re-snapped on scale change)
@@ -349,8 +600,19 @@ function UI.Button(parent, text, w, h)
   b:SetPushedTextOffset(0, -1)
   b:SetText(text or "")
 
+  -- The Blizzard look's red button art, made once.
+  local red = Skin.RedButton(b)
+
   local function paint(p)
     local t = K:Theme()
+    local state = t.skin == "blizzard" and (not b:IsEnabled() and "disabled" or (b.down and "pushed") or "normal") or nil
+    local art = red(state)
+    b.bg:SetShown(not art); b.edge:SetShown(not art)
+    if art then
+      local c = b:IsEnabled() and (p > 0.5 and { 1, 1, 1 } or { 1, 0.82, 0 }) or { 0.5, 0.5, 0.5 }
+      b.label:SetTextColor(c[1], c[2], c[3], 1)
+      return
+    end
     b.bg:SetVertexColor(Mix(t.btn, t.btnHover, p))
     b.edge:SetColor(Mix(t.btnEdge, t.btnEdgeHover, p))
     local r, g, bl, a = Mix(t.btnText, t.btnTextHover, p)
@@ -358,9 +620,11 @@ function UI.Button(parent, text, w, h)
   end
   function b:Paint() paint(UI.Progress(self)) end
   b:HookScript("OnEnter", function(self) if self:IsEnabled() then UI.Tween(self, 1, 0.12, paint) end end)
-  b:HookScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint) end)
+  b:HookScript("OnLeave", function(self) self.down = nil; UI.Tween(self, 0, 0.12, paint) end)
+  b:HookScript("OnMouseDown", function(self) if self:IsEnabled() then self.down = true; self:Paint() end end)
+  b:HookScript("OnMouseUp", function(self) self.down = nil; self:Paint() end)
   b:SetScript("OnEnable", function(self) self:Paint() end)
-  b:SetScript("OnDisable", function(self) UI.Tween(self, 0, 0.01, paint) end)
+  b:SetScript("OnDisable", function(self) self.down = nil; UI.Tween(self, 0, 0.01, paint) end)
   UI:OnTheme(function() b:Paint() end)
   return b
 end
@@ -382,15 +646,37 @@ function UI.CloseButton(parent, onPanel, size)
     l:SetRotation(math.rad(angle))
     b.cross[i] = l
   end
+  -- The Blizzard look's red X, made once.
+  b.art = b:CreateTexture(nil, "ARTWORK", nil, 1)
+  b.art:SetAllPoints()
+  b.art:Hide()
+  b.artHL = b:CreateTexture(nil, "HIGHLIGHT")
+  b.artHL:SetAllPoints()
+  b.artHL:Hide()
   local function paint(p)
+    local art = UI.Skinned() and Skin.CloseArt()
+    b.bg:SetShown(not art)
+    for _, l in ipairs(b.cross) do l:SetShown(not art) end
+    if art then
+      Skin.Paint(b.art, not b:IsEnabled() and art.disabled or (b.down and art.pushed) or art.normal)
+      Skin.Paint(b.artHL, art.highlight)
+      return
+    end
+    b.art:Hide(); b.artHL:Hide()
     local c = onPanel and K:Theme().text or K:Theme().navText
     b.bg:SetVertexColor(c[1], c[2], c[3], 0.10 * p)
     for _, l in ipairs(b.cross) do l:SetVertexColor(c[1], c[2], c[3], 0.55 + 0.45 * p) end
   end
   b:SetScript("OnEnter", function(self) UI.Tween(self, 1, 0.1, paint) end)
-  b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.1, paint) end)
-  b:SetScript("OnMouseDown", function() for _, l in ipairs(b.cross) do l:SetPoint("CENTER", 0, -1) end end)
-  b:SetScript("OnMouseUp", function() for _, l in ipairs(b.cross) do l:SetPoint("CENTER", 0, 0) end end)
+  b:SetScript("OnLeave", function(self) self.down = nil; UI.Tween(self, 0, 0.1, paint) end)
+  b:SetScript("OnMouseDown", function(self)
+    for _, l in ipairs(b.cross) do l:SetPoint("CENTER", 0, -1) end
+    self.down = true; paint(UI.Progress(self))
+  end)
+  b:SetScript("OnMouseUp", function(self)
+    for _, l in ipairs(b.cross) do l:SetPoint("CENTER", 0, 0) end
+    self.down = nil; paint(UI.Progress(self))
+  end)
   b:SetScript("OnClick", function() parent:Hide() end)
   UI:OnTheme(function() paint(UI.Progress(b)) end)
   return b
@@ -443,7 +729,7 @@ function UI.Segments(parent, items, width, onSelect)
 
   function holder:Paint()
     local t = K:Theme()
-    self.bg:SetVertexColor(unpack(t.btn))
+    self.bg:SetVertexColor(unpack(t.segBg or t.btn))
     self.edge:SetColor(unpack(t.btnEdge))
     for i, b in ipairs(self.buttons) do
       local sel = b.key == self.selected
@@ -669,8 +955,29 @@ function UI.Window(name, title, w, h, opts)
   f.bg:SetTexture(WHITE)
   f.edge = UI.Border(f)
 
+  -- The Blizzard look: the game's rock backdrop under the content and its
+  -- metal rim over the edges, both made once and shown with that look.
+  f.rock = f:CreateTexture(nil, "BACKGROUND", nil, -7)
+  f.rock:SetAllPoints()
+  f.rock:SetTexture(Skin.ROCK, "REPEAT", "REPEAT")
+  f.rock:SetHorizTile(true); f.rock:SetVertTile(true)
+  f.rock:Hide()
+  f.rim = Skin.Rim(f)
+  -- The title and close button ride above the rim.
+  f.top = CreateFrame("Frame", nil, f)
+  f.top:SetAllPoints()
+  f.top:EnableMouse(false)
+  if f.rim then f.top:SetFrameLevel(f.rim:GetFrameLevel() + 1) end
+
   f.close = UI.CloseButton(f)
+  f.close:SetFrameLevel(f.top:GetFrameLevel() + 1)
   f.close:SetPoint("TOPRIGHT", -6, -5)
+
+  -- A bare window still gets its title in the rim's band.
+  if opts.bare then
+    f.TitleText = UI.Text(f.top, title, "Header", "deskHeading")
+    f.TitleText:Hide()
+  end
 
   if not opts.bare then
     f.titleBar = f:CreateTexture(nil, "BACKGROUND", nil, -6)
@@ -685,17 +992,44 @@ function UI.Window(name, title, w, h, opts)
     f.icon:SetSize(18, 18)
     f.icon:SetPoint("TOPLEFT", 12, -8)
     f.icon:SetTexture(K.ICON)
-    f.TitleText = UI.Text(f, title, "Header", "deskHeading")
+    f.TitleText = UI.Text(f.top, title, "Header", "deskHeading")
     f.TitleText:SetPoint("LEFT", f.icon, "RIGHT", 8, 0)
   end
   function f:SetTitle(text) if self.TitleText then self.TitleText:SetText(text) end end
 
   UI:OnTheme(function(t)
+    local rim = t.skin == "blizzard" and f.rim and true or false
     f.bg:SetVertexColor(unpack(t.chrome))
     f.edge:SetColor(unpack(t.chromeEdge))
+    f.edge:SetShown(not rim)
+    if f.rim then f.rim:SetShown(rim) end
+    f.rock:SetShown(rim)
+    f.rock:SetVertexColor(0.5, 0.5, 0.5, 0.85)
+    f.close:ClearAllPoints()
+    -- On the rim, the X sits in its corner over the title band.
+    if rim then f.close:SetPoint("TOPRIGHT", -3, -2) else f.close:SetPoint("TOPRIGHT", -6, -5) end
     if f.titleBar then
+      f.titleBar:SetShown(not rim); f.titleLine:SetShown(not rim); f.icon:SetShown(not rim)
       f.titleBar:SetVertexColor(unpack(t.bar))
       f.titleLine:SetVertexColor(unpack(t.line))
+    end
+    local tt = f.TitleText
+    if tt then
+      tt:ClearAllPoints()
+      if rim then
+        -- Centred in the rim's band, as the game's own windows have it.
+        tt:SetPoint("TOPLEFT", f, "TOPLEFT", 40, -6)
+        tt:SetPoint("TOPRIGHT", f, "TOPRIGHT", -40, -6)
+        tt:SetJustifyH("CENTER")
+        tt:SetWordWrap(false)
+        tt:Show()
+      elseif f.icon then
+        tt:SetWidth(0)
+        tt:SetJustifyH("LEFT")
+        tt:SetPoint("LEFT", f.icon, "RIGHT", 8, 0)
+      else
+        tt:Hide()   -- a bare window draws its own header
+      end
     end
   end)
 
@@ -712,6 +1046,23 @@ end
 ---------------------------------------------------------------------------
 -- Content pieces
 ---------------------------------------------------------------------------
+-- A small round button in a window's top-right corner (help, Ko-fi): x, y
+-- from the corner under Kinship's look; in the metal rim's title band, left
+-- of the X, under the Blizzard look.
+function UI.SeatCornerButton(f, b, x, y)
+  UI:OnTheme(function(t)
+    local rim = t.skin == "blizzard" and f.rim
+    b:ClearAllPoints()
+    if rim then
+      b:SetPoint("TOPRIGHT", x + 6, -1)
+      b:SetFrameLevel(f.top:GetFrameLevel() + 1)
+    else
+      b:SetPoint("TOPRIGHT", x, y)
+      b:SetFrameLevel(f:GetFrameLevel() + 10)
+    end
+  end)
+end
+
 -- A content card: cream, with a fine brown edge.
 function UI.Panel(parent)
   local p = CreateFrame("Frame", nil, parent)
@@ -933,8 +1284,20 @@ function UI.Field(parent, label, width, maxLetters, onChange, style)
   eb:SetPoint("TOPLEFT", 0, -14)
   eb:SetScript("OnTextChanged", function(self, user) if user and onChange then onChange(self:GetText()) end end)
   holder.edit = eb
+  -- A label too long for the field (with room for its (i)) is cut short with
+  -- "..." rather than running into the next field. Re-fitted when fonts change.
+  holder.label:SetWordWrap(false)
+  local function fit()
+    local l = holder.label
+    l:SetWidth(0)
+    local room = width - 2 - (holder.info and 18 or 0)
+    local w = l.GetUnboundedStringWidth and l:GetUnboundedStringWidth() or l:GetStringWidth()
+    if w and w > room then l:SetWidth(room) end
+  end
+  fit()
+  UI:OnTheme(fit)
   -- holder:Info(title, body) puts a small (i) after the label.
-  function holder:Info(title, body) self.info = UI.Info(self, self.label, title, body, role); return self end
+  function holder:Info(title, body) self.info = UI.Info(self, self.label, title, body, role); fit(); return self end
   return holder
 end
 

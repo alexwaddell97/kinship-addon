@@ -512,6 +512,175 @@ K:RegisterPage({
 ---------------------------------------------------------------------------
 -- Kinship's own sections
 ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+-- Choosing a look (asked once, the first time the journal opens). Picking
+-- a card dresses Kinship in it straight away, so you see it before you go
+-- on; Settings > Look changes it any time.
+---------------------------------------------------------------------------
+local Look = {}
+K.LookChoice = Look
+
+local LOOKS = {
+  { key = "kinship", theme = "classic", label = "Kinship",
+    desc = "Teal and gold, with cream pages like a well-kept journal." },
+  { key = "blizzard", theme = "blizzard", label = "Blizzard",
+    desc = "The game's own windows: a metal frame, red buttons and dark pages." },
+}
+local PREVIEW_W, PREVIEW_H = 220, 108
+
+local function SetLook(key)
+  S().uiTheme = key == "blizzard" and "blizzard" or nil
+  UI:ApplyTheme()
+end
+
+local function CurrentLook() return S().uiTheme == "blizzard" and "blizzard" or "kinship" end
+
+-- A small drawing of a window in a look: sidebar, page header, a cream or
+-- dark page with two lines of writing, and a button. Its colours are the
+-- look's own, so it never follows the look you're in.
+local function Preview(parent, th)
+  local f = CreateFrame("Frame", nil, parent)
+  f:SetSize(PREVIEW_W, PREVIEW_H)
+  local function Rect(c, layer, sub)
+    local r = f:CreateTexture(nil, layer or "ARTWORK", nil, sub)
+    r:SetColorTexture(c[1], c[2], c[3], c[4] or 1)
+    return r
+  end
+  local body = Rect({ th.chrome[1], th.chrome[2], th.chrome[3], 1 }, "BACKGROUND", 0)
+  body:SetAllPoints()
+  local side = Rect(th.bar, "BACKGROUND", 1)
+  side:SetPoint("TOPLEFT"); side:SetPoint("BOTTOMLEFT"); side:SetWidth(50)
+  for i = 1, 4 do
+    local item = Rect(th.navText, "ARTWORK", 0)
+    item:SetSize(i == 1 and 30 or 24, 3)
+    item:SetPoint("TOPLEFT", 10, -16 - i * 12)
+    item:SetAlpha(i == 1 and 0.9 or 0.45)
+  end
+  local mark = Rect(th.ui, "ARTWORK", 1)
+  mark:SetSize(2, 9); mark:SetPoint("TOPLEFT", 1, -25)
+  local head = Rect(th.deskHeading, "ARTWORK", 0)
+  head:SetSize(70, 5); head:SetPoint("TOPLEFT", 62, -12)
+  local page = CreateFrame("Frame", nil, f)
+  page:SetPoint("TOPLEFT", 60, -26); page:SetPoint("BOTTOMRIGHT", -10, 10)
+  local paper = page:CreateTexture(nil, "BACKGROUND")
+  paper:SetAllPoints()
+  paper:SetColorTexture(th.panel[1], th.panel[2], th.panel[3], 1)
+  UI.Border(page, th.panelEdge)
+  local function Mark(c, w, hgt, x, y, a)
+    local r = page:CreateTexture(nil, "ARTWORK")
+    r:SetColorTexture(c[1], c[2], c[3], a or 1)
+    r:SetSize(w, hgt); r:SetPoint("TOPLEFT", x, y)
+    return r
+  end
+  Mark(th.heading, 54, 4, 10, -10)
+  Mark(th.text, 110, 2, 10, -25, 0.6)
+  Mark(th.text, 84, 2, 10, -34, 0.6)
+  local btn = page:CreateTexture(nil, "ARTWORK", nil, 1)
+  btn:SetColorTexture(th.btn[1], th.btn[2], th.btn[3], 1)
+  btn:SetSize(44, 12); btn:SetPoint("BOTTOMRIGHT", -8, 8)
+  local btnText = page:CreateTexture(nil, "ARTWORK", nil, 2)
+  btnText:SetColorTexture(th.btnText[1], th.btnText[2], th.btnText[3], 1)
+  btnText:SetSize(24, 2); btnText:SetPoint("CENTER", btn)
+  -- The window's own edge: a hairline, or a heavier bronze rim for Blizzard.
+  if th.skin == "blizzard" then
+    local e = th.chromeEdge
+    local function Side(p1, p2, w, hgt)
+      local r = f:CreateTexture(nil, "OVERLAY")
+      r:SetColorTexture(e[1], e[2], e[3], 1)
+      r:SetPoint(p1); r:SetPoint(p2)
+      if w then r:SetWidth(w) else r:SetHeight(hgt) end
+    end
+    Side("TOPLEFT", "TOPRIGHT", nil, 3); Side("BOTTOMLEFT", "BOTTOMRIGHT", nil, 3)
+    Side("TOPLEFT", "BOTTOMLEFT", 3); Side("TOPRIGHT", "BOTTOMRIGHT", 3)
+  else
+    UI.Border(f, th.chromeEdge)
+  end
+  return f
+end
+
+local function BuildLook(host)
+  local m = UI.Modal(host, 540, 330, function() Look.asker:Done() end)
+  Look.asker = m
+  local card = m.card
+  local head = UI.Section(card, "Before you begin")
+  head:SetPoint("TOPLEFT", 21, -15)
+  local title = UI.Text(card, "How should Kinship look?", "Title", "text", 500)
+  title:SetPoint("TOPLEFT", 20, -42)
+  local sub = UI.Text(card, "Pick one to try it: the journal changes straight away. You can switch any time in "
+    .. "Settings > Look.", "Small", "subtle", 500)
+  sub:SetPoint("TOPLEFT", 20, -68)
+  sub:SetSpacing(2)
+
+  m.cards = {}
+  for i, look in ipairs(LOOKS) do
+    local b = CreateFrame("Button", nil, card)
+    b:SetSize(PREVIEW_W + 20, PREVIEW_H + 76)
+    b:SetPoint("TOPLEFT", 20 + (i - 1) * (PREVIEW_W + 20 + 20), -96)
+    b.bg = b:CreateTexture(nil, "BACKGROUND")
+    b.bg:SetAllPoints()
+    b.bg:SetColorTexture(1, 1, 1, 1)
+    b.edge = UI.Border(b)
+    b.preview = Preview(b, UI.THEMES[look.theme])
+    b.preview:SetPoint("TOP", 0, -10)
+    b.label = UI.Text(b, look.label, "Header", "text", PREVIEW_W)
+    b.label:SetPoint("TOPLEFT", b.preview, "BOTTOMLEFT", 0, -10)
+    b.desc = UI.Text(b, look.desc, "Small", "subtle", PREVIEW_W)
+    b.desc:SetPoint("TOPLEFT", b.label, "BOTTOMLEFT", 0, -4)
+    b.desc:SetSpacing(2)
+    function b:Paint()
+      local t = K:Theme()
+      local u = t.ui
+      local on = CurrentLook() == look.key
+      self.bg:SetVertexColor(u[1], u[2], u[3], on and 0.14 or (self.hover and 0.07 or 0.02))
+      self.edge:SetColor(u[1], u[2], u[3], on and 1 or (self.hover and 0.6 or 0.25))
+    end
+    b:SetScript("OnEnter", function(self) self.hover = true; self:Paint() end)
+    b:SetScript("OnLeave", function(self) self.hover = false; self:Paint() end)
+    b:SetScript("OnClick", function()
+      if SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) end
+      SetLook(look.key)
+    end)
+    UI:OnTheme(function() b:Paint() end)
+    m.cards[i] = b
+  end
+
+  local go = UI.Button(card, "Continue", 120, 26)
+  go:SetPoint("BOTTOMRIGHT", -16, 14)
+  go:SetScript("OnClick", function() m:Done() end)
+
+  function m:Done()
+    S().lookAsked = true
+    self:Hide()
+    local after = self.after
+    self.after = nil
+    if after then C_Timer.After(0.2, after) end
+  end
+  return m
+end
+
+function Look:NeedsAsking() return K.db ~= nil and not S().lookAsked end
+
+-- host: the frame to cover (the journal); after(): what to do next.
+function Look:Ask(host, after)
+  local m = self.asker or BuildLook(host)
+  m.after = after
+  for _, b in ipairs(m.cards) do b:Paint() end
+  m:Show()
+end
+
+K:RegisterSettings({ id = "look", title = "Look", order = 3, keywords = "theme style skin blizzard dark colours appearance",
+    build = function(card)
+  card:Segments("Window style", {
+    { key = "kinship", label = "Kinship" },
+    { key = "blizzard", label = "Blizzard" },
+  }, function() return S().uiTheme == "blizzard" and "blizzard" or "kinship" end, function(key)
+    S().uiTheme = key == "blizzard" and "blizzard" or nil
+    UI:ApplyTheme()
+  end)
+  card:Note("Kinship: teal and gold, with cream pages.  Blizzard: the game's own windows, with a metal frame, "
+    .. "red buttons and dark pages.")
+end })
+
 K:RegisterSettings({ id = "chat", trp3 = "hide", title = "Roleplay chat", order = 10, build = function(card)
   card:Toggle("Roleplay names", "Profile names in roleplay gold, with the character name after them.", "chatNames")
   card:Toggle("Colour emotes and speech", "\"Quotes\" in emotes and *actions* in speech.", "chatEmotes")

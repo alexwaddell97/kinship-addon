@@ -28,20 +28,90 @@ local function SetNameLine(tooltip, text, char, p)
   end
 end
 
+-- A player's tooltip is a short card: who they are, how they're playing and
+-- what they're up to. Holding Shift (or the "Everything" setting) adds the
+-- rest, on a wider tooltip so it reads as paragraphs instead of a column.
+-- Lines added by other files ask K:TooltipFull() and, when they hold back,
+-- call K:TooltipMore() so the "Hold Shift" hint knows there is more.
+local FULL_WIDTH = 320
+local tip = { full = false, more = false, active = false, widened = false }
+function K:TooltipFull() return tip.full end
+function K:TooltipMore() tip.more = true end
+
+local function WantFull()
+  return K.Settings().tooltipDetail == "full" or IsShiftKeyDown()
+end
+
+local function Cut(text, n)
+  text = strtrim((text or ""):gsub("%s+", " "))
+  if #text <= n then return text end
+  local cut = text:sub(1, n):match("^(.*)%s") or text:sub(1, n)
+  return (cut:gsub("[\192-\255][\128-\191]*$", "")) .. "..."
+end
+
+local function Colored(text, c) return ("|cff%s%s|r"):format(UI.Hex(c), text) end
+
+-- The people who make Kinship, by character name. Never by roleplay name:
+-- anyone can choose that one.
+local DEVELOPERS = { ["brennan black"] = true, ["mira moonshadow"] = true }
+local function IsDeveloper(name)
+  local key = K.NameKey(name)
+  return key ~= nil and DEVELOPERS[(key:gsub("%-.*$", ""))] == true
+end
+local function AddDeveloperLine(tooltip, name)
+  if IsDeveloper(name) then tooltip:AddLine(("|T%s:14:14|t Kinship developer"):format(K.ICON), 0.62, 0.90, 0.84) end
+end
+
 local function AddProfileLines(tooltip, name, p, other)
   local C = UI.Clean
-  if other then
-    local rp = strtrim(C(p.rpName))
-    if rp ~= "" then
-      SetNameLine(tooltip, K.Titled(C(p.prefix), rp), K:CharacterName(name), p)
-    end
-  elseif strtrim(p.rpName or "") ~= "" then
-    SetNameLine(tooltip, K:DisplayName(p), K:CharacterName(), p)
-  end
+  local full = tip.full
+  -- Their roleplay name, or their own under a title ("Operative Brennan
+  -- Black"), with the character's name on the right when it differs.
+  local char = K:CharacterName(other and name or nil)
+  local shown, own = K:ShownName(p, char)
+  if shown then SetNameLine(tooltip, shown, not own and char or nil, p) end
   if p.epithet and p.epithet ~= "" then tooltip:AddLine(C(p.epithet), 0.30, 0.72, 0.68) end
   local who = strtrim(C(p.race) .. " " .. C(p.class))
   if who ~= "" then tooltip:AddLine(who, 0.75, 0.75, 0.75) end
-  if p.house and strtrim(p.house) ~= "" then
+
+  -- How they're playing, on one line: status, war stance, experience.
+  local bits = {}
+  local s = K.STATUS[p.status]
+  if s then bits[#bits + 1] = Colored(s.label, s.color) end
+  local stance = K.STANCES[p.stance or (other and "" or "duel")]
+  if stance then
+    bits[#bits + 1] = ("|T%s:14:14:0:0:64:64:5:59:5:59|t %s"):format(stance.icon, Colored(stance.label, stance.color))
+  end
+  local lv = K.Experience and K.Experience.Notable(p)
+  if lv then bits[#bits + 1] = ("|T%s:14:14:0:0:64:64:5:59:5:59|t %s"):format(lv.icon, Colored(lv.tip, lv.color)) end
+  if #bits > 0 then tooltip:AddLine(table.concat(bits, "   ")) end
+
+  local currently = strtrim(C(p.currently or ""))
+  local ooc = strtrim(C(p.ooc or ""))
+  local hasHouse = p.house and strtrim(p.house) ~= ""
+  local hasGroup = strtrim(C(p.group)) ~= ""
+  -- Consent as coloured words (green yes, amber ask, red no)
+  local words = {}
+  for _, f in ipairs(K.CONSENT) do
+    local v = p.consent and p.consent[f.key]
+    for _, cv in ipairs(K.CONSENT_VALUES) do
+      if cv.key == v and f.key ~= "RR" then words[#words + 1] = Colored(f.label, cv.color) end
+    end
+  end
+  local hasConsent = #words > 0
+
+  if not full then
+    if currently ~= "" then
+      local short = Cut(currently, 90)
+      tooltip:AddLine("\"" .. short .. "\"", 0.85, 0.85, 0.85, true)
+      if short ~= currently then tip.more = true end
+    end
+    if hasHouse or hasGroup or hasConsent or ooc ~= "" then tip.more = true end
+    return
+  end
+
+  if hasHouse or hasGroup or hasConsent then tooltip:AddLine(" ") end
+  if hasHouse then
     local h = K.db.houses[strtrim(p.house):lower()]
     local crest = p.crest or (h and h.crest) or "Interface\\Icons\\INV_Shield_05"
     local family = other and K:HouseKey() == strtrim(p.house):lower() and K:HouseState(name) == "recognised"
@@ -57,44 +127,32 @@ local function AddProfileLines(tooltip, name, p, other)
     tooltip:AddLine(("|T%s:14:14|t %s%s%s"):format(crest, role ~= "" and (role .. ", ") or "", group,
       ours and "  |cff5fd35f(your group)|r" or ""), 0.94, 0.82, 0.54)
   end
-  local s = K.STATUS[p.status]
-  if s then tooltip:AddLine(s.label, unpack(s.color)) end
-  local lv = K.Experience and K.Experience.Notable(p)
-  if lv then tooltip:AddLine(("|T%s:14:14:0:0:64:64:5:59:5:59|t %s"):format(lv.icon, lv.tip), unpack(lv.color)) end
-  -- War stance, then consent as coloured words (green yes, amber ask, red no)
-  local stance = K.STANCES[p.stance or (other and "" or "duel")]
-  if stance then
-    tooltip:AddLine(("|T%s:14:14:0:0:64:64:5:59:5:59|t %s"):format(stance.icon, stance.label), unpack(stance.color))
-  end
-  local words = {}
-  for _, f in ipairs(K.CONSENT) do
-    local v = p.consent and p.consent[f.key]
-    for _, cv in ipairs(K.CONSENT_VALUES) do
-      if cv.key == v and f.key ~= "RR" then words[#words + 1] = ("|cff%s%s|r"):format(UI.Hex(cv.color), f.label) end
-    end
-  end
-  if #words > 0 then tooltip:AddLine(table.concat(words, "  ·  ")) end
-  if p.currently and p.currently ~= "" then
-    tooltip:AddLine("\"" .. C(p.currently) .. "\"", 0.85, 0.85, 0.85, true)
-  end
-  if p.ooc and p.ooc ~= "" then
-    tooltip:AddLine("|cff8c8c8cOOC:|r " .. C(p.ooc), 0.65, 0.65, 0.65, true)
-  end
+  if hasConsent then tooltip:AddLine(table.concat(words, "  ·  ")) end
+  if currently ~= "" or ooc ~= "" then tooltip:AddLine(" ") end
+  if currently ~= "" then tooltip:AddLine("\"" .. currently .. "\"", 0.85, 0.85, 0.85, true) end
+  if ooc ~= "" then tooltip:AddLine("|cff8c8c8cOOC:|r " .. ooc, 0.65, 0.65, 0.65, true) end
 end
 
 local function OnUnitTooltip(tooltip)
   if tooltip ~= GameTooltip or K:Compat() then return end   -- Total RP 3 draws its own
   local ok, _, unit = pcall(tooltip.GetUnit, tooltip)
   if not ok or not unit or not Safe(unit) or not UnitIsPlayer(unit) then return end
+  tip.full, tip.more, tip.active, tip.tried = WantFull(), false, true, nil
   local function Extras(name, profile, isMe)
     for _, fn in ipairs(K.tooltipProviders) do
       local okP, err = pcall(fn, tooltip, unit, name, profile, isMe)
       if not okP then K:CaughtError("tooltip", err) end
     end
+    if tip.full then
+      if tooltip.SetMinimumWidth then tooltip:SetMinimumWidth(FULL_WIDTH); tip.widened = true end
+    elseif tip.more then
+      tooltip:AddLine("Hold Shift for more", 0.50, 0.50, 0.50)
+    end
     tooltip:Show()
   end
   if UnitIsUnit(unit, "player") then
     AddProfileLines(tooltip, K:PlayerName(), K:Profile())
+    AddDeveloperLine(tooltip, K:MyName())
     Extras(K:MyName(), K:Profile(), true)
     return
   end
@@ -103,8 +161,11 @@ local function OnUnitTooltip(tooltip)
   if K:IsIgnored(name) then return end
   local reg = K:ProfileOf(name)
   if reg and reg.profile then AddProfileLines(tooltip, name, reg.profile, true) end
+  AddDeveloperLine(tooltip, name)
   local e = K:KinFor(name)
-  if e then
+  if e and not tip.full then
+    tip.more = true
+  elseif e then
     local m = e.met or {}
     tooltip:AddLine(("|T%s:14:14|t %s - met in %s, level %d"):format(K.ICON, K.RelationLabel(e.rel), m.place or "?", m.level or 0),
       0.80, 0.71, 0.51)
@@ -122,7 +183,9 @@ local function OnUnitTooltip(tooltip)
     end
   end
   local note = K.db.notes[K.NameKey(name) or ""]
-  if note then tooltip:AddLine("|TInterface\\Icons\\INV_Misc_Note_01:14:14:0:0:64:64:5:59:5:59|t " .. note, 0.75, 0.75, 0.75, true) end
+  if note and not tip.full then
+    tip.more = true
+  elseif note then tooltip:AddLine("|TInterface\\Icons\\INV_Misc_Note_01:14:14:0:0:64:64:5:59:5:59|t " .. note, 0.75, 0.75, 0.75, true) end
   Extras(name, reg and reg.profile, false)
 end
 
@@ -205,7 +268,12 @@ function SB:Build()
   b.text:SetPoint("LEFT", b.gem, "RIGHT", 5, 0)
   b:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "ADD")
   b:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.06)
+  -- The Blizzard look: the HUD's bronze box (made once; flat when the client has none).
+  b.hud = UI.Skin.Hud(b, 12)
   UI:OnTheme(function(t)
+    local hud = t.skin == "blizzard" and b.hud
+    if b.hud then b.hud:SetShown(hud) end
+    b.bg:SetShown(not hud); b.edge:SetShown(not hud); b.bar:SetShown(not hud)
     b.bg:SetColorTexture(unpack(t.chrome))
     b.edge:SetColor(unpack(t.chromeEdge))
   end)
@@ -284,10 +352,38 @@ end
 ---------------------------------------------------------------------------
 -- Start-up
 ---------------------------------------------------------------------------
+-- Pressing or letting go of Shift over a player redraws their tooltip on
+-- the very next frame. The tooltip checks every frame while it's open
+-- (cheap: one key test, and a unit lookup only when Shift no longer matches
+-- what's drawn), so it never waits on the game's own slower refresh.
+local function Watch(tt)
+  if not tip.active then return end
+  local want = WantFull()
+  if want == tip.full or want == tip.tried then return end
+  tip.tried = want   -- one go per press, even if the game won't redraw it
+  local ok, _, unit = pcall(tt.GetUnit, tt)
+  if not (ok and unit and Safe(unit)) then return end
+  local okP, isPlayer = pcall(UnitIsPlayer, unit)
+  if okP and Safe(isPlayer) and isPlayer then tt:SetUnit(unit) end
+end
+
+-- The tooltip is shared by everything: put its width back whenever it's
+-- cleared, and stop watching Shift once it closes.
+local function Reset(tt, closed)
+  if closed then tip.active = false end
+  if tip.widened then
+    tip.widened = false
+    if tt.SetMinimumWidth then tt:SetMinimumWidth(0) end
+  end
+end
+
 K:On("LOGIN", function()
   if TooltipDataProcessor and Enum and Enum.TooltipDataType then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tt) K.Try("tooltip", OnUnitTooltip, tt) end)
   end
+  GameTooltip:HookScript("OnHide", function(tt) Reset(tt, true) end)
+  if GameTooltip:HasScript("OnTooltipCleared") then GameTooltip:HookScript("OnTooltipCleared", function(tt) Reset(tt) end) end
+  GameTooltip:HookScript("OnUpdate", function(tt) K.Try("tooltip", Watch, tt) end)
   SetupMenus()
   SB:Build()
   SB:Update()
@@ -310,3 +406,17 @@ end
 _G["BINDING_NAME_KINSHIPRP_DICE"] = "Dice tray"
 _G["BINDING_NAME_KINSHIPRP_STATUS"] = "Cycle IC / LFRP / OOC"
 _G["BINDING_NAME_KINSHIPRP_VIEW"] = "View your target's profile"
+
+---------------------------------------------------------------------------
+-- Settings
+---------------------------------------------------------------------------
+K:RegisterSettings({ id = "tooltips", trp3 = "hide", title = "Tooltips", order = 13,
+  keywords = "mouseover hover shift short full detail crowded", build = function(card)
+  card:Segments("When you mouse over a player", {
+    { key = "short", label = "Short" },
+    { key = "full", label = "Everything" },
+  }, function() return K.Settings().tooltipDetail == "full" and "full" or "short" end,
+  function(v) K.Settings().tooltipDetail = v == "full" and "full" or nil end, 100)
+  card:Note("Short shows who they are, how they're playing and what they're up to. Hold Shift over them for "
+    .. "everything else: house, group, consent, OOC notes, effects, mounts and your own notes.")
+end })

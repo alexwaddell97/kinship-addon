@@ -1,5 +1,30 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Added
+- A second look for Kinship's windows. Settings > Look > Blizzard dresses
+  them like the game's own: the metal frame, red buttons, gold headings and
+  dark pages. Kinship's teal and cream stays the default, and you can switch
+  back and forth without a /reload. The first time you open the journal
+  after updating, Kinship asks which you'd like, with a small picture of
+  each; picking one changes the journal there and then so you can compare.
+
+### Changed
+- Player tooltips are shorter and easier to read. They show who someone
+  is, how they're playing (status, war stance and experience on one line)
+  and what they're up to. Hold Shift over them for everything else (house,
+  group, consent, OOC notes, effects, mounts and your own notes) on a wider
+  tooltip. Prefer it all at once? Settings > Tooltips > Everything.
+- The target bar leaves war stance to the tooltip, so its line under the
+  name has room for the rest.
+
+### Fixed
+- Playing under your character's own name with a title ("Operative"
+  with Full name left empty) showed nothing on unit frames, in window
+  titles, in the inspect panel, on tooltips or on the target bar. They now
+  show "Operative Brennan Black", as nameplates already did.
+
 ## 1.3.2
 
 Fixes, and Total RP 3 profiles read more clearly. No new files, so a /reload is enough.
