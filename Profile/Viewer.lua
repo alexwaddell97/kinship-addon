@@ -410,6 +410,26 @@ function V:Build()
   UI:OnTheme(function() if V.data and V.tab then V:ShowTab(V.tab) end end)
 end
 
+-- Which of the writing tabs have something in them.
+local function Has(s) return type(s) == "string" and strtrim(s) ~= "" end
+local function TabFilled(p, i)
+  if not p then return false end
+  if i == 2 then return Has(p.personality) or (K.Persona ~= nil and #K.Persona.Traits(p) > 0) end
+  if i == 3 then return Has(p.appearance) end
+  if i == 4 then return Has(p.history) end
+  return true
+end
+
+-- The long writing lives in Looks and History (where other RP addons'
+-- descriptions arrive), so About points the way to it.
+function V:MoreToRead(p)
+  local where = {}
+  if TabFilled(p, 3) then where[#where + 1] = "Looks" end
+  if TabFilled(p, 4) then where[#where + 1] = "History" end
+  if #where == 0 then return nil end
+  return "|cff" .. UI.Hex(K:Theme().subtle) .. "Their longer writing is under " .. table.concat(where, " and ") .. ", above.|r"
+end
+
 function V:ShowTab(i)
   if self.tab ~= i and self.frame:IsShown() then UI.FadeIn(self.body, 0.2) end
   self.tab = i
@@ -478,7 +498,8 @@ function V:ShowTab(i)
     text = Paragraphs({ { "Right now", effects }, { "At a glance", pr.glance }, { "Identity", table.concat(who, "  \194\183  ") },
       { "Motto", pr.motto }, { "House " .. (other and houseName or UI.Escape(houseName)), houseText },
       { other and UI.Clean(groupName) or UI.Escape(groupName), groupText },
-      { "Boundaries", table.concat(bounds, "  \194\183  ") }, { "Out of character", pr.ooc } })
+      { "Boundaries", table.concat(bounds, "  \194\183  ") }, { "Out of character", pr.ooc },
+      { "More to read", self:MoreToRead(pr) } })
   elseif i == 2 then
     local other = not d.mine
     text = Paragraphs({ { "Personality", Rich(d.profile.personality, other) }, { "Traits", TraitLines(d.profile, other) } })
@@ -622,6 +643,7 @@ function V:Present(data, unit, keepTab)
   -- already open behind the journal. Live refreshes while you type leave it where it is.
   if not keepTab then f:Raise() end
   self.tabs:SetTabShown(CHRONICLE, data.mine and true or false)
+  for i = 2, 4 do self.tabs:SetTabFaint(i, not TabFilled(data.profile, i)) end
   local tab = keepTab and self.tab or 1
   if tab == CHRONICLE and not data.mine then tab = 1 end
   self:ShowTab(tab)

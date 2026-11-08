@@ -558,12 +558,20 @@ function UI.TabBar(parent, names, onSelect, desk)
         local on, mid, off, a = t.heading, t.text, t.subtle, t.accent
         if desk then on, mid, off, a = t.deskHeading, t.deskText, t.deskSubtle, t.ui end
         b.text:SetTextColor(unpack(sel and on or (b.hover and mid or off)))
+        b.text:SetAlpha((b.faint and not sel and not b.hover) and 0.45 or 1)
         b.line:SetVertexColor(a[1], a[2], a[3], sel and 1 or (b.hover and 0.3 or 0))
       end
     end
     self:SetWidth(math.max(1, x))
   end
   function bar:Select(i) self.selected = i; self:Paint() end
+  -- Dim a tab with nothing in it (it can still be opened).
+  function bar:SetTabFaint(i, faint)
+    local b = self.tabs[i]
+    if not b then return end
+    b.faint = faint or nil
+    self:Paint()
+  end
   -- Hide a tab (a switched-off feature); the others close up.
   function bar:SetTabShown(i, shown)
     local b = self.tabs[i]

@@ -16,6 +16,12 @@
   the name as well as on its own; Kinship now leaves it out when the name
   already starts with it.
 
+### Changed
+- Long profiles were easy to miss: other RP addons' descriptions arrive in
+  History, but the profile viewer opens on About. About now ends with a line
+  pointing to Looks or History when they have writing in them, and tabs with
+  nothing in them are dimmed.
+
 ## 1.3.1
 
 A fix after 1.3.0. No new files, so a /reload is enough.
