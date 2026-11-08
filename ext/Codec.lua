@@ -141,11 +141,13 @@ function C:Warnings(decoded)
   return out
 end
 
--- Decode and store in one go.
+-- Decode and store in one go. Always filed as received: a string can claim
+-- anyone made it (MD.CB), so one naming you (or someone you trust) mustn't
+-- run its effects without asking.
 function C:Import(text)
   local decoded, why = self:Decode(text)
   if not decoded then return nil, why end
-  local obj, src = E:Store(decoded.id, decoded.object)
+  local obj, src = E:Store(decoded.id, decoded.object, false, true)
   if not obj then return nil, src end
   return obj, decoded.id, src
 end

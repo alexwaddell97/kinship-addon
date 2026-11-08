@@ -417,8 +417,9 @@ E.IsMine = IsMine
 
 -- Store a root: sanitised, filed under "my" when you made it (MD.CB is you)
 -- or "exchange" otherwise, security recomputed, the sender remembered.
--- received = it came from another player (trade, link, stash): always
--- "exchange", whatever its MD.CB claims, so it can't pass as your own.
+-- received = it came from another player (trade, link, stash) or a string:
+-- always "exchange", whatever its MD.CB claims, so it can't pass as your own.
+-- sender = who it came from; false when there's no telling (an import).
 -- Returns the stored object and where it went, or nil and a reason.
 function E:Store(rootID, obj, sender, received)
   if not E.ValidRootID(rootID) then return nil, "its ID is damaged" end
@@ -430,7 +431,10 @@ function E:Store(rootID, obj, sender, received)
   self:Remove(rootID, true)
   db[src][rootID] = clean
   self:Secure(rootID, clean)
-  local from = type(sender) == "string" and sender ~= "" and sender or E.Str(clean.MD.CB)
+  -- sender false: nobody we can vouch for (an import string), so its MD.CB
+  -- can't borrow the trust you gave the person it names.
+  local from
+  if sender ~= false then from = type(sender) == "string" and sender ~= "" and sender or E.Str(clean.MD.CB) end
   if src == "exchange" and from then db.security.sender[rootID] = from end
   Register(rootID, clean, src, 0)
   K:Fire("EXT_DB", rootID)
