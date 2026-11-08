@@ -1,5 +1,16 @@
 # Kinship RP changelog
 
+## 1.4.1
+
+A shorter target bar. No new files, so a /reload is enough.
+
+### Changed
+- The target bar is shorter. It shows four actions (profile, letter,
+  relationship, effect) and puts the rest behind a "..." button; long names
+  stop sooner; and a roleplay name that already holds the character's
+  ("Gorwan Ironwill, Son of Smith") no longer repeats it in grey, here or
+  on unit frames and in chat.
+
 ## 1.4.0
 
 A Blizzard look for Kinship's windows, calmer tooltips, and titles that show even without a roleplay name. No new files, so a /reload is enough.

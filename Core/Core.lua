@@ -467,7 +467,9 @@ function K.BothNames(rp, char, hex)
   rp, char = rp or "", char or ""
   if rp == "" then return char end
   local out = "|cff" .. (hex or K.RP_NAME_HEX) .. rp .. "|r"
-  if char ~= "" and char:lower() ~= rp:lower() then out = out .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r" end
+  -- No copy beside it when the roleplay name already holds the character's
+  -- ("Gorwan Ironwill, Son of Smith" for Gorwan Ironwill).
+  if char ~= "" and not rp:lower():find(char:lower(), 1, true) then out = out .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r" end
   return out
 end
 

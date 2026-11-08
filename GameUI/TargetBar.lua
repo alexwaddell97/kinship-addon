@@ -17,9 +17,10 @@ local H = 58
 local PORTRAIT = 44
 local GLANCE, BTN = 28, 28
 -- The name column grows to fit the name and the line under it (the bar
--- widens with it), up to NAME_MAX. Wide enough for an epithet, status,
--- stance and relationship in the Blizzard look's wider letters.
-local NAME_MIN, NAME_MAX = 120, 330
+-- widens with it), up to NAME_MAX; longer names end in "...".
+local NAME_MIN, NAME_MAX = 120, 240
+-- Actions shown as buttons; past this, the rest wait in a "more" menu.
+local MAX_ACTIONS = 4
 
 local S = K.Settings
 
@@ -193,6 +194,42 @@ local function ActionButton(f, i)
   return b
 end
 
+-- The "more" button: the actions that didn't get a button of their own.
+function B.MoreButton(f)
+  if f.more then return f.more end
+  local b = RoundButton(f, BTN)
+  b.icon:SetTexture(WHITE)
+  UI:OnTheme(function(t) b.icon:SetVertexColor(t.chrome[1], t.chrome[2], t.chrome[3], 1) end)
+  b.dots = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  b.dots:SetPoint("CENTER", 0, 3)
+  b.dots:SetText("...")
+  b:HookScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    GameTooltip:SetText("More", 1, 0.82, 0)
+    for _, def in ipairs(self.defs or {}) do GameTooltip:AddLine(def.label or "", 1, 1, 1) end
+    GameTooltip:Show()
+  end)
+  b:HookScript("OnLeave", function() GameTooltip:Hide() end)
+  b:SetScript("OnClick", function(self)
+    GameTooltip:Hide()
+    UI.Menu(self, function(root)
+      for _, def in ipairs(self.defs or {}) do
+        root:CreateButton(("|T%s:16:16:0:0:64:64:5:59:5:59|t %s"):format(def.icon or K.ICON, def.label or ""), function()
+          -- After the menu has closed: some actions open a menu of their own.
+          C_Timer.After(0, function()
+            if not def.onClick then return end
+            local ok, err = pcall(def.onClick, "target", B.name, self)
+            if not ok then K:CaughtError("target bar " .. tostring(def.id), err) end
+          end)
+        end)
+      end
+    end)
+  end)
+  b:Hide()
+  f.more = b
+  return b
+end
+
 ---------------------------------------------------------------------------
 -- Filling it in
 ---------------------------------------------------------------------------
@@ -265,7 +302,8 @@ function B:Update()
     -- Their roleplay name, or their own under a title ("Lady Mira Moonshadow").
     text = (K:ShownName(p, char)) or char
   end
-  if hasRP and char ~= "" and char:lower() ~= text:lower() then
+  -- No copy of the character's name when the roleplay name already holds it.
+  if hasRP and char ~= "" and not text:lower():find(char:lower(), 1, true) then
     text = text .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r"
   end
   f.name:SetText(text)
@@ -370,7 +408,11 @@ function B:Update()
     f.split:SetPoint("LEFT", x, 0)
     x = x + 9
   end
-  for i, def in ipairs(shown) do
+  -- The first few as buttons (they're in order of use); the rest in a menu,
+  -- unless there's only one more, which may as well be a button.
+  local direct = #shown > MAX_ACTIONS + 1 and MAX_ACTIONS or #shown
+  for i = 1, direct do
+    local def = shown[i]
     local btn = ActionButton(f, i)
     btn.def = def
     btn.icon:SetTexture(def.icon or K.ICON)
@@ -379,7 +421,16 @@ function B:Update()
     btn:Show()
     x = x + BTN + 6
   end
-  for i = #shown + 1, #f.buttons do f.buttons[i]:Hide(); f.buttons[i].def = nil end
+  for i = direct + 1, #f.buttons do f.buttons[i]:Hide(); f.buttons[i].def = nil end
+  local more = B.MoreButton(f)
+  more.defs = {}
+  for i = direct + 1, #shown do more.defs[#more.defs + 1] = shown[i] end
+  more:SetShown(#more.defs > 0)
+  if #more.defs > 0 then
+    more:ClearAllPoints()
+    more:SetPoint("LEFT", x, 0)
+    x = x + BTN + 6
+  end
 
   f:SetWidth(x + 4)
   if not f:IsShown() then
