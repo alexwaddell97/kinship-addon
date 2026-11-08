@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.3.2
+
+Fixes, and Total RP 3 profiles read more clearly. No new files, so a /reload is enough.
 
 ### Fixed
 - Levelling up (and other tracker updates) could raise "Auras cannot be
