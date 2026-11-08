@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.0
+
+A Blizzard look for Kinship's windows, calmer tooltips, and titles that show even without a roleplay name. No new files, so a /reload is enough.
 
 ### Added
 - A second look for Kinship's windows. Settings > Look > Blizzard dresses
