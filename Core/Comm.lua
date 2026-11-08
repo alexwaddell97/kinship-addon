@@ -13,7 +13,7 @@ K.VERSION = "1.3.1"
 
 -- Fields to fetch when viewing someone's full profile.
 local FULL_FIELDS = { "TT", "DE", "HI", "AG", "AH", "HH", "MO", "PN", "KP", "KG", "KC", "KM", "KH", "KW", "RI", "RD", "RO", "RM", "RR",
-                      "PX", "NI", "RA", "RC", "AE", "HB", "CO" }
+                      "PX", "NI", "RA", "RC", "AE", "HB", "CO", "AW", "RS", "PG", "PR", "PV" }
 -- Stance and the PvP-relevant consent fields travel with the tooltip data.
 local TOOLTIP_EXTRA = { "KW", "RI", "RD", "RO", "RM", "PX", "RC", "CO" }
 local CONSENT_FIELDS = { "RI", "RD", "RO", "RM", "RR" }
@@ -41,6 +41,7 @@ local FIELD_OF = {
   ooc = "CO", epithet = "NT", house = "NH", pronouns = "PN", age = "AG", height = "AH", home = "HH",
   motto = "MO", currently = "CU", appearance = "DE", history = "HI", personality = "KP", glance = "KG",
   crest = "KC", houseMotto = "KM", houseHistory = "KH",
+  weight = "AW", guildName = "PG", guildRank = "PR", voice = "PV",
   group = "KO", groupRole = "KR", groupCrest = "KE", groupMotto = "KB", groupStory = "KD",
 }
 
@@ -49,6 +50,15 @@ local FIELD_OF = {
 local PERSONALITY_MARK = "\n\n~ Personality ~\n"
 
 local FC_OUT = { ic = "2", ooc = "1", lfrp = "3" }
+
+-- MSP heights and weights are plain centimetres and kilograms when they're
+-- bare numbers (MyRolePlay sends them that way); anything else is as typed.
+local function Units(v, unit)
+  local n = tonumber(v)
+  return n and ("%s %s"):format(v, unit) or v
+end
+-- Relationship status (RS) as Total RP 3 numbers it; 0 is "not shown".
+local RELATIONSHIP = { ["1"] = "Single", ["2"] = "Taken", ["3"] = "Married", ["4"] = "Divorced", ["5"] = "Widowed" }
 local FC_IN  = { ["1"] = "ooc", ["2"] = "ic", ["3"] = "lfrp", ["4"] = "ic" }
 
 -- Other RP addons that publish their own MSP profile. Kinship is meant to
@@ -222,7 +232,8 @@ function BuildProfile(fields)
     rpName = f("NA"), prefix = f("PX"), nickname = f("NI"), race = f("RA"), class = f("RC"),
     eyes = f("AE"), birthplace = f("HB"), ooc = f("CO"),
     epithet = f("NT"), house = f("NH"), pronouns = f("PN"),
-    age = f("AG"), height = f("AH"), home = f("HH"), motto = f("MO"), currently = f("CU"),
+    age = f("AG"), height = Units(f("AH"), "cm"), weight = Units(f("AW"), "kg"), home = f("HH"),
+    relationship = RELATIONSHIP[f("RS")] or "", guildName = f("PG"), guildRank = f("PR"), voice = f("PV"), motto = f("MO"), currently = f("CU"),
     appearance = f("DE"), history = history, personality = personality, glance = f("KG"),
     status = FC_IN[f("FC")] or "ooc",
     crest = ValidCrest(f("KC")), houseMotto = f("KM"), houseHistory = f("KH"),

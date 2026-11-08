@@ -3,8 +3,7 @@
 -- around. Asked once (the first time the journal opens), changed any time
 -- on the Profile page, and shown in tooltips, the profile viewer and the
 -- target bar. Travels as the standard MSP "FR" field (so Total RP 3,
--- MyRolePlay and XRP users see it too) and Kinship's own "KX" for the exact
--- answer (FR has no word for "happy to help").
+-- MyRolePlay and XRP users see it too) and Kinship's own "KX" as well.
 --   profile.rpExp = "new" | "casual" | "experienced" | "mentor" | nil
 
 local ADDON, ns = ...
@@ -16,20 +15,21 @@ K.Experience = X
 X.ORDER = { "new", "casual", "experienced", "mentor" }
 X.LEVELS = {
   new = { label = "New to roleplay", short = "New to RP", icon = "Interface\\Icons\\INV_Misc_Flower_02",
-          color = { 0.55, 0.85, 0.45 }, fr = "4", tip = "New to roleplay: be welcoming",
+          color = { 0.55, 0.85, 0.45 }, fr = "1", tip = "New to roleplay: be welcoming",
           desc = "Still finding your feet. Others will know to be patient and kind." },
   casual = { label = "Casual roleplayer", short = "Casual", icon = "Interface\\Icons\\INV_Drink_05",
           color = { 0.80, 0.76, 0.62 }, fr = "2",
           desc = "You roleplay now and then, when the mood takes you." },
   experienced = { label = "Experienced roleplayer", short = "Experienced", icon = "Interface\\Icons\\INV_Misc_Book_09",
-          color = { 0.62, 0.76, 0.96 }, fr = "1",
+          color = { 0.62, 0.76, 0.96 }, fr = "3",
           desc = "At home in long scenes, plots and making it up as you go." },
   mentor = { label = "Happy to help newcomers", short = "Helper", icon = "Interface\\Icons\\Spell_Holy_SealOfWisdom",
-          color = { 0.95, 0.80, 0.40 }, fr = "1", tip = "Happy to help new roleplayers",
+          color = { 0.95, 0.80, 0.40 }, fr = "4", tip = "Happy to help new roleplayers",
           desc = "Experienced, and glad to show new roleplayers the ropes. They can find you." },
 }
--- MSP's roleplaying style, for other addons' players: 1 normal, 2 casual, 3 full-time, 4 beginner.
-local FR_IN = { ["1"] = "experienced", ["2"] = "casual", ["3"] = "experienced", ["4"] = "new" }
+-- FR as Total RP 3 (and MyRolePlay, it notes) use it: 1 newcomer, 2 casual,
+-- 3 veteran, 4 newcomer guide (happy to help).
+local FR_IN = { ["1"] = "new", ["2"] = "casual", ["3"] = "experienced", ["4"] = "mentor" }
 
 function X.Of(p) return p and X.LEVELS[p.rpExp] or nil end
 

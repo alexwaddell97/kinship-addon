@@ -420,11 +420,26 @@ local function TabFilled(p, i)
   return true
 end
 
+-- Other RP addons send their main writing (Total RP 3's "About") in the
+-- field Kinship keeps appearance in, so for their players it's "Description".
+local function LooksLabel(p)
+  local a = p and p.addon
+  return (type(a) == "string" and a ~= "" and not a:find("^KinshipRP")) and "Description" or "Looks"
+end
+
+-- Their in-character guild and rank (Total RP 3 shares these), "Sergeant, the Silver Hand".
+function V:GuildLine(p, other)
+  local function T(s) s = strtrim(s or ""); return other and UI.Clean(s) or UI.Escape(s) end
+  local name, rank = T(p.guildName), T(p.guildRank)
+  if name == "" then return nil end
+  return rank ~= "" and (rank .. ", " .. name) or name
+end
+
 -- The long writing lives in Looks and History (where other RP addons'
 -- descriptions arrive), so About points the way to it.
 function V:MoreToRead(p)
   local where = {}
-  if TabFilled(p, 3) then where[#where + 1] = "Looks" end
+  if TabFilled(p, 3) then where[#where + 1] = LooksLabel(p) end
   if TabFilled(p, 4) then where[#where + 1] = "History" end
   if #where == 0 then return nil end
   return "|cff" .. UI.Hex(K:Theme().subtle) .. "Their longer writing is under " .. table.concat(where, " and ") .. ", above.|r"
@@ -450,7 +465,8 @@ function V:ShowTab(i)
     -- Who they are, on one line: "Human  ·  Paladin  ·  Storm grey eyes  ·  Born in Moonbrook"
     local who = {}
     for _, f in ipairs({ { "", "race" }, { "", "class" }, { "", "eyes", " eyes" }, { "Born in ", "birthplace" },
-                         { "Known as ", "nickname" } }) do
+                         { "Known as ", "nickname" }, { "Weighs ", "weight" }, { "", "relationship" },
+                         { "Voice: ", "voice" } }) do
       local v = pr[f[2]] and strtrim(pr[f[2]]) or ""
       if v ~= "" then who[#who + 1] = f[1] .. v .. (f[3] or "") end
     end
@@ -498,6 +514,7 @@ function V:ShowTab(i)
     text = Paragraphs({ { "Right now", effects }, { "At a glance", pr.glance }, { "Identity", table.concat(who, "  \194\183  ") },
       { "Motto", pr.motto }, { "House " .. (other and houseName or UI.Escape(houseName)), houseText },
       { other and UI.Clean(groupName) or UI.Escape(groupName), groupText },
+      { "Guild", self:GuildLine(pr, other) },
       { "Boundaries", table.concat(bounds, "  \194\183  ") }, { "Out of character", pr.ooc },
       { "More to read", self:MoreToRead(pr) } })
   elseif i == 2 then
@@ -644,6 +661,8 @@ function V:Present(data, unit, keepTab)
   if not keepTab then f:Raise() end
   self.tabs:SetTabShown(CHRONICLE, data.mine and true or false)
   for i = 2, 4 do self.tabs:SetTabFaint(i, not TabFilled(data.profile, i)) end
+  self.tabs.tabs[3].text:SetText(LooksLabel(data.profile))
+  self.tabs:Paint()
   local tab = keepTab and self.tab or 1
   if tab == CHRONICLE and not data.mine then tab = 1 end
   self:ShowTab(tab)

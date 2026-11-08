@@ -15,12 +15,23 @@
   nameplates, tooltips and elsewhere. Some RP addons share the title inside
   the name as well as on its own; Kinship now leaves it out when the name
   already starts with it.
+- Roleplay experience was crossed with Total RP 3: its newcomers showed in
+  Kinship as experienced, and Kinship's newcomers showed in Total RP 3 as
+  happy to guide newcomers. Kinship now reads and sends it the way Total RP 3
+  and MyRolePlay do (1 newcomer, 2 casual, 3 veteran, 4 happy to help).
 
 ### Changed
 - Long profiles were easy to miss: other RP addons' descriptions arrive in
   History, but the profile viewer opens on About. About now ends with a line
   pointing to Looks or History when they have writing in them, and tabs with
   nothing in them are dimmed.
+- For players of other RP addons, the Looks tab is called Description, since
+  that's where their main writing (Total RP 3's "About") arrives.
+
+### Added
+- More of what Total RP 3 players share now shows on their profile: weight,
+  relationship status and voice in Identity, and their in-character guild
+  and rank under Guild. Bare-number heights and weights get their units.
 
 ## 1.3.1
 
