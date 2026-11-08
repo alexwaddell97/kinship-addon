@@ -274,7 +274,7 @@ local function WhoName(sender, claimed)
     local rp = strtrim(UI.Clean(p.rpName or ""))
     if rp ~= "" then
       local prefix = strtrim(UI.Clean(p.prefix or ""))
-      return prefix ~= "" and (prefix .. " " .. rp) or rp
+      return K.Titled(prefix, rp)
     end
   end
   if type(claimed) == "string" then

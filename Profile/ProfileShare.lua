@@ -508,7 +508,7 @@ function S:Validate()
   local rp = strtrim(p.rpName or "")
   local prefix = strtrim(p.prefix or "")
   if rp == "" then rp = "Unnamed character" end
-  card.name:SetText(prefix ~= "" and (prefix .. " " .. rp) or rp)
+  card.name:SetText(K.Titled(prefix, rp))
   card.epithet:SetText(strtrim(p.epithet or "") ~= "" and p.epithet or " ")
   local facts = {}
   for _, k in ipairs({ "race", "class", "age", "home" }) do

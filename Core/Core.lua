@@ -47,6 +47,16 @@ function K.Plain(s)
   return strtrim((tostring(s or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|", "")))
 end
 
+-- A title before a name ("Lady" + "Mira Moonshadow"), unless the name
+-- already starts with it: some RP addons share the title inside the name too.
+function K.Titled(title, name)
+  title, name = strtrim(title or ""), name or ""
+  if title == "" then return name end
+  local t, n = K.Plain(title):lower(), K.Plain(name):lower()
+  if t ~= "" and (n == t or n:sub(1, #t + 1) == t .. " ") then return name end
+  return title .. " " .. name
+end
+
 ---------------------------------------------------------------------------
 -- Saved data
 ---------------------------------------------------------------------------
@@ -410,7 +420,7 @@ function K:DisplayName(p)
   local n = strtrim(p.rpName or "")
   if n == "" then n = self:CharacterName() end   -- the game's whole name, surname and all
   local prefix = strtrim(p.prefix or "")
-  return prefix ~= "" and (prefix .. " " .. n) or n
+  return K.Titled(prefix, n)
 end
 
 -- Out in the world (tooltips, nameplates, unit frames, chat) a roleplay name

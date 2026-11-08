@@ -59,7 +59,7 @@ local function RPName(unit)
   local rp = p and Plain(UI.Clean(p.rpName or "")) or ""
   if rp == "" then return nil end
   local prefix = Plain(UI.Clean(p.prefix or ""))
-  return prefix ~= "" and (prefix .. " " .. rp) or rp
+  return K.Titled(prefix, rp)
 end
 
 -- The forms the game's name can take on a frame: with surname first (Forever

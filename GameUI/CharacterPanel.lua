@@ -575,7 +575,7 @@ local function TheirTitle()
   local rp = p and strtrim(UI.Clean(p.rpName or "")) or ""
   if rp == "" then return nil end
   local prefix = strtrim(UI.Clean(p.prefix or ""))
-  local text = prefix ~= "" and (prefix .. " " .. rp) or rp
+  local text = K.Titled(prefix, rp)
   local P = K.Persona
   local r, g, b
   if P then r, g, b = P.NameColor(p) end
@@ -926,7 +926,7 @@ function CP:RefreshTheirs()
     f.med.icon:SetTexCoord(0, 1, 0, 1)
   end
   local rp = p and strtrim(C(p.rpName)) or ""
-  f.name:SetText(rp ~= "" and ((C(p.prefix) ~= "" and (C(p.prefix) .. " ") or "") .. rp) or Short(name))
+  f.name:SetText(rp ~= "" and K.Titled(C(p.prefix), rp) or Short(name))
   f.name:SetTextColor(NameRGB(p, unit))
   f.epithet:SetText(p and C(p.epithet) or "")
   local st = p and K.STATUS[p.status]

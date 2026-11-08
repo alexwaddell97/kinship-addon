@@ -250,7 +250,7 @@ function B:Update()
     local rp = p and strtrim(C(p.rpName)) or ""
     if rp ~= "" then
       local prefix = strtrim(C(p.prefix))
-      text = prefix ~= "" and (prefix .. " " .. rp) or rp
+      text = K.Titled(prefix, rp)
     else
       text = char
     end

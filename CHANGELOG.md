@@ -11,6 +11,10 @@
 - Releases no longer include an empty luacheck.txt.
 - The satchel didn't close with your bags if you'd opened it before them
   (with its button or key). Opening the bags now ties it to them.
+- Some players' titles showed twice ("Lady Lady Darkwhisper"), on
+  nameplates, tooltips and elsewhere. Some RP addons share the title inside
+  the name as well as on its own; Kinship now leaves it out when the name
+  already starts with it.
 
 ## 1.3.1
 

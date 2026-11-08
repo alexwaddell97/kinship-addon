@@ -120,7 +120,7 @@ local function DisplayName(p)
   local rp = Plain(p.rpName)
   if rp == "" then return "" end
   local prefix = Plain(p.prefix)
-  return prefix ~= "" and (prefix .. " " .. rp) or rp
+  return K.Titled(prefix, rp)
 end
 
 local function MatchFont(fs, from, delta)
@@ -388,7 +388,7 @@ local function NameFor(anchor, name, rp, prefix)
   if charName == "" then charName = Plain(Ambiguate and Ambiguate(name, "none") or name) end
   local text = rp
   if text == "" then
-    text = prefix ~= "" and (prefix .. " " .. charName) or charName
+    text = K.Titled(prefix, charName)
   end
   return text, charName ~= "" and text:lower():find(charName:lower(), 1, true) ~= nil
 end

@@ -32,7 +32,7 @@ local function AddProfileLines(tooltip, name, p, other)
   if other then
     local rp = strtrim(C(p.rpName))
     if rp ~= "" then
-      SetNameLine(tooltip, (p.prefix and p.prefix ~= "" and (C(p.prefix) .. " ") or "") .. rp, K:CharacterName(name))
+      SetNameLine(tooltip, K.Titled(C(p.prefix), rp), K:CharacterName(name))
     end
   elseif strtrim(p.rpName or "") ~= "" then
     SetNameLine(tooltip, K:DisplayName(p), K:CharacterName())

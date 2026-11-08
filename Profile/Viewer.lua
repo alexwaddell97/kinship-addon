@@ -521,7 +521,7 @@ function V:Present(data, unit, keepTab)
   local text = data.name
   if rp ~= "" then
     local prefix = UI.Clean(p.prefix)
-    text = prefix ~= "" and (prefix .. " " .. rp) or rp
+    text = K.Titled(prefix, rp)
   end
   local hasRP = rp ~= "" or (data.mine and p and strtrim(p.rpName or "") ~= "")
   if hasRP and char ~= "" and char:lower() ~= (text or ""):lower() then

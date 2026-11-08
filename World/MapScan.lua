@@ -125,7 +125,7 @@ local function DisplayName(e)
     local rp = strtrim(UI.Clean(p.rpName or ""))
     if rp ~= "" then
       local prefix = strtrim(UI.Clean(p.prefix or ""))
-      return prefix ~= "" and (prefix .. " " .. rp) or rp, p
+      return K.Titled(prefix, rp), p
     end
   end
   return e.rp or Short(e.name), p

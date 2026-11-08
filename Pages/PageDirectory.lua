@@ -28,7 +28,7 @@ local function DisplayName(e)
   local rp = strtrim(UI.Clean(p.rpName))
   if rp == "" then return Short(e.name) end
   local prefix = UI.Clean(p.prefix)
-  return prefix ~= "" and (prefix .. " " .. rp) or rp
+  return K.Titled(prefix, rp)
 end
 
 local function Matches(e, filter, search)
