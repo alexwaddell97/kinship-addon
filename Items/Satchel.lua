@@ -1228,8 +1228,16 @@ end
 ---------------------------------------------------------------------------
 -- Opening and closing with the bags
 ---------------------------------------------------------------------------
+-- Already showing when the bags open (opened by its button first, say): it
+-- belongs with them now, so closing the bags closes it too.
+local function TieToBags()
+  if SA.frame and SA.frame:IsShown() then SA.frame.withBags = true end
+  if SA.strip and SA.strip:IsShown() then SA.strip.withBags = true end
+end
+
 local function BagsShown()
   if not (On() and S().satchelWithBags ~= false) then return end
+  TieToBags()
   HookSearch()
   -- Straight away, beside the bags, if they already have their place...
   local bags = OpenBags()

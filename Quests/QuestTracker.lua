@@ -320,6 +320,9 @@ local function Place(f)
   f:ClearAllPoints()
   local otf = _G.ObjectiveTrackerFrame
   if otf and otf:IsVisible() then
+    -- On the tracker's own layer, so its background (if shown) can't cover us
+    f:SetFrameStrata(otf:GetFrameStrata())
+    f:SetFrameLevel(otf:GetFrameLevel() + 20)
     local below, low
     for _, m in ipairs(type(otf.modules) == "table" and otf.modules or {}) do
       if type(m) == "table" and m.IsVisible and m:IsVisible() and m.GetBottom then

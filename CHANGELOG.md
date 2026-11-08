@@ -9,6 +9,8 @@
   the tracker, in the same fonts and colours, so nothing Kinship does reaches
   the game's own sections. Click its heading to fold it.
 - Releases no longer include an empty luacheck.txt.
+- The satchel didn't close with your bags if you'd opened it before them
+  (with its button or key). Opening the bags now ties it to them.
 
 ## 1.3.1
 
