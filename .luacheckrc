@@ -52,7 +52,7 @@ read_globals = {
   "ToggleWorldMap", "TooltipDataProcessor", "UIErrorsFrame", "UIParent", "UNKNOWNOBJECT", "UiMapPoint",
   "UnitAffectingCombat", "UnitBuff", "UnitCanAttack", "UnitClass", "UnitExists", "UnitFactionGroup",
   "UnitFullName", "UnitGUID", "UnitHealth", "UnitInParty", "UnitInRaid", "UnitInRange", "UnitIsDead",
-  "UnitIsEnemy", "UnitIsOtherPlayersPet", "UnitIsPVP", "UnitIsPlayer", "UnitIsTapDenied", "UnitIsUnit",
+  "UnitIsEnemy", "UnitIsOtherPlayersPet", "UnitIsPVP", "UnitIsPlayer", "UnitIsTapDenied", "UnitIsUnit", "UnitIsVisible",
   "UnitLevel", "UnitName", "UnitPlayerControlled", "UnitRace", "WorldMapFrame", "abs", "bit", "ceil", "date",
   "debugprofilestop", "debugstack", "floor", "format", "geterrorhandler", "gsub", "hooksecurefunc",
   "issecretvalue", "max", "min", "mod", "random", "securecall", "seterrorhandler", "sort", "sqrt", "strfind",

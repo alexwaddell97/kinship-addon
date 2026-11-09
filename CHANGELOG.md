@@ -1,5 +1,25 @@
 # Kinship RP changelog
 
+## 1.4.2
+
+Profiles for people nearby, and two-part names. No new files, so a /reload is enough.
+
+### Changed
+- A profile shows the player's model whenever they're nearby, not only when
+  they're your target, mouseover or focus. Kinship also looks through
+  nameplates and your party or raid, so a profile opened from chat or the
+  directory shows them if they're close. An open profile picks up their model
+  as soon as they come into view.
+- A player with no RP addon no longer gets an empty profile. It shows their
+  level, race, class and guild from the game, without the blank Pronouns,
+  Age, Height and Home rows.
+
+### Fixed
+- A profile opened from a right-click menu or a chat name could carry only a
+  first name ("Matilda" for Matilda Mortred). It then showed no surname, no
+  model, and asked the wrong name for a profile. A first name now matches the
+  player nearby, and the profile switches to their full name.
+
 ## 1.4.1
 
 A shorter target bar. No new files, so a /reload is enough.

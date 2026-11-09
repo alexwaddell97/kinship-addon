@@ -203,6 +203,11 @@ local function SetupMenus()
     end
     local name = ctx.name
     if ctx.server and ctx.server ~= "" and not name:find("-", 1, true) then name = name .. "-" .. ctx.server end
+    -- The menu can carry only a first name; the unit has the full one
+    if ctx.unit then
+      local okN, full = pcall(GetUnitName, ctx.unit, true)
+      if okN and full and Safe(full) and full ~= "" then name = full end
+    end
     local unitIsMe = ctx.unit and UnitIsUnit(ctx.unit, "player")
     local isMe = (Safe(unitIsMe) and unitIsMe) or K:IsMe(name) or K:IsMe(ctx.name)
 

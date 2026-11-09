@@ -13,6 +13,36 @@ K.Registry = K.Registry or {}
 local TABS = { "About", "Nature", "Looks", "History", "Chronicle" }
 local CHRONICLE = 5
 
+-- What the game shows about players you've been near this session, so
+-- someone with no RP addon still gets a line about who they are.
+local seen = {}
+local function Learn(unit, key)
+  if not (unit and key) then return end
+  local info = seen[key] or {}
+  local okR, race = pcall(UnitRace, unit)
+  if okR and K.Safe(race) then info.race = race end
+  local okC, className, class = pcall(UnitClass, unit)
+  if okC and K.Safe(className) and K.Safe(class) then info.className, info.class = className, class end
+  local okL, level = pcall(UnitLevel, unit)
+  if okL and K.Safe(level) and level > 0 then info.level = level end
+  local okG, guild = pcall(GetGuildInfo, unit)
+  if okG and K.Safe(guild) and guild ~= "" then info.guild = guild end
+  seen[key] = info
+end
+
+-- "Level 60 Human Warrior", the class in its colour
+local function WhoLine(info)
+  if not info then return nil end
+  local parts = {}
+  if info.level then parts[#parts + 1] = "Level " .. info.level end
+  if info.race then parts[#parts + 1] = info.race end
+  if info.className then
+    local r, g, b = UI.ClassColor(info.class)
+    parts[#parts + 1] = ("|cff%02x%02x%02x%s|r"):format(r * 255, g * 255, b * 255, info.className)
+  end
+  return #parts > 0 and table.concat(parts, " ") or nil
+end
+
 -- Inline headings inside the reading text, in the theme's accent.
 local function Head(text) return "|cff" .. UI.Hex(K:Theme().accent) .. text .. "|r" end
 
@@ -379,11 +409,13 @@ function V:Build()
 
   -- Quick facts in two columns
   self.facts = {}
-  local labels = { "Pronouns", "Age", "Height", "Home" }
-  for i, label in ipairs(labels) do
+  local labels = {}
+  self.factLabels = labels
+  for i, label in ipairs({ "Pronouns", "Age", "Height", "Home" }) do
     local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
     local l = UI.Text(info, label, "GameFontNormalSmall", "subtle")
     l:SetPoint("TOPLEFT", 18 + col * 180, -102 - row * 18)
+    labels[label] = l
     local v = UI.Text(info, "", "GameFontHighlightSmall", "text", 110)
     v:SetPoint("TOPLEFT", 80 + col * 180, -102 - row * 18)
     v:SetWordWrap(false)
@@ -567,6 +599,15 @@ function V:Present(data, unit, keepTab)
   end
   self.name:SetText(text)
   self.epithet:SetText(p and p.epithet ~= "" and p.epithet or " ")
+  -- No profile: what the game knows instead, and no empty fact grid
+  local bare = not p and not data.mine
+  if bare then
+    if unit and UnitExists(unit) then Learn(unit, data.key) end
+    local info = seen[data.key]
+    self.epithet:SetText(WhoLine(info) or " ")
+    data.guildLine = info and info.guild and ("<" .. info.guild .. ">") or nil
+  end
+  for _, l in pairs(self.factLabels) do l:SetShown(not bare) end
 
   local houseName = p and strtrim(p.house or "") or ""
   if houseName ~= "" then
@@ -608,12 +649,13 @@ function V:Present(data, unit, keepTab)
 
   for label, key in pairs({ Pronouns = "pronouns", Age = "age", Height = "height", Home = "home" }) do
     local v = p and p[key] or ""
-    self.facts[label]:SetText(v ~= "" and v or "|cff888888-|r")
+    self.facts[label]:SetText(bare and "" or (v ~= "" and v or "|cff888888-|r"))
   end
 
   local cur = p and p.currently or ""
   if cur ~= "" then self.currently:SetText("\"" .. cur .. "\"")
   elseif data.kinLine then self.currently:SetText(data.kinLine)
+  elseif data.guildLine then self.currently:SetText(data.guildLine)
   else self.currently:SetText("") end
 
   -- The stage they've set out, and the palette to change yours
@@ -624,14 +666,12 @@ function V:Present(data, unit, keepTab)
   local worn = K.Worn and K:ExtOn("inventory") and p and K.Worn.Of(p, data.mine) or {}
   self:PlaceWorn(worn, data.mine)
 
-  -- Model (left alone on live refreshes so it doesn't jump while you type)
-  if keepTab and f:IsShown() then
+  -- Model (left alone on live refreshes so it doesn't jump while you type,
+  -- unless there wasn't one and they've just been found nearby)
+  if keepTab and f:IsShown() and (self.model:IsShown() or not unit) then
     -- keep current model
   elseif unit and UnitExists(unit) then
-    self.model:Show(); self.stageEmpty:Hide()
-    self.model:SetUnit(unit)
-    self.model.facing = 0; self.model:SetFacing(0)
-    self.stageNote:SetText("Drag to turn")
+    self:ShowModel(unit)
   else
     self.model:Hide(); self.stageEmpty:Show()
     self.stageNote:SetText("Stand near them to see their appearance.")
@@ -932,21 +972,104 @@ local function KinLine(name)
   return ("%s. You met in %s, at level %d."):format(K.RelationLabel(e.rel), m.place or "?", m.level or 0)
 end
 
+function V:ShowModel(unit)
+  self.model:Show(); self.stageEmpty:Hide()
+  self.model:SetUnit(unit)
+  self.model.facing = 0; self.model:SetFacing(0)
+  self.stageNote:SetText("Drag to turn")
+end
+
+-- Everywhere a player near you might be found, so their model shows without
+-- having to target them: target, mouseover, focus, your group, nameplates.
+local TOKENS = { "target", "mouseover", "focus" }
+for i = 1, 4 do TOKENS[#TOKENS + 1] = "party" .. i end
+for i = 1, 40 do TOKENS[#TOKENS + 1] = "raid" .. i end
+for i = 1, 40 do TOKENS[#TOKENS + 1] = "nameplate" .. i end
+
+-- WoW Forever characters have two names ("Matilda Mortred"), but some of the
+-- game (menus, chat links) hands over only the first. A first name alone
+-- matches a full name that starts with it.
+local function Bare(name) return ((K.NameKey(name) or ""):gsub("%-.*$", "")) end
+function V.SameName(full, given)
+  local a, b = Bare(full), Bare(given)
+  if a == "" or b == "" then return false end
+  if a == b then return true end
+  return not b:find(" ", 1, true) and a:match("^(%S+) ") == b
+end
+
+local function Near(u, name, loose)
+  if not UnitExists(u) then return false end
+  local okP, isPlayer = pcall(UnitIsPlayer, u)
+  if okP and K.Safe(isPlayer) and not isPlayer then return false end
+  -- Group members far away exist but can't be drawn
+  if UnitIsVisible and (u:find("^party") or u:find("^raid")) then
+    local okV, near = pcall(UnitIsVisible, u)
+    if okV and K.Safe(near) and not near then return false end
+  end
+  local okN, n = pcall(GetUnitName, u, true)
+  if not (okN and n and K.Safe(n)) then return false end
+  if loose then return V.SameName(n, name) end
+  return K.NameKey(n) == K.NameKey(name)
+end
+
+-- The nearby unit for a name: an exact match first, then a first-name one.
+function V.FindUnit(name)
+  if not (name and K.NameKey(name)) then return nil end
+  for _, loose in ipairs({ false, true }) do
+    for _, u in ipairs(TOKENS) do
+      if Near(u, name, loose) then return u end
+    end
+  end
+end
+
+-- The full name a unit goes by, or the name we were given.
+local function FullName(unit, name)
+  if not unit then return name end
+  local ok, n = pcall(GetUnitName, unit, true)
+  return (ok and n and K.Safe(n) and n ~= "") and n or name
+end
+
+-- An open profile with no model picks one up as soon as they come into view.
+function V:CatchUp()
+  local d = self.data
+  if not (self.frame and self.frame:IsShown() and d and not d.mine and d.raw) then return end
+  if self.model:IsShown() then return end
+  local unit = V.FindUnit(d.raw)
+  if not unit then return end
+  -- Known only by a first name until now: show them again under their full one
+  local full = FullName(unit, d.raw)
+  if K.NameKey(full) ~= K.NameKey(d.raw) then return self:ShowName(full, unit) end
+  d.unit = unit
+  self:ShowModel(unit)
+  if not d.profile then
+    Learn(unit, d.key)
+    local info = seen[d.key]
+    self.epithet:SetText(WhoLine(info) or " ")
+    if info and info.guild and (self.currently:GetText() or "") == "" then self.currently:SetText("<" .. info.guild .. ">") end
+  end
+end
+
+do
+  local ev = CreateFrame("Frame")
+  for _, e in ipairs({ "NAME_PLATE_UNIT_ADDED", "PLAYER_TARGET_CHANGED", "UPDATE_MOUSEOVER_UNIT",
+    "PLAYER_FOCUS_CHANGED", "GROUP_ROSTER_UPDATE" }) do
+    ev:RegisterEvent(e)
+  end
+  ev:SetScript("OnEvent", function() K.Try("viewer", V.CatchUp, V) end)
+end
+
 function V:ShowName(name, unit, keepTab)
   if not name then return end
   -- A unit token is only a hint: by the time a profile arrives it may point
   -- at someone else, or at you. Keep it only while it's still this player.
   if unit then
     local n = UnitExists(unit) and GetUnitName(unit, true)
-    if not (n and K.Safe(n) and K.NameKey(n) == K.NameKey(name)) then unit = nil end
+    if not (n and K.Safe(n) and V.SameName(n, name)) then unit = nil end
   end
   if K:IsMe(name) then return self:ShowSelf() end
-  if not unit then
-    for _, u in ipairs({ "target", "mouseover", "focus" }) do
-      local n = UnitExists(u) and GetUnitName(u, true)
-      if n and K.Safe(n) and n == name then unit = u break end
-    end
-  end
+  if not unit then unit = V.FindUnit(name) end
+  -- Found them: from here on, their full name ("Matilda" becomes "Matilda Mortred")
+  name = FullName(unit, name)
   local reg = K:ProfileOf(name)
   if not keepTab then K.Comm:Request(name, true) end
   local short = Ambiguate and Ambiguate(name, "none") or name
@@ -954,9 +1077,9 @@ function V:ShowName(name, unit, keepTab)
     name = short, raw = name, unit = unit, key = K.NameKey(name),
     profile = reg and reg.profile,
     kinLine = KinLine(name),
-    missing = "No roleplay profile has arrived from this player yet.\n\n" ..
-      "If they use Kinship or another RP addon (such as Total RP 3, MyRolePlay or XRP), " ..
-      "their profile appears here as soon as it arrives. Profiles can't travel inside dungeons and raids.",
+    missing = "No roleplay profile from them yet.\n\n" ..
+      "If they use Kinship or another RP addon (Total RP 3, MyRolePlay, XRP), it shows here as soon as it arrives. " ..
+      "Profiles can't travel inside dungeons and raids.",
   }, unit, keepTab)
 end
 
