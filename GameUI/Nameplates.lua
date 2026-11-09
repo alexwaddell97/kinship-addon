@@ -20,7 +20,8 @@ local P = {
 }
 K.Plates = P
 
-local MAX_W = 220
+local MAX_W = 260        -- widest a name runs before it trails off
+local TITLE_W = 380      -- the epithet, in smaller letters, gets more room
 local ASK_GAP, ASK_AGAIN, STALE, QUEUE_MAX = 0.6, 300, 600, 40
 local TITLE_COLOR = { 0.56, 0.84, 0.80 }
 local DOT_SHIFT = 6   -- half the dot and its gap, so dot + name sit centred
@@ -140,11 +141,12 @@ local function MatchFont(fs, from, delta)
   end
 end
 
-local function SetClamped(fs, text)
+local function SetClamped(fs, text, max)
+  max = max or MAX_W
   fs:SetWidth(0)
   fs:SetText(text)
   local w = fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or fs:GetStringWidth()
-  if w > MAX_W then fs:SetWidth(MAX_W) end
+  if w > max then fs:SetWidth(max) end
 end
 
 ---------------------------------------------------------------------------
@@ -298,7 +300,7 @@ local function Draw(o, anchor, d, rec)
   local epithet = s.platesTitles and d.epithet or ""
   local hasTitle = epithet ~= ""
   if hasTitle then
-    SetClamped(o.title, epithet)
+    SetClamped(o.title, epithet, TITLE_W)
     o.title:SetTextColor(TITLE_COLOR[1], TITLE_COLOR[2], TITLE_COLOR[3], 0.95)
   end
   o.title:SetShown(hasTitle)
@@ -417,7 +419,7 @@ local function Paint(unit, rec)
   local text, same = NameFor(anchor, name, DisplayName(p), Plain(p.prefix))
   local kin, rival = Marks(name)
   Draw(Overlay(plate), anchor, {
-    text = text, epithet = Plain(p.epithet), status = p.status, sameName = same,
+    text = text, epithet = K.Epithet(p, Plain(p.epithet)), status = p.status, sameName = same,
     color = { K.NameColorOf(p) },
     ring = { RingColor(K.RelationOf and K:RelationOf(name)) }, kin = kin, rival = rival,
   }, rec)

@@ -131,7 +131,7 @@ local function Hover(frame, link)
   local reg = not isMe and K:ProfileOf(name)
   local p = isMe and K:Profile() or (reg and reg.profile)
   if p then
-    local ep = Plain(UI.Clean(p.epithet))
+    local ep = K.Epithet(p, Plain(UI.Clean(p.epithet)))
     if ep ~= "" then GameTooltip:AddLine(ep, 0.37, 0.77, 0.72) end
     local who = strtrim(Plain(UI.Clean(p.race)) .. " " .. Plain(UI.Clean(p.class)))
     if who ~= "" then GameTooltip:AddLine(who, 0.8, 0.8, 0.8) end

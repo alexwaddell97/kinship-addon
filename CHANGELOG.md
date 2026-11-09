@@ -1,5 +1,22 @@
 # Kinship RP changelog
 
+## 1.4.3
+
+Tidier names and titles. No new files, so a /reload is enough.
+
+### Changed
+- Nameplates give longer names and epithets more room before they trail off
+  with "...". Epithets get the most, since they're in smaller letters.
+
+### Fixed
+- A title with "of" in it now goes after the name: "Lion Brightblade, Son of
+  the Forest" rather than "Son of the Forest Lion Brightblade". Titles such as
+  "Lady" still go in front.
+- An epithet that repeats the player's name or title no longer says them
+  twice. Kinship takes those parts out, and leaves the line off if nothing
+  else is left. This applies on the target bar, tooltips, nameplates, the
+  profile window and the character sheet.
+
 ## 1.4.2
 
 Profiles for people nearby, and two-part names. No new files, so a /reload is enough.

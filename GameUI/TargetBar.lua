@@ -321,7 +321,7 @@ function B:Update()
   if ignored then
     bits[1] = "Ignored"
   elseif p then
-    local epithet = strtrim(C(p.epithet))
+    local epithet = K.Epithet(p, strtrim(C(p.epithet)))
     if epithet ~= "" then bits[#bits + 1] = epithet end
     local st = p.status and K.STATUS[p.status]
     if st then bits[#bits + 1] = ("|cff%s%s|r"):format(Hex(st.color), st.short or st.label) end

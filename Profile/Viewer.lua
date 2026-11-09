@@ -598,7 +598,8 @@ function V:Present(data, unit, keepTab)
     text = text .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r"
   end
   self.name:SetText(text)
-  self.epithet:SetText(p and p.epithet ~= "" and p.epithet or " ")
+  local epithet = p and K.Epithet(p, p.epithet) or ""
+  self.epithet:SetText(epithet ~= "" and epithet or " ")
   -- No profile: what the game knows instead, and no empty fact grid
   local bare = not p and not data.mine
   if bare then

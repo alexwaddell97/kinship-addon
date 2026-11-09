@@ -70,7 +70,8 @@ local function AddProfileLines(tooltip, name, p, other)
   local char = K:CharacterName(other and name or nil)
   local shown, own = K:ShownName(p, char)
   if shown then SetNameLine(tooltip, shown, not own and char or nil, p) end
-  if p.epithet and p.epithet ~= "" then tooltip:AddLine(C(p.epithet), 0.30, 0.72, 0.68) end
+  local epithet = p.epithet and p.epithet ~= "" and K.Epithet(p, C(p.epithet)) or ""
+  if epithet ~= "" then tooltip:AddLine(epithet, 0.30, 0.72, 0.68) end
   local who = strtrim(C(p.race) .. " " .. C(p.class))
   if who ~= "" then tooltip:AddLine(who, 0.75, 0.75, 0.75) end
 

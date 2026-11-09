@@ -457,7 +457,7 @@ function CP:Refresh()
   end
   pane.name:SetText(K:DisplayName(p))
   pane.name:SetTextColor(NameRGB(p, "player"))
-  local sub = strtrim(p.epithet or "")
+  local sub = K.Epithet(p, strtrim(p.epithet or ""))
   if sub == "" and K:HouseName() ~= "" then sub = "of House " .. K:HouseName() end
   pane.epithet:SetText(sub)
   if pane.status then pane.status:Select(p.status) end
@@ -964,7 +964,7 @@ function CP:RefreshTheirs()
   end
   f.name:SetText((K:ShownName(p, Short(name))) or Short(name))
   f.name:SetTextColor(NameRGB(p, unit))
-  f.epithet:SetText(p and C(p.epithet) or "")
+  f.epithet:SetText(p and K.Epithet(p, C(p.epithet)) or "")
   local st = p and K.STATUS[p.status]
   f.rows.Status.value:SetText(st and st.label or "|cff808080Unknown|r")
   if st then f.rows.Status.value:SetTextColor(unpack(st.color)) end

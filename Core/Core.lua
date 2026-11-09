@@ -48,13 +48,48 @@ function K.Plain(s)
 end
 
 -- A title before a name ("Lady" + "Mira Moonshadow"), unless the name
--- already starts with it: some RP addons share the title inside the name too.
+-- already holds it: some RP addons share the title inside the name too.
+--
+-- A title with "of" in it reads after the name instead: "Lion Brightblade,
+-- Son of the Forest", not "Son of the Forest Lion Brightblade".
+function K.TitleAfter(title)
+  return (" " .. K.Plain(title or ""):lower() .. " "):find(" of ", 1, true) ~= nil
+end
+
 function K.Titled(title, name)
   title, name = strtrim(title or ""), name or ""
   if title == "" then return name end
   local t, n = K.Plain(title):lower(), K.Plain(name):lower()
-  if t ~= "" and (n == t or n:sub(1, #t + 1) == t .. " ") then return name end
+  if t ~= "" and (" " .. n .. " "):find(" " .. t .. "[ ,]") then return name end
+  if K.TitleAfter(title) then return name .. ", " .. title end
   return title .. " " .. name
+end
+
+-- An epithet without the name or title copied into it. Some profiles repeat
+-- them there ("Lion Brightblade Son of the Forest"), which only says them twice.
+-- text is the epithet as the caller shows it; it comes back untouched unless
+-- something had to come out.
+function K.Epithet(p, text)
+  text = text or ""
+  if not p or text == "" then return text end
+  local plain = K.Plain(text)
+  local low = plain:lower()
+  local cut = false
+  for _, part in ipairs({ K.Plain(p.rpName or ""), K.Plain(p.prefix or "") }) do
+    if #part > 2 then
+      local i, j = low:find(part:lower(), 1, true)
+      if i then
+        plain = plain:sub(1, i - 1) .. " " .. plain:sub(j + 1)
+        low = plain:lower()
+        cut = true
+      end
+    end
+  end
+  if not cut then return text end
+  -- Tidy what's left: spaces, and commas or dashes left hanging at either end
+  plain = plain:gsub("%s+", " ")
+  plain = plain:gsub("^[%s,;:%-]+", ""):gsub("[%s,;:%-]+$", "")
+  return plain
 end
 
 ---------------------------------------------------------------------------
