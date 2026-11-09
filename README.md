@@ -32,7 +32,7 @@ It speaks the same profile protocol as Total RP 3, MyRolePlay and XRP, so player
 
 **Houses and groups.** Characters who share a family name can form a house with a crest, motto and history. Groups do the same for companies, orders and RP guilds that aren't families.
 
-**RP-PvP.** Forever has no RP-PvP realm, so Kinship adds a war stance, boundaries for injury, death, capture and crime, a record of rivals and battles, and Parley: a wheel of the game's own emotes that the other faction can see.
+**RP-PvP.** For Forever's RP-PvP realms, Kinship adds a war stance, boundaries for injury, death, capture and crime, a record of rivals and battles, and Parley: a wheel of the game's own emotes that the other faction can see.
 
 **And the rest.** Letters with wax seals, documents, trading items, stashes hidden in the world, gatherings on the calendar, dice, a satchel next to your bags, a Roleplay tab on the character sheet, and a directory of every roleplayer you've met.
 
