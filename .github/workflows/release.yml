@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # pinned: lua-check installs from Ubuntu's packages here
     steps:
       - uses: actions/checkout@v7
 
