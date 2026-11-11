@@ -25,7 +25,12 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install luacheck
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lua-check
+        # luacheck's own Linux build: apt's mirrors have been hanging for minutes.
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -sSfL --retry 3 -o "$HOME/bin/luacheck" https://github.com/lunarmodules/luacheck/releases/download/v1.2.0/luacheck
+          chmod +x "$HOME/bin/luacheck"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
 
       - name: Check the code
         run: |
