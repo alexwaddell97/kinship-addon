@@ -10,7 +10,7 @@ on:
 
 jobs:
   luacheck:
-    runs-on: ubuntu-24.04   # pinned: lua-check installs from Ubuntu's packages here
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 
