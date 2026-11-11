@@ -156,6 +156,7 @@ function K:SetRelation(name, relKey)
   if not key then return false end
   if relKey == "" or relKey == "none" then relKey = nil end
   if relKey and not self:RelationDef(relKey) then return false end
+  local before = Store()[key]
   Store()[key] = relKey
   local e, kinKey = KinEntry(name)
   if e then
@@ -164,6 +165,7 @@ function K:SetRelation(name, relKey)
     self:Fire("KIN")
   end
   self:Fire("RELATIONS", key, relKey)
+  if relKey and relKey ~= before and self.NoteBond then self:NoteBond(name, relKey) end
   return true
 end
 
@@ -618,7 +620,7 @@ end
 
 K:RegisterSettings({ id = "relations", title = "Relationships", order = 32, build = function(card)
   local W = card:GetWidth() - 32
-  card:Toggle("Relationship in tooltips", "Your relationship with someone, in its colour, when you mouse over them.", "relTooltip")
+  card:Toggle("Relationship in tooltips", "Shows your relationship with a player when you mouse over them.", "relTooltip")
   card:Space(2)
 
   local y = card.y
@@ -644,7 +646,7 @@ K:RegisterSettings({ id = "relations", title = "Relationships", order = 32, buil
   y = y - 24
 
   R.customList = UI.List(card, W, 150, 40,
-    "None of your own yet. Make one for the bonds the built-in ones don't cover: sworn sister, debtor, old flame.",
+    "You haven't made any yet. Add your own, like sworn sister, debtor or old flame.",
     function(row)
       row.ring = UI.Circle(row, 26, "ARTWORK", 0)
       row.ring:SetPoint("LEFT", 10, 0)

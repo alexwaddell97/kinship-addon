@@ -130,6 +130,9 @@ end
 
 local checked, probe = {}, nil
 
+-- The icon names Kinship knows (IconNames.lua, through IconPicker.lua).
+local function Names() return K.IconPicker end
+
 -- Icon name or file ID -> something SetTexture/|T accepts, or nil if it
 -- doesn't exist on this client.
 function M.IconTexture(spec)
@@ -141,12 +144,14 @@ function M.IconTexture(spec)
   local n = tonumber(spec)
   if n then
     M:IconList()
-    if macroSet[n] then result = n end
+    local IP = Names()
+    if macroSet[n] or (IP and IP.NameOf and IP.NameOf(n)) then result = n end
   elseif #spec <= 80 and spec:find("^[%w_%-]+$") then
     local path = "Interface\\Icons\\" .. spec
     M:IconList()
     local getID = rawget(_G, "GetFileIDFromPath")
-    if macroSet[spec:lower()] then
+    local IP = Names()
+    if macroSet[spec:lower()] or (IP and IP.IdOf and IP.IdOf(spec)) then
       result = path
     elseif type(getID) == "function" then
       local ok, id = pcall(getID, path)
@@ -361,7 +366,8 @@ local function ColourMenu(owner, eb)
 end
 
 ---------------------------------------------------------------------------
--- Icon picker: the macro icons (always valid), or an icon typed by name.
+-- Icon picker: the macro icons (always valid), narrowed as you type part of
+-- a name; Enter takes the icon typed, or the first one found.
 ---------------------------------------------------------------------------
 local PICK_W, PICK_H, COLS, CELL = 372, 432, 8, 41
 
@@ -384,20 +390,27 @@ function M:BuildPicker()
 
   f.name = UI.Edit(f, 136, 24, "desk", 80)
   f.name:SetPoint("TOPRIGHT", -16, -46)
-  f.name.hint = UI.Text(f.name, "Icon name, then Enter", "Small", "deskSubtle")
+  f.name.hint = UI.Text(f.name, "Search or icon name", "Small", "deskSubtle")
   f.name.hint:SetPoint("LEFT", 8, 0)
   f.name:SetScript("OnTextChanged", function(self)
     self.hint:SetShown((self:GetText() or "") == "")
     f.status:SetText("")
+    if f.timer then f.timer:Cancel() end
+    f.timer = C_Timer.NewTimer(0.15, function() f.timer = nil; f.Search() end)
   end)
   f.name:SetScript("OnEnterPressed", function(self)
+    if f.timer then f.timer:Cancel(); f.timer = nil; f.Search() end
     local spec = strtrim(self:GetText() or "")
     if M.IconTexture(spec) then
       f.Choose(spec)
+    elseif f.found and f.found[1] ~= nil then
+      f.Choose(f.found[1])
     else
-      f.status:SetText("|cffe6705aThere's no icon called \"" .. UI.Escape(spec) .. "\" on this client.|r")
+      f.status:SetText("|cffe6705aNo icon by that name. Try a shorter word, like \"sword\".|r")
     end
   end)
+  UI.Tooltip(f.name, "Find an icon", "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
+    .. "Enter takes the first one, or the icon you named in full.")
   f.status = UI.Text(f, "", "Small", "deskSubtle", PICK_W - 32)
   f.status:SetPoint("TOPLEFT", 17, -78)
 
@@ -435,20 +448,41 @@ function M:BuildPicker()
   return f
 end
 
+-- Fill the grid: every icon, or the ones whose names match what's typed.
+function M:FillPicker(f)
+  local q = strtrim(f.name:GetText() or ""):lower():gsub("^interface[\\/]icons[\\/]", "")
+  local IP = Names()
+  local icons
+  if q == "" or not (IP and IP.Search) then
+    icons, f.found = self:IconList(), nil
+  else
+    local n = tonumber(q)
+    icons = n and { n } or IP.Search(q)
+    f.found = icons
+  end
+  if icons == f.shown then return end
+  f.shown = icons
+  f.list.empty:SetText(f.found and "No icons match that. Try a shorter word." or "No icons are available on this client.")
+  if f.list.scroll then f.list.scroll:SetVerticalScroll(0) end
+  local rows, row = {}, nil
+  for i, icon in ipairs(icons) do
+    if (i - 1) % COLS == 0 then row = {}; rows[#rows + 1] = row end
+    row[#row + 1] = icon
+  end
+  f.list:SetItems(rows, f.paintRow)
+end
+
 -- onPick(spec, size): spec is a file ID or an icon name, as a string.
 function M:PickIcon(onPick)
   local f = self:BuildPicker()
   f.onPick = onPick
   f.status:SetText("")
+  if f.timer then f.timer:Cancel(); f.timer = nil end
   f.name:SetText("")
   if not f.loaded then
     f.loaded = true
-    local rows, row = {}, nil
-    for i, icon in ipairs(self:IconList()) do
-      if (i - 1) % COLS == 0 then row = {}; rows[#rows + 1] = row end
-      row[#row + 1] = icon
-    end
-    f.list:SetItems(rows, function(r, item)
+    f.Search = function() M:FillPicker(f) end
+    f.paintRow = function(r, item)
       for i, b in ipairs(r.cells) do
         local icon = item[i]
         b.spec = icon
@@ -457,8 +491,9 @@ function M:PickIcon(onPick)
           b.icon:SetTexture(type(icon) == "string" and ("Interface\\Icons\\" .. icon) or icon)
         end
       end
-    end)
+    end
   end
+  self:FillPicker(f)
   f:Show()
 end
 

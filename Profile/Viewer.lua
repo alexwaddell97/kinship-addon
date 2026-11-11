@@ -956,7 +956,7 @@ function V:ShowHouse(name, from)
     row.name:SetWidth(sub ~= "" and 200 or 320)   -- the whole row when there's nothing beside it
   end)
   f.note:SetText(other and "Anyone can write a house name into their profile, so these are the people who say they belong."
-    or "Recognise who truly belongs on your House page.")
+    or "Recognise who truly belongs on your Community page.")
   f:Show()
   f:Raise()
 end

@@ -146,7 +146,8 @@ local function SetClamped(fs, text, max)
   fs:SetWidth(0)
   fs:SetText(text)
   local w = fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or fs:GetStringWidth()
-  if w > max then fs:SetWidth(max) end
+  -- A width the game keeps secret can't be compared: then it simply stops at the limit.
+  if not Safe(w) or w > max then fs:SetWidth(max) end
 end
 
 ---------------------------------------------------------------------------
@@ -712,17 +713,17 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", ord
       set = function(v) S()[key] = v; P:RefreshAll() end,
     }
   end
-  card:Toggle("Roleplay nameplates", "Kinship's touches on players' nameplates: roleplay names in their own colour or gold (or their character name, with any title, if they don't use one), a dot for IC, LFRP or OOC, and the marks below. Off, every plate is left as the game draws it.", opt("plates"))
-  card:Toggle("Players' own name colours", "Names on plates, tooltips and unit frames in the colour each player chose for theirs (very dark ones are lightened so you can read them). Off, every roleplay name is in roleplay gold.", {
+  card:Toggle("Roleplay nameplates", "Shows roleplay names on nameplates, with a dot for IC, LFRP or OOC and the options below. When off, nameplates look as normal.", opt("plates"))
+  card:Toggle("Players' own name colours", "Shows each roleplay name in the colour its player picked. Very dark colours are lightened. When off, all roleplay names are gold.", {
     get = function() return S().ownNameColors ~= false end,
     set = function(v) S().ownNameColors = v; P:RefreshAll() end,
   })
-  card:Toggle("Character name in brackets", "Under the roleplay name, their character's name as \"(Name)\" in a softer grey, where the plate shows it.", opt("platesBrackets"))
-  card:Toggle("Kin and rival marks", "A small icon after their name for your Kin and your rivals, in your relationship's or standing's colour. Rivals are marked on enemy players' plates too.", opt("platesIcons"))
-  card:Toggle("Show epithets", "Their epithet in small letters under the name, like \"the Wandering Blade\". Titles like \"Lord\" always show as part of the name.", opt("platesTitles"))
-  card:Toggle("Show out-of-character players", "When off, players marked OOC keep their ordinary name.", opt("platesOOC"))
-  card:Toggle("Hide in combat", "Plates go back to plain names while you're fighting.", opt("platesCombat"))
-  card:Toggle("Colour by relationship", "The ring round their status dot in your relationship's colour: friends, family, rivals and the rest.", opt("platesRelation"))
+  card:Toggle("Character name in brackets", "Shows the character name in grey brackets under the roleplay name.", opt("platesBrackets"))
+  card:Toggle("Kin and rival marks", "Adds a small icon after the names of your Kin and rivals. Rivals are marked on enemy nameplates too.", opt("platesIcons"))
+  card:Toggle("Show epithets", "Shows epithets, like \"the Wandering Blade\", under the name. Titles like \"Lord\" always show.", opt("platesTitles"))
+  card:Toggle("Show out-of-character players", "When off, players set to OOC show their normal name.", opt("platesOOC"))
+  card:Toggle("Hide in combat", "Shows normal names while you're in combat.", opt("platesCombat"))
+  card:Toggle("Colour by relationship", "Colours the ring around the status dot by your relationship with them.", opt("platesRelation"))
   local note = card:Note("", 70)
   card:OnRefresh(function()
     note:SetText(P:Describe())

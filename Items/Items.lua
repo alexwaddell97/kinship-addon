@@ -725,25 +725,25 @@ end)
 
 K:RegisterSettings({ id = "items", title = "Items & stashes", order = 40,
   shown = function() return K:ExtOn("inventory") end, build = function(card)
-  card:Toggle("Accept item offers", "Other players can offer you items. Turn off to turn every offer away.", "itemOffers")
+  card:Toggle("Accept item offers", "Lets other players offer you items. When off, all offers are declined.", "itemOffers")
   card:Toggle("Answer area searches", "Players searching nearby can find your stashes.", "stashAnswer")
-  card:Toggle("Kinship items in the trade window", "A card beside the trade window when you trade with another Kinship player, to swap Kinship items as part of the trade. Off, your trades are ordinary game trades.", {
+  card:Toggle("Kinship items in the trade window", "When trading with another Kinship user, shows a panel for swapping Kinship items too.", {
     get = function() return K.db.settings.tradeCard ~= false end,
     set = function(v) K.db.settings.tradeCard = v end,
   })
-  card:Toggle("Kinship vault at the bank", "Thirty more slots that open beside the bank when you talk to a banker.", {
+  card:Toggle("Kinship vault at the bank", "Adds 30 extra slots next to the bank when you visit a banker.", {
     get = function() return K.db.settings.vault ~= false end,
     set = function(v) K.db.settings.vault = v; if not v and K.Vault then K.Vault:Hide() end end,
   })
-  card:Toggle("Satchel button by your bags", "A small bag beside your bag bar that opens your roleplay satchel.", {
+  card:Toggle("Satchel button by your bags", "Adds a button next to your bags that opens your roleplay satchel.", {
     get = function() return K.db.settings.satchelButton ~= false end,
     set = function(v) K.db.settings.satchelButton = v; if K.Satchel then K.Satchel:PlaceButton() end end,
   })
-  card:Toggle("Open the satchel with your bags", "Your roleplay satchel opens and closes with your game bags, docked beside them.", {
+  card:Toggle("Open the satchel with your bags", "Opens and closes the satchel with your bags.", {
     get = function() return K.db.settings.satchelOpensWithBags == true end,
     set = function(v) K.db.settings.satchelOpensWithBags = v or nil end,
   })
-  card:Toggle("Keep the satchel minimised", "When it opens, it comes up as a thin strip beside your bags until you click it. Handy when you're not roleplaying.", {
+  card:Toggle("Keep the satchel minimised", "The satchel opens as a small bar next to your bags. Click it to expand.", {
     get = function() return K.db.settings.satchelMin and true or false end,
     set = function(v) if K.Satchel then K.Satchel:SetCollapsed(v) else K.db.settings.satchelMin = v or nil end end,
   })

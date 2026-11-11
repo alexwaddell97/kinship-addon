@@ -806,19 +806,18 @@ end)
 
 K:RegisterSettings({ id = "auras", title = "Effects", order = 16,
   shown = function() return K:ExtOn("auras") end, build = function(card)
-  card:Toggle("Effects bar", "Your own effects as icons on your screen, with time left. Drag to move.",
+  card:Toggle("Effects bar", "Shows your effects as icons with time left. Drag to move.",
     { get = function() return S().auraBar ~= false end, set = function(v) K.db.settings.auraBar = v; Bar:Update() end })
   card:Toggle("Effects in tooltips", "Show players' effects when you hover over them.", "auraTooltip")
-  card:Toggle("Offer a wound after a PvP death", "When an enemy player brings you down, ask whether the fight left a mark.",
+  card:Toggle("Offer a wound after a PvP death", "When an enemy player kills you, asks if you want to add a wound.",
     "auraDeathPrompt")
-  card:Toggle("Lock the effects bar", "Stop it moving when dragged.", "auraBarLock")
-  card:Toggle("Rest speeds healing", "At an inn or in a city, wounds and exhaustion pass twice as fast.",
+  card:Toggle("Lock the effects bar", "Stops the bar from being dragged.", "auraBarLock")
+  card:Toggle("Rest speeds healing", "Wounds and exhaustion heal twice as fast at an inn or in a city.",
     { get = function() return S().auraRest ~= false end, set = function(v) K.db.settings.auraRest = v end })
   card:Segments("From other players", {
     { key = "ask", label = "Ask me" }, { key = "group", label = "Trust my group" }, { key = "never", label = "Never" },
   }, function() return S().auraAccept or "ask" end, function(v) K.db.settings.auraAccept = v end, 110)
-  card:Note("Wounds always follow your Injury boundary, and captures your Capture boundary (Profile > Boundaries): "
-    .. "\"No\" turns them away and \"Ask\" always asks, whatever you choose here.")
+  card:Note("Wounds and captures follow your Injury and Capture boundaries (Profile > Boundaries). \"No\" always declines and \"Ask\" always asks, whatever you pick here.")
   card:Button("Reset the effects bar position", function()
     K.db.settings.auraBarPos = nil
     if Bar.frame then BarPlace(Bar.frame) end

@@ -704,6 +704,90 @@ function K:MeetUnit(unit, how)
   if not UnitExists(unit) or not UnitIsPlayer(unit) or UnitIsUnit(unit, "player") then return end
   local name = GetUnitName(unit, true)
   if not self.Safe(name) or not name then return end
+  local _, class = UnitClass(unit)
+  return self:MeetName(name, self.Safe(class) and class or nil, how)
+end
+
+---------------------------------------------------------------------------
+-- The Chronicle notes the bonds you make, not everyone you group with (the
+-- Kin page keeps who you met, where and when).
+---------------------------------------------------------------------------
+local BOND_WORDS = {
+  friend = "Became friends with %s", family = "Welcomed %s as family", love = "Grew close to %s",
+  ally = "Made an ally of %s", mentor = "Began a mentor's bond with %s", business = "Struck a deal with %s",
+  unfriendly = "Fell out with %s", rival = "Made a rival of %s", enemy = "Made an enemy of %s",
+}
+local BOND_REDO = 600   -- a change of mind within this long rewrites the entry
+
+function K:NoteBond(name, relKey)
+  if not (self.db and name and relKey) or relKey == "neutral" then return end
+  local def = self.RelationDef and self:RelationDef(relKey)
+  local fmt = BOND_WORDS[relKey]
+  local title = fmt and fmt:format(name) or (def and (def.label .. ": " .. name))
+  if not title then return end
+  local c, key, now = self:Chronicle(), name:lower(), time()
+  for i = #c.entries, math.max(1, #c.entries - 20), -1 do
+    local e = c.entries[i]
+    if e.bondWith == key and now - (e.t or 0) < BOND_REDO and e.title == e.autoTitle then
+      e.title, e.autoTitle = title, title
+      self:Fire("CHRONICLE", e)
+      return e
+    end
+  end
+  local e = self:AddEntry("kin", title)
+  e.bondWith, e.autoTitle = key, title
+  return e
+end
+
+-- Chronicles from before kept a "Travelled with" entry for everyone you
+-- grouped with. Those go, once per character, except any you've written in.
+local function ClearTravelled()
+  local c = K:Chronicle()
+  if c.clearedTravel then return end
+  c.clearedTravel, c.foldedTravel = true, nil
+  local keep, n = {}, 0
+  for _, e in ipairs(c.entries) do
+    local auto = e.kind == "kin" and type(e.title) == "string" and e.title:find("^Travelled with ")
+      and ((e.text or "") == "" or e.text == e.autoText)
+    if auto then n = n + 1 else keep[#keep + 1] = e end
+  end
+  if n > 0 then
+    c.entries = keep
+    K:Fire("CHRONICLE")
+  end
+end
+
+-- Older Chronicles also said "Set foot in" beside "Entered" for every dungeon:
+-- the "Set foot in" goes, once per character, unless you've written in it.
+local function ClearDungeonDoubles()
+  local c = K:Chronicle()
+  if c.tidiedDungeons then return end
+  c.tidiedDungeons = true
+  local entered = {}
+  for _, e in ipairs(c.entries) do
+    if e.kind == "dungeon" and e.place then entered[e.place] = e.t or 0 end
+  end
+  local keep, n = {}, 0
+  for _, e in ipairs(c.entries) do
+    local t = e.kind == "place" and (e.text or "") == "" and e.place and entered[e.place]
+    if t and math.abs((e.t or 0) - t) < 600 and e.title == "Set foot in " .. e.place then
+      n = n + 1
+    else
+      keep[#keep + 1] = e
+    end
+  end
+  if n > 0 then
+    c.entries = keep
+    K:Fire("CHRONICLE")
+  end
+end
+
+K:On("LOGIN", function()
+  K.Try("chronicle", ClearTravelled)
+  K.Try("chronicle", ClearDungeonDoubles)
+end)
+
+function K:MeetName(name, class, how)
   local list, key = self:KinList(), name:lower()
   local e = list[key]
   if not e then
@@ -711,13 +795,39 @@ function K:MeetUnit(unit, how)
     e = { name = name, rel = "", how = how or "group",
           met = { place = place, level = UnitLevel("player"), t = time() } }
     list[key] = e
-    self:AddEntry("kin", "Travelled with " .. name, nil, place)
     self:Fire("KIN")
   end
   e.seen = time()
-  local _, class = UnitClass(unit)
-  if self.Safe(class) then e.class = class end
+  if class then e.class = class end
   return e
+end
+
+-- Who joins Kin from your groups: "rp" (people with a roleplay profile, the
+-- default), "all", or "off". People already in your Kin are kept up to date
+-- whatever this is.
+function K:KinFromGroups()
+  local v = self.db and self.db.settings.kinFromGroups
+  return (v == "all" or v == "off") and v or "rp"
+end
+
+-- Kin who are only there because you grouped once: no bond, not added by
+-- you, no roleplay profile, nothing of yours written about them.
+function K:IsPassingKin(e)
+  if type(e) ~= "table" or e.how ~= "group" or (e.rel or "") ~= "" then return false end
+  if self.RelationKey and self:RelationKey(e.name) then return false end
+  local key = self.NameKey(e.name)
+  local reg = key and self.db.registry and self.db.registry[key]
+  return not (reg and reg.profile)
+end
+
+-- Take those out. Returns how many went.
+function K:TidyKin()
+  local list, n = self:KinList(), 0
+  for key, e in pairs(list) do
+    if self:IsPassingKin(e) then list[key] = nil; n = n + 1 end
+  end
+  if n > 0 then self:Fire("KIN") end
+  return n
 end
 
 function K:AddKinByName(name)
@@ -740,12 +850,15 @@ local function OnZone()
   local c = K:Chronicle()
   local place, id = K:CurrentPlace()
   local zoneKey = id or place
+  local inInstance, kind = IsInInstance()
+  local dungeon = inInstance and (kind == "party" or kind == "raid")
   if zoneKey and not c.zones[zoneKey] then
     c.zones[zoneKey] = time()
-    K:AddEntry("place", "Set foot in " .. place, nil, place)
+    -- In a dungeon or raid, "Entered" below says it (and each of its floors
+    -- is a map of its own, so this would say it again and again).
+    if not dungeon then K:AddEntry("place", "Set foot in " .. place, nil, place) end
   end
-  local inInstance, kind = IsInInstance()
-  if inInstance and (kind == "party" or kind == "raid") then
+  if dungeon then
     local name = GetInstanceInfo()
     if K.Safe(name) and name and not c.instances[name] then
       c.instances[name] = time()
@@ -763,6 +876,34 @@ end
 -- Who counts as travelling with you: your party, or in a raid only your own
 -- group of five. Battlegrounds and arenas fill up with strangers, so they
 -- never add anyone.
+-- Grouped with, but their profile hadn't arrived yet: [nameKey] = { name, class }
+local waiting = {}
+
+local function Grouped(unit)
+  if not UnitExists(unit) or not UnitIsPlayer(unit) or UnitIsUnit(unit, "player") then return end
+  local name = GetUnitName(unit, true)
+  if not K.Safe(name) or not name then return end
+  local mode = K:KinFromGroups()
+  if mode == "all" or K:KinList()[name:lower()] then return K:MeetUnit(unit, "group") end
+  if mode == "off" then return end
+  local key = K.NameKey(name)
+  if not key then return end
+  local reg = K.db.registry and K.db.registry[key]
+  if reg and reg.profile then return K:MeetUnit(unit, "group") end
+  local _, class = UnitClass(unit)
+  waiting[key] = { name = name, class = K.Safe(class) and class or nil }
+end
+
+-- Their profile came in: they join, if you're still together.
+K:On("REGISTRY", function(key, entry)
+  local w = key and waiting[key]
+  if not w then return end
+  waiting[key] = nil
+  if K:KinFromGroups() ~= "rp" or not (entry and entry.profile) then return end
+  local together = UnitInParty(w.name) or UnitInRaid(w.name)
+  if K.Safe(together) and together then K:MeetName(w.name, w.class, "group") end
+end)
+
 local function OnGroup()
   local inInstance, kind = IsInInstance()
   if inInstance and (kind == "pvp" or kind == "arena") then return end
@@ -775,10 +916,10 @@ local function OnGroup()
     if not mine then return end
     for i = 1, n do
       local sub = select(3, GetRaidRosterInfo(i))
-      if sub == mine then K.Try("group", K.MeetUnit, K, "raid" .. i, "group") end
+      if sub == mine then K.Try("group", Grouped, "raid" .. i) end
     end
   else
-    for i = 1, GetNumSubgroupMembers() do K.Try("group", K.MeetUnit, K, "party" .. i, "group") end
+    for i = 1, GetNumSubgroupMembers() do K.Try("group", Grouped, "party" .. i) end
   end
 end
 
@@ -848,6 +989,8 @@ SlashCmdList.KINSHIPRP = function(input)
   cmd = (cmd or ""):lower()
   if cmd == "" then
     K.Journal:Toggle()
+  elseif cmd == "community" then
+    K.Journal:Open("house")
   elseif cmd == "profile" or cmd == "chronicle" or cmd == "kin" or cmd == "house" or cmd == "gatherings"
       or cmd == "directory" or cmd == "warfront" or cmd == "letters" or cmd == "settings"
       or cmd == "persona" or cmd == "companions" or cmd == "quests" or cmd == "inventory" then

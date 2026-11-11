@@ -16,7 +16,7 @@ local MODULES = {
 }
 
 K:RegisterSettings({ id = "extended", title = "Extended features", order = 80, build = function(card)
-  card:Toggle("Extended features", "Items, documents, effects, campaigns and everything that reads Total RP 3: Extended creations.", {
+  card:Toggle("Extended features", "Items, documents, effects, campaigns, and support for Total RP 3: Extended creations.", {
     get = function() return K:ExtWanted() end,
     set = function(v) K:SetExt(nil, v) end,
   })
@@ -34,12 +34,12 @@ K:RegisterSettings({ id = "extended", title = "Extended features", order = 80, b
     local need = K:ExtNeedsReload()
     local text
     if need then
-      text = ("|cff%sSomething you switched on needs a reload to start.|r Switching off takes effect at once.")
+      text = ("|cff%sReload to start the features you turned on.|r")
         :format(UI.CardHex({ 0.95, 0.60, 0.25 }))
     elseif not K:ExtWanted() then
-      text = "Extended features are off: their pages, tabs and messages are gone until you switch them back on."
+      text = "Extended features are off. Their pages and tabs are hidden until you turn them back on."
     else
-      text = "Switching a feature off hides it and ignores its messages at once. Switching it back on needs a reload."
+      text = "Turning a feature off works straight away. Turning it back on needs a reload."
     end
     note:SetText(text)
     reload:SetEnabled(need)

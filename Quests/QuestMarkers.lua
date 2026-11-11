@@ -596,7 +596,7 @@ K:On("QUESTS", function() QM.cache = Markers(); K.Try("map pins", wm.Layout, wm)
 
 K:RegisterSettings({ id = "questMarkers", title = "Quest markers", order = 35,
   shown = function() return K:ExtOn("campaigns") end, build = function(card)
-  card:Toggle("On the world map", "Pins for your tracked roleplay quests: the quest's icon, numbered objectives, and a ring for an area.",
+  card:Toggle("On the world map", "Shows map pins for your tracked roleplay quests and their objectives.",
     { get = function() return S().questPins ~= false end, set = function(v) K.db.settings.questPins = v; K.Try("map pins", wm.Layout, wm) end })
-  card:Toggle("On the minimap", "The same pins on your minimap, at its edge when they're further away.", "questMinimap")
+  card:Toggle("On the minimap", "Shows the same pins on your minimap. Distant ones sit at the edge.", "questMinimap")
 end })

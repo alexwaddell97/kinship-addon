@@ -336,8 +336,10 @@ end
 
 function G:ReplayCurrent()
   local page, content = CurrentPage()
-  local gid = page and ((page.guide and content and page.guide(content)) or PageGuide(page.id))
-  if gid and content and content.ok then self:Start(gid, content, J.frame)
+  local gid, ctx
+  if page and page.guide and content then gid, ctx = page.guide(content) end
+  gid = gid or (page and PageGuide(page.id))
+  if gid and content and content.ok then self:Start(gid, ctx or content, J.frame)
   elseif self.defs.journal then self:Start("journal", J, J.frame) end
 end
 
@@ -412,11 +414,11 @@ K:On("LOGIN", function()
 end)
 
 K:RegisterSettings({ id = "guides", title = "Guides", order = 2, build = function(card)
-  card:Toggle("Guide me through new pages", "The first time you open a page, a short tour shows what everything does. Skip any tour with Esc.",
+  card:Toggle("Show a tour on new pages", "The first time you open a page, a short tour explains it. Press Esc to skip one.",
     { get = function() return G:AutoOn() end, set = function(v) K.db.settings.guidesAuto = v end })
-  card:Button("Show every guide again", function()
+  card:Button("Reset tours", function()
     G:Reset()
-    K:Print("Guides reset: each page shows its tour again the next time you open it.")
+    K:Print("Tours reset. Each page will show its tour again next time you open it.")
   end, 200)
-  card:Note("The ? at the top of the journal replays the tour for the page you're on.")
+  card:Note("Click ? at the top of the journal to replay the tour for the page you're on.")
 end })

@@ -1,6 +1,8 @@
 -- Kinship RP: the icon picker. A Kinship window with a virtualised grid of
 -- every macro icon (spells and items, as file IDs), a shelf of recently
--- chosen icons, and a box for typing an icon name or file ID. For everyone:
+-- chosen icons, and a search box: part of a name ("sword", "fire") narrows the
+-- grid as you type, using the names in IconNames.lua; a file ID or a full
+-- icon name and Enter picks that icon. For everyone:
 --   K.IconPicker:Open(anchorFrame, currentIcon, function(icon) ... end)
 -- icon is a file ID (number), or a texture path when typed by name and the
 -- client can't turn it into an ID.
@@ -68,6 +70,71 @@ local function Lists()
   return lists
 end
 
+---------------------------------------------------------------------------
+-- Icon names (IconNames.lua: "<file ID> <name>" a line)
+---------------------------------------------------------------------------
+local NAMES = "\n" .. (ns.ICON_NAMES or "")
+ns.ICON_NAMES = nil
+
+-- The icon's name, or nil if it isn't in the list.
+function IP.NameOf(id)
+  if type(id) ~= "number" then return nil end
+  local s = NAMES:find("\n" .. id .. " ", 1, true)
+  if not s then return nil end
+  local from = s + #tostring(id) + 2
+  local e = NAMES:find("\n", from, true)
+  return NAMES:sub(from, (e or #NAMES + 1) - 1)
+end
+
+-- The file ID of an icon by its full name, or nil.
+function IP.IdOf(name)
+  name = name and name:lower()
+  if not name or name == "" then return nil end
+  local pos = 1
+  while true do
+    local s, e = NAMES:find(" " .. name .. "\n", pos, true)
+    if not s then
+      -- the last line has no newline after it
+      local tail = " " .. name
+      if #NAMES < #tail or NAMES:sub(-#tail) ~= tail then return nil end
+      s, e = #NAMES - #tail + 1, #NAMES
+    end
+    local ls = s
+    while ls > 1 and NAMES:byte(ls - 1) ~= 10 do ls = ls - 1 end
+    local id = NAMES:sub(ls, s - 1):match("^(%d+)$")
+    if id then return tonumber(id) end
+    if e >= #NAMES then return nil end
+    pos = e
+  end
+end
+
+-- Icons whose names hold every word of the query, in name order. set, if
+-- given, keeps only the icons in it.
+function IP.Search(query, set)
+  local words = {}
+  for w in (query or ""):lower():gmatch("%S+") do words[#words + 1] = w end
+  if #words == 0 then return {} end
+  table.sort(words, function(a, b) return #a > #b end)
+  local first, out, pos = words[1], {}, 1
+  while true do
+    local s = NAMES:find(first, pos, true)
+    if not s then break end
+    local ls = s
+    while ls > 1 and NAMES:byte(ls - 1) ~= 10 do ls = ls - 1 end
+    local le = NAMES:find("\n", s, true) or (#NAMES + 1)
+    pos = le
+    local id, name = NAMES:sub(ls, le - 1):match("^(%d+) (.*)$")
+    local ok = name and name:find(first, 1, true)
+    for i = 2, #words do
+      if not ok then break end
+      ok = name:find(words[i], 1, true)
+    end
+    id = tonumber(id)
+    if ok and id and (not set or set[id]) then out[#out + 1] = id end
+  end
+  return out
+end
+
 local function Recent()
   if not K.db then return {} end
   K.db.recentIcons = K.db.recentIcons or {}
@@ -89,6 +156,8 @@ local function Resolve(text)
   if n then return (n > 0 and n == math.floor(n)) and n or nil end
   local name = text:match("^[Ii][Nn][Tt][Ee][Rr][Ff][Aa][Cc][Ee]\\[Ii][Cc][Oo][Nn][Ss]\\([%w_%-]+)$") or text:match("^([%w_%-]+)$")
   if not name then return nil end
+  local known = IP.IdOf(name)
+  if known then return known end
   local path = "Interface\\Icons\\" .. name
   local byPath = rawget(_G, "GetFileIDFromPath")
   if type(byPath) == "function" then
@@ -100,7 +169,7 @@ local function Resolve(text)
 end
 
 local function Describe(icon)
-  if type(icon) == "number" then return ("Icon %d"):format(icon) end
+  if type(icon) == "number" then return IP.NameOf(icon) or ("Icon %d"):format(icon) end
   if type(icon) == "string" then return icon:match("([^\\/]+)$") or icon end
   return "No icon"
 end
@@ -172,11 +241,14 @@ function IP:Build()
   self.filter = "all"
   f.filters = UI.Segments(f, FILTERS, 64, function(key) IP:SetFilter(key) end)
   f.filters:SetPoint("TOPLEFT", 16, -46)
-  local search = UI.Search(f, 124, "Name or ID", function() end)
+  local search = UI.Search(f, 124, "Search or ID", function(text) IP:QueueSearch(text) end)
   search:SetPoint("TOPRIGHT", -16, -46)
   search:SetMaxLetters(80)
   search:SetScript("OnEnterPressed", function(eb)
+    if IP.timer then IP.timer:Cancel(); IP.timer = nil; IP:SetQuery(strtrim(eb:GetText() or ""):lower()) end
     local icon = Resolve(eb:GetText())
+    -- Not an exact name or ID: the first icon the search found.
+    if not icon and IP.query and IP.items and IP.items[1] ~= nil then icon = IP.items[1] end
     if icon then
       IP:Select(icon, true)
       eb:ClearFocus()
@@ -184,7 +256,8 @@ function IP:Build()
       IP:Flash("No icon by that name or ID.")
     end
   end)
-  UI.Tooltip(search, "Find an icon", "Type an icon's name (INV_Misc_Book_09) or file ID, then press Enter.")
+  UI.Tooltip(search, "Find an icon", "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
+    .. "A file ID or a full name (INV_Misc_Book_09) and Enter picks that icon.")
   self.search = search
 
   -- The grid, on a card
@@ -283,17 +356,55 @@ function IP:ScrollTo(index)
   self.sf:SetVerticalScroll(math.max(0, math.min(range, row * CELL - GRID_H / 2 + CELL / 2)))
 end
 
+-- The search waits for a pause in typing.
+function IP:QueueSearch(text)
+  if self.timer then self.timer:Cancel() end
+  self.timer = C_Timer.NewTimer(0.15, function()
+    IP.timer = nil
+    if IP.frame and IP.frame:IsShown() then IP:SetQuery(text) end
+  end)
+end
+
+function IP:SetQuery(text)
+  text = (text or ""):gsub("^interface[\\/]icons[\\/]", "")
+  local q = text ~= "" and text or nil
+  if q == self.query then return end
+  self.query = q
+  self:SetFilter(self.filter)
+end
+
+-- The icons in a filter, as a set of file IDs (nil for all of them).
+function IP:FilterSet(key, base)
+  if key == "all" then return nil end
+  self.sets = self.sets or {}
+  if key ~= "recent" and self.sets[key] then return self.sets[key] end
+  local set = {}
+  for _, v in ipairs(base) do if type(v) == "number" then set[v] = true end end
+  if key ~= "recent" then self.sets[key] = set end
+  return set
+end
+
 function IP:SetFilter(key)
   self.filter = key
   self.frame.filters:Select(key)
   local items = key == "recent" and Recent() or Lists()[key] or Lists().all
+  local q = self.query
+  if q then
+    local n = tonumber(q)
+    if n then
+      items = (n > 0 and n == math.floor(n)) and { n } or {}
+    else
+      items = IP.Search(q, self:FilterSet(key, items))
+    end
+  end
   self.items = items
   self.content:SetHeight(math.max(1, math.ceil(#items / COLS) * CELL))
   self.sf:SetVerticalScroll(0)
   local empty = #items == 0
   self.card.emptyArt:SetShown(empty)
   self.card.empty:SetShown(empty)
-  self.card.empty:SetText(key == "recent" and "Icons you choose will gather here, ready for next time."
+  self.card.empty:SetText((q and ("No icons match " .. '"%s"' .. ". Try a shorter word, or All."):format(q))
+    or (key == "recent" and "Icons you choose will gather here, ready for next time.")
     or "The game didn't hand over any icons. Type a name or file ID above instead.")
   self:ScrollTo(self:IndexOf(self.selected))
   self:Render()
@@ -374,6 +485,8 @@ function IP:Open(anchorFrame, currentIcon, onPick)
   self.onPick = onPick
   self.selected = currentIcon
   self.flash = nil
+  self.query = nil
+  if self.timer then self.timer:Cancel(); self.timer = nil end
   self.search:SetText("")
   Place(f, anchorFrame)
   f:Show()

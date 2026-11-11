@@ -250,13 +250,13 @@ K:On("REGISTRY", function(key)
 end)
 
 K:RegisterSettings({ id = "unitNames", title = "Unit frames", order = 41, build = function(card)
-  card:Toggle("Roleplay names on unit frames", "Your player frame shows your roleplay name in its colour, with your character's name after it.", {
+  card:Toggle("Roleplay names on unit frames", "Shows your roleplay name on your player frame, followed by your character name.", {
     get = function() return S().rpUnitNames ~= false end,
     set = function(v) K.db.settings.rpUnitNames = v; N:Refresh() end,
   })
-  card:Toggle("Include target and focus", "Your target and focus frames show their roleplay name, and their character's name, once their profile has arrived.", {
+  card:Toggle("Include target and focus", "Shows roleplay names on your target and focus frames once Kinship has their profile.", {
     get = function() return S().rpUnitNamesOthers ~= false end,
     set = function(v) K.db.settings.rpUnitNamesOthers = v; N:Refresh() end,
   })
-  card:Note("Works with EllesmereUI's unit frames and the game's own. The character name always stays, so whispers and invites are never a guess; the rest of the line stays as your frames draw it.")
+  card:Note("Works with the game's unit frames and EllesmereUI's. The character name always stays visible, so you know who to whisper or invite.")
 end })

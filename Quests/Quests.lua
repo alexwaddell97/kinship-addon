@@ -1078,18 +1078,17 @@ end
 ---------------------------------------------------------------------------
 K:RegisterSettings({ id = "quests", title = "Quests", order = 35,
   shown = function() return K:ExtOn("campaigns") end, build = function(card)
-  card:Toggle("In the objective tracker", "Tracked roleplay quests appear in your objective tracker under Roleplay Quests, with their icons.", {
+  card:Toggle("In the objective tracker", "Shows tracked roleplay quests in your objective tracker.", {
     get = function() return K.db.settings.questTracker ~= false end,
     set = function(v) K.db.settings.questTracker = v; K:Fire("QUESTS") end,
   })
-  card:Toggle("Distances in the tracker", "How far each map pin is, beside the quest and its objectives. "
-    .. "Off keeps the tracker as tidy as the game's own; hover a quest there to see them.", {
+  card:Toggle("Distances in the tracker", "Shows how far away each objective is. When off, hover a quest to see distances.", {
     get = function() return K.db.settings.questTrackerDistance == true end,
     set = function(v) K.db.settings.questTrackerDistance = v or nil; K:Fire("QUESTS") end,
   })
-  card:Toggle("Roleplay tab in the quest log", "A tab beside the quest log's own, listing your roleplay quests.", {
+  card:Toggle("Roleplay tab in the quest log", "Adds a tab to the quest log listing your roleplay quests.", {
     get = function() return K.db.settings.questLogTab ~= false end,
     set = function(v) K.db.settings.questLogTab = v; if K.QuestTracker then K.QuestTracker:ApplyLogSetting() end end,
   })
-  card:Toggle("Quest offers", "Let other Kinship players offer you quests. You still choose whether to accept.", "questOffers")
+  card:Toggle("Quest offers", "Lets other Kinship users offer you quests. You can still say no.", "questOffers")
 end })

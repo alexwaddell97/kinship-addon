@@ -204,10 +204,55 @@ function P.Music(p)
   if m and m > 0 then return math.floor(m) end
 end
 
+-- The game's whole music library (MusicNames.lua), built on first use:
+-- { id, time, name, hay } for each track this client has. Tracks from the
+-- suggestions keep their friendly names.
+local library
+function P.MusicLibrary()
+  if library then return library end
+  library = {}
+  local curated = {}
+  for _, m in ipairs(P.MUSIC) do curated[m.id] = m.name end
+  local known = C_UIFileAsset and C_UIFileAsset.IsKnownFile
+  for _, e in ipairs(ns.MUSIC_LIBRARY or {}) do
+    local id, len, names = e[1], e[2], e[3]
+    local ok, has = true, true
+    if type(known) == "function" then ok, has = pcall(known, id) end
+    if not ok or has then
+      local first = names:match("^[^|]+") or names
+      local name = curated[id] or (first:gsub("^mus_", ""):gsub("_", " "):gsub("^%l", string.upper))
+      library[#library + 1] = { id = id, time = len, name = name, hay = (names .. "|" .. name):lower() }
+    end
+  end
+  ns.MUSIC_LIBRARY = nil
+  return library
+end
+
+-- Tracks whose names hold every word of the query (or whose file ID it is).
+function P.SearchMusic(query)
+  local words = {}
+  for w in (query or ""):lower():gmatch("%S+") do words[#words + 1] = w end
+  local out = {}
+  if #words == 0 then return out end
+  local id = tonumber(query)
+  for _, m in ipairs(P.MusicLibrary()) do
+    local ok = id ~= nil and m.id == id
+    if not ok then
+      ok = true
+      for _, w in ipairs(words) do
+        if not m.hay:find(w, 1, true) then ok = false break end
+      end
+    end
+    if ok then out[#out + 1] = m end
+  end
+  return out
+end
+
 function P.MusicLabel(id)
   id = tonumber(id)
   if not id then return nil end
   for _, m in ipairs(P.MUSIC) do if m.id == id then return m.name end end
+  for _, m in ipairs(P.MusicLibrary()) do if m.id == id then return m.name end end
   return ("Music file %d"):format(id)
 end
 

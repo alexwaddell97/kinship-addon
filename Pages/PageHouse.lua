@@ -1,50 +1,10 @@
--- Kinship RP: House page (families built on shared surnames).
+-- Kinship RP: Community page. Your house (a family, on a shared surname),
+-- your group, and Gatherings (PageGatherings.lua) as a third tab.
 
 local ADDON, ns = ...
 local K = ns.K
 local UI = K.UI
 
--- Crests to choose from, by theme (names in the game's icon folder). Any
--- that this client doesn't have are left out when the chooser is built.
-local CREST_SETS = {
-  { key = "arms", label = "Arms", icons = {
-    "INV_Shield_05", "INV_Shield_01", "INV_Shield_02", "INV_Shield_03", "INV_Shield_04", "INV_Shield_06", "INV_Shield_07", "INV_Shield_08",
-    "INV_Shield_09", "INV_Shield_10", "INV_Crown_01", "INV_Crown_02", "INV_Jewelry_Ring_03", "INV_Jewelry_Ring_01", "INV_Misc_Gem_Pearl_05", "INV_Misc_Gem_01",
-    "INV_BannerPVP_01", "INV_BannerPVP_02", "INV_Misc_Key_03", "INV_Misc_Coin_01", "INV_Misc_Book_09", "INV_Misc_Rune_01", "INV_Scroll_03", "INV_Letter_15",
-    "Spell_Holy_SealOfMight", "Spell_Holy_SealOfWisdom", "Spell_Holy_SealOfRighteousness", "Spell_Holy_SealOfSalvation", "Ability_Warrior_BattleShout",
-    "Ability_Warrior_DefensiveStance", "Ability_Warrior_ShieldWall", "Spell_Holy_DevotionAura",
-  } },
-  { key = "beasts", label = "Beasts", icons = {
-    "Ability_Hunter_Pet_Wolf", "Ability_Hunter_Pet_Bear", "Ability_Hunter_Pet_Boar", "Ability_Hunter_Pet_Cat", "Ability_Hunter_Pet_Owl",
-    "Ability_Hunter_Pet_Raptor", "Ability_Hunter_Pet_Spider", "Ability_Hunter_Pet_Scorpid", "Ability_Hunter_Pet_Crab", "Ability_Hunter_Pet_Crocolisk",
-    "Ability_Hunter_Pet_Gorilla", "Ability_Hunter_Pet_Hyena", "Ability_Hunter_Pet_Turtle", "Ability_Hunter_Pet_Vulture", "Ability_Hunter_Pet_WindSerpent",
-    "Ability_Hunter_Pet_Bat", "Ability_Hunter_Pet_Tallstrider", "Ability_Mount_WhiteTiger", "Ability_Mount_BlackPanther", "Ability_Mount_JungleTiger",
-    "Ability_Mount_RidingHorse", "Ability_Mount_WhiteDireWolf", "Ability_Mount_MountainRam", "Ability_Mount_Raptor", "Ability_Druid_CatForm",
-    "Ability_Racial_BearForm", "Ability_Druid_TravelForm", "Ability_Druid_AquaticForm", "Ability_Hunter_EagleEye", "Spell_Nature_RavenForm",
-    "INV_Misc_Head_Dragon_01", "INV_Misc_MonsterClaw_04",
-  } },
-  { key = "war", label = "Blades", icons = {
-    "INV_Sword_04", "INV_Sword_01", "INV_Sword_02", "INV_Sword_03", "INV_Sword_05", "INV_Sword_06", "INV_Sword_07", "INV_Sword_08",
-    "INV_Axe_01", "INV_Axe_02", "INV_Axe_03", "INV_Axe_04", "INV_Hammer_09", "INV_Hammer_01", "INV_Hammer_02", "INV_Mace_01",
-    "INV_Spear_01", "INV_Staff_01", "INV_Staff_02", "INV_Weapon_ShortBlade_01", "INV_Weapon_ShortBlade_02", "INV_Weapon_ShortBlade_05",
-    "Ability_Rogue_Eviscerate", "Ability_DualWield", "Ability_BackStab", "Ability_Parry", "Ability_MeleeDamage", "Ability_ThunderClap",
-    "INV_Misc_Bone_HumanSkull_01", "Ability_Warrior_Charge", "Ability_Warrior_Disarm", "Ability_Warrior_Cleave",
-  } },
-  { key = "nature", label = "Nature", icons = {
-    "Spell_Nature_Tranquility", "Spell_Nature_StarFall", "Spell_Nature_ProtectionformNature", "Spell_Nature_HealingTouch",
-    "Spell_Nature_Regeneration", "Spell_Nature_ResistNature", "Spell_Nature_Thorns", "Spell_Nature_LightningShield", "Spell_Nature_Lightning",
-    "Spell_Nature_EarthBind", "Spell_Nature_Sleep", "Spell_Nature_Cyclone", "Spell_Nature_Polymorph", "Spell_Frost_SummonWaterElemental",
-    "INV_Misc_Herb_19", "INV_Misc_Flower_02", "INV_Misc_Herb_10", "INV_Misc_Branch_01", "INV_Misc_Pelt_Wolf_01", "INV_Misc_Food_15",
-    "INV_Drink_05", "INV_Misc_Herb_07", "INV_Misc_Herb_11", "Spell_Nature_NullifyDisease",
-  } },
-  { key = "magic", label = "Magic", icons = {
-    "Spell_Holy_HolyBolt", "Spell_Holy_PowerWordShield", "Spell_Holy_MindVision", "Spell_Holy_GreaterBlessingofKings", "Spell_Holy_Renew",
-    "Spell_Holy_MagicalSentry", "Spell_Holy_PrayerOfSpirit", "Spell_Fire_FlameBolt", "Spell_Fire_Fireball02", "Spell_Fire_Fire",
-    "Spell_Frost_FrostBolt02", "Spell_Frost_IceStorm", "Spell_Arcane_Blink", "Spell_Arcane_StarFire", "Spell_Arcane_PortalStormWind",
-    "Spell_Shadow_ShadowWordPain", "Spell_Shadow_DeathCoil", "Spell_Shadow_RaiseDead", "Spell_Shadow_Charm", "Spell_Shadow_Possession",
-    "Spell_Shadow_AntiShadow", "Spell_Shadow_LifeDrain", "Spell_Shadow_PsychicScream", "Spell_Shadow_MindSteal",
-  } },
-}
 local ICON_DIR = "Interface\\Icons\\"
 
 -- A crest as a medallion: a gold ring, a dark well, a fine inner ring, and the
@@ -88,184 +48,29 @@ local function Medallion(parent, size, button, onCard)
 end
 
 ---------------------------------------------------------------------------
--- The crest chooser: a pop-over on the journal. Your arms large in their
--- ring, with the house name and motto beneath, and as they'll be pressed
--- into a letter's seal; themed sets of round crests, or any icon by name.
+-- Choosing a crest: the icon picker (IconPicker.lua), searched by name. A
+-- crest is shared by its icon's name, so it needs one other players can take.
 ---------------------------------------------------------------------------
-local CW, CH = 580, 440
-local COLS, ROWS, CELL = 8, 6, 43
-local chooser
-
-local function CrestName(path)
-  local n = tostring(path or ""):match("([^\\]+)$") or ""
-  return (n:gsub("^INV_", ""):gsub("^Ability_", ""):gsub("^Spell_", ""):gsub("_", " "))
+local function CrestPath(icon)
+  local IP = K.IconPicker
+  local name = (type(icon) == "number" and IP and IP.NameOf and IP.NameOf(icon))
+    or (type(icon) == "string" and icon:match("([^\\/]+)$"))
+  if name and name:find("^[%w_]+$") then return ICON_DIR .. name end
 end
 
-local function BuildChooser()
-  local m = UI.Modal((K.Journal and K.Journal.frame) or UIParent, CW, CH, function() chooser:Hide() end)
-  chooser = m
-  local card = m.card
-
-  -- Left: the preview
-  m.head = UI.Section(card, "Your arms")
-  m.head:SetPoint("TOPLEFT", 21, -15)
-  local cx = 105
-  m.medal = Medallion(card, 112, false, true)
-  m.medal:SetPoint("CENTER", card, "TOPLEFT", cx, -110)
-  m.big = m.medal.icon
-  m.house = UI.Text(card, "", "Header", "text", 170)
-  m.house:SetPoint("TOP", card, "TOPLEFT", cx, -176)
-  m.house:SetJustifyH("CENTER")
-  m.house:SetWordWrap(false)
-  m.motto = UI.Text(card, "", "Small", "subtle", 170)
-  m.motto:SetPoint("TOP", m.house, "BOTTOM", 0, -5)
-  m.motto:SetJustifyH("CENTER")
-  m.motto:SetSpacing(2)
-  m.name = UI.Text(card, "", "Small", "subtle", 170)
-  m.name:SetPoint("TOP", card, "TOPLEFT", cx, -232)
-  m.name:SetJustifyH("CENTER")
-  m.name:SetWordWrap(false)
-
-  -- The seal it makes (click to try another wax)
-  m.sealKey = 1
-  m.seal = UI.Seal(card, 58)
-  m.seal:SetPoint("CENTER", card, "TOPLEFT", cx, -300)
-  m.sealBtn = CreateFrame("Button", nil, card)
-  m.sealBtn:SetAllPoints(m.seal)
-  m.sealBtn:SetScript("OnClick", function()
-    m.sealKey = m.sealKey % #UI.SEAL_COLORS + 1
-    m:Paint()
-  end)
-  UI.Tooltip(m.sealBtn, "On your letters", "Your crest is pressed into the wax of every letter you seal. Click to try another colour of wax.")
-  m.sealNote = UI.Text(card, "Pressed into your letters' seals", "Small", "subtle", 170)
-  m.sealNote:SetPoint("TOP", m.seal, "BOTTOM", 0, -8)
-  m.sealNote:SetJustifyH("CENTER")
-
-  -- Right: the sets
-  local RX = 210
-  local sets = {}
-  for _, set in ipairs(CREST_SETS) do sets[#sets + 1] = { key = set.key, label = set.label } end
-  m.tabs = UI.Segments(card, sets, 68, function(key) m.set = key; m:Paint() end)
-  m.tabs:SetPoint("TOPLEFT", RX, -44)
-
-  m.cells = {}
-  for i = 1, COLS * ROWS do
-    local b = CreateFrame("Button", nil, card)
-    b:SetSize(CELL - 3, CELL - 3)
-    b:SetPoint("TOPLEFT", RX + ((i - 1) % COLS) * CELL, -78 - math.floor((i - 1) / COLS) * CELL)
-    b.ring = UI.Circle(b, CELL - 3, "ARTWORK", 0)
-    b.ring:SetPoint("CENTER")
-    b.icon = b:CreateTexture(nil, "ARTWORK", nil, 1)
-    b.icon:SetSize(CELL - 9, CELL - 9)
-    b.icon:SetPoint("CENTER")
-    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    UI.Round(b.icon)
-    b:SetScript("OnEnter", function(self)
-      self.hover = true
-      m:PaintCell(self)
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText(CrestName(self.path), 1, 1, 1)
-      GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function(self) self.hover = false; m:PaintCell(self); GameTooltip:Hide() end)
-    b:SetScript("OnClick", function(self)
-      if SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) end
-      m.choice = self.path
-      m:Paint()
-      UI.FadeIn(m.big, 0.15)
-    end)
-    m.cells[i] = b
-  end
-
-  -- Any icon, by name
-  m.field = UI.Field(card, "Or any icon, by name (e.g. INV_Misc_Head_Dragon_01)", 236, 80, nil)
-  m.field:SetPoint("TOPLEFT", RX, -350)
-  m.field.edit:SetScript("OnEnterPressed", function(self)
-    local name = strtrim(self:GetText() or ""):gsub("^[Ii]nterface\\[Ii]cons\\", "")
-    self:ClearFocus()
-    if not name:find("^[%w_]+$") then m.note:SetText("Only letters, numbers and _ in an icon's name.") return end
-    local probe = m.probe or card:CreateTexture(nil, "BACKGROUND")
-    m.probe = probe
-    probe:Hide()
-    if probe:SetTexture(ICON_DIR .. name) == false then m.note:SetText("Your game has no icon by that name.") return end
-    m.choice = ICON_DIR .. name
-    m.note:SetText("")
-    m:Paint()
-  end)
-  m.note = UI.Text(card, "", "Small", "subtle", 236)
-  m.note:SetPoint("TOPLEFT", m.field, "BOTTOMLEFT", 1, -4)
-
-  m.use = UI.Button(card, "Use this crest", 130, 26)
-  m.use:SetPoint("BOTTOMRIGHT", -16, 14)
-  m.use:SetScript("OnClick", function()
-    if m.choice and m.onPick then m.onPick(m.choice) end
-    m:Hide()
-  end)
-  m.cancel = UI.Button(card, "Cancel", 80, 26)
-  m.cancel:SetPoint("RIGHT", m.use, "LEFT", -8, 0)
-  m.cancel:SetScript("OnClick", function() m:Hide() end)
-
-  -- Leave out crests this client doesn't have.
-  local probe = card:CreateTexture(nil, "BACKGROUND")
-  probe:Hide()
-  for _, set in ipairs(CREST_SETS) do
-    local kept = {}
-    for _, name in ipairs(set.icons) do
-      if probe:SetTexture(ICON_DIR .. name) ~= false and #kept < COLS * ROWS then kept[#kept + 1] = ICON_DIR .. name end
+-- current: the crest now; onPick(path) when one is chosen.
+local function ShowPicker(anchor, current, onPick)
+  local IP = K.IconPicker
+  if not IP then return end
+  local name = type(current) == "string" and current:match("([^\\]+)$")
+  IP:Open(anchor, (name and IP.IdOf and IP.IdOf(name)) or current, function(icon)
+    local path = CrestPath(icon)
+    if path then
+      onPick(path)
+    elseif UIErrorsFrame then
+      UIErrorsFrame:AddMessage("That icon can't be shared as a crest. Try another.", 1, 0.25, 0.2)
     end
-    set.paths = kept
-  end
-
-  function m:PaintCell(b)
-    local t = K:Theme()
-    local sel = b.path ~= nil and b.path == self.choice
-    local c = sel and t.accent or t.ui
-    b.ring:SetVertexColor(c[1], c[2], c[3], sel and 1 or (b.hover and 0.55 or 0))
-    b.icon:SetAlpha((sel or b.hover) and 1 or 0.85)
-  end
-
-  function m:Paint()
-    local t = K:Theme()
-    self.tabs:Select(self.set)
-    local list
-    for _, set in ipairs(CREST_SETS) do if set.key == self.set then list = set.paths end end
-    for i, b in ipairs(self.cells) do
-      b.path = list and list[i]
-      b:SetShown(b.path ~= nil)
-      if b.path then b.icon:SetTexture(b.path); self:PaintCell(b) end
-    end
-    self.medal:SetCrest(self.choice)
-    local kind = self.kind
-    local h = kind.Record()
-    self.head:SetText(kind.arms)
-    self.house:SetText(kind.Title(kind.Name()))
-    local motto = h and strtrim(h.motto or "") or ""
-    self.motto:SetText(motto ~= "" and ("\"" .. UI.Escape(motto) .. "\"") or "")
-    self.name:SetText(CrestName(self.choice))
-    -- Only a house's crest goes on your seal
-    for _, w in ipairs({ self.seal, self.sealBtn, self.sealNote }) do w:SetShown(kind.seal) end
-    self.seal:SetSeal(UI.SEAL_COLORS[self.sealKey].key, self.choice)
-    self.use:SetEnabled(self.choice ~= nil)
-  end
-  UI:OnTheme(function() if m:IsShown() then m:Paint() end end)
-  return m
-end
-
--- current: the crest now; onPick(path) when one is chosen; kind: whose
--- crest it is (HOUSE or GROUP, below).
-local function ShowPicker(current, onPick, kind)
-  local m = chooser or BuildChooser()
-  m.onPick, m.kind = onPick, kind
-  m.choice = current
-  m.note:SetText("")
-  m.field.edit:SetText("")
-  -- Open on the set the current crest is in.
-  m.set = CREST_SETS[1].key
-  for _, set in ipairs(CREST_SETS) do
-    for _, path in ipairs(set.paths or {}) do if path == current then m.set = set.key end end
-  end
-  m:Paint()
-  m:Show()
+  end)
 end
 
 -- Recognition: [nameKey] = { name, state = "recognised" | "ignored" }
@@ -402,12 +207,12 @@ local function BuildPane(c, kind)
   local ring = pane.crest
   pane.crest:HookScript("OnEnter", function(self) self:SetLit(true) end)
   pane.crest:HookScript("OnLeave", function(self) self:SetLit(false) end)
-  pane.crest:SetScript("OnClick", function()
+  pane.crest:SetScript("OnClick", function(self)
     local r = kind.Record()
-    ShowPicker(r and r.crest, function(path)
+    ShowPicker(self, r and r.crest, function(path)
       local rec = kind.Record()
       if rec then rec.crest = path; K:Fire(kind.event); K.Journal:RefreshCurrent() end
-    end, kind)
+    end)
   end)
   UI.Tooltip(pane.crest, kind.arms, kind.crestTip)
 
@@ -544,12 +349,16 @@ local function RefreshPane(pane)
 end
 
 K:RegisterPage({
-  id = "house", title = "House", heading = "House & group",
-  subtitle = "Your family, and any company or order you belong to.",
+  id = "house", title = "Community", heading = "Community",
+  subtitle = "Your family, the company or order you belong to, and gatherings to share.",
+  guide = function(c)
+    if c.tab == 3 and K.Guide and K.Guide.PageGuide then return K.Guide.PageGuide("gatherings"), c.gatherings end
+  end,
 
   build = function(c)
     c.tab = 1
-    c.tabs = UI.TabBar(c, { "House", "Group" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabs = UI.TabBar(c, { "House", "Group", "Gatherings" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabKeys = { "house", "group", "gatherings" }
     c.tabs:SetPoint("TOPLEFT", -10, 2)
 
     -- House: its name comes from your profile (your surname, to start with)
@@ -596,13 +405,21 @@ K:RegisterPage({
     UI.Tooltip(g.leave, "Leave the group", "Takes it off your profile. Its crest and story stay saved here, "
       .. "so naming it again brings them back.")
 
-    c.panes = { h, g }
+    -- Gatherings, built by its own page
+    local gf = CreateFrame("Frame", nil, c)
+    gf:SetPoint("TOPLEFT", 0, -TOP)
+    gf:SetSize(696, PANE_H)
+    K.Journal:Embed("gatherings", gf)
+    c.gatherings = gf
+
+    c.panes = { h, g, gf }
     -- The house tour lights these
     c.hero, c.none, c.crest, c.motto, c.desc, c.members = h.hero, h.none, h.crest, h.motto, h.desc, h.members
     c.group = g
   end,
 
   refresh = function(c)
+    c.tab = K.Journal:WantedTab(c) or c.tab
     c.tabs:Select(c.tab)
     for i, pane in ipairs(c.panes) do pane:SetShown(i == c.tab) end
     if c.shownTab ~= c.tab then
@@ -610,6 +427,7 @@ K:RegisterPage({
       c.shownTab = c.tab
     end
     local pane = c.panes[c.tab]
+    if pane == c.gatherings then K.Journal:RefreshEmbedded(pane) return end
     RefreshPane(pane)
     if pane == c.group and not c.group.role.edit:HasFocus() then c.group.role.edit:SetText(K:GroupRole()) end
   end,

@@ -29,6 +29,12 @@ W.OUTCOMES = {
 }
 
 local LOG_MAX, RECENT_WINDOW = 30, 40
+local AUTO_RIVAL = 3   -- fights before someone is marked Rival without you choosing it
+
+local function InBattleground()
+  local inInstance, kind = IsInInstance()
+  return inInstance and (kind == "pvp" or kind == "arena")
+end
 
 function W.Grudge(key)
   for _, g in ipairs(W.GRUDGES) do if g.key == key then return g end end
@@ -97,9 +103,13 @@ end
 function W:Tally(r) return ("%d : %d"):format(r.wins or 0, r.losses or 0) end
 
 -- Record a clash. outcome: win | loss | draw | parley; how: a few words.
-function W:Record(name, outcome, how, info, quiet)
+-- source: "kill" (an honourable kill) or "duel" when the game reported it;
+-- nil for the rest (a fall you confirmed, a clash logged by hand, a parley).
+function W:Record(name, outcome, how, info, quiet, source)
   if not name or not W.OUTCOMES[outcome] then return end
-  local r = self:Get(name, true)
+  local battleground = source == "kill" and InBattleground()
+  -- A battleground's kills only add to the tally of people already here.
+  local r = self:Get(name, not battleground)
   if not r then return end
   Absorb(r, info or self.known[K.NameKey(name) or ""])
   local place = K:CurrentPlace()
@@ -112,13 +122,20 @@ function W:Record(name, outcome, how, info, quiet)
   r.log = r.log or {}
   table.insert(r.log, 1, { t = now, o = outcome, place = place, how = how })
   while #r.log > LOG_MAX do table.remove(r.log) end
-  if not r.grudge and outcome ~= "parley" then r.grudge = "rival" end
+  -- Rival, once you've fought a few times (you can mark anyone sooner). A
+  -- duel with your Kin or someone you have a bond with never does it.
+  local fights = (r.wins or 0) + (r.losses or 0) + (r.draws or 0)
+  local friendly = source == "duel" and (K:KinFor(name) or (K.RelationKey and K:RelationKey(name)))
+  if not r.grudge and outcome ~= "parley" and fights >= AUTO_RIVAL and not friendly then r.grudge = "rival" end
 
-  if outcome ~= "parley" and K.db.settings.warChronicle then
+  -- Duels and battleground kills count, quietly: the Chronicle and the
+  -- toasts are for the fights out in the world.
+  local story = outcome ~= "parley" and source ~= "duel" and not battleground
+  if story and K.db.settings.warChronicle then
     K:AddEntry("battle", W.OUTCOMES[outcome].verb:format(Short(r.name)), how and ("(" .. how .. ")") or nil, place)
   end
   K:Fire("RIVALS", r)
-  if not quiet and outcome ~= "parley" and K.db.settings.warToasts then self:Toast(r, outcome, how) end
+  if story and not quiet and K.db.settings.warToasts then self:Toast(r, outcome, how) end
   return r
 end
 
@@ -200,7 +217,7 @@ end
 
 -- After dying, offer to record the defeat against whoever you were facing.
 local function OnDeath()
-  if not K.db.settings.warToasts then return end
+  if not K.db.settings.warToasts or InBattleground() then return end   -- a battleground is all falls
   local foe = W:LastFoe()
   if not foe then return end
   local info = W.known[K.NameKey(foe) or ""] or {}
@@ -252,7 +269,7 @@ local function OnHonor(msg)
   for _, fmt in ipairs({ _G.COMBATLOG_HONORGAIN, _G.COMBATLOG_HONORGAIN_NO_RANK }) do
     local m = Match(msg, fmt)
     if m and m[1] then
-      W:Record(m[1], "win", "Honourable kill")
+      W:Record(m[1], "win", "Honourable kill", nil, nil, "kill")
       return
     end
   end
@@ -264,8 +281,8 @@ local function OnSystem(msg)
   if not m then m = Match(msg, _G.DUEL_WINNER_RETREAT); how = "Duel (they fled)" end
   if not m or not m[1] or not m[2] then return end
   local winner, loser = m[1], m[2]
-  if IsMe(winner) then W:Record(loser, "win", how)
-  elseif IsMe(loser) then W:Record(winner, "loss", how == "Duel" and "Duel" or "Duel (you fled)") end
+  if IsMe(winner) then W:Record(loser, "win", how, nil, nil, "duel")
+  elseif IsMe(loser) then W:Record(winner, "loss", how == "Duel" and "Duel" or "Duel (you fled)", nil, nil, "duel") end
 end
 
 ---------------------------------------------------------------------------

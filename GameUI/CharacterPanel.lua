@@ -1042,21 +1042,19 @@ end)
 K:On("PROFILE", function() if S().rpTitles then CP:ApplyTitles() end end)
 
 K:RegisterSettings({ id = "characterPanel", title = "Character sheet", order = 40, build = function(card)
-  card:Toggle("Roleplay tab on the character sheet", "A Kinship tab in the sheet's own column: your roleplay details in the right pane.", {
+  card:Toggle("Roleplay tab on the character sheet", "Adds a Roleplay tab to your character sheet with your roleplay details.", {
     get = function() return S().charPanel ~= false end,
     set = function(v) S().charPanel = v; ApplySetting() end,
   })
-  card:Toggle("Roleplay when inspecting", "Their profile beside the inspect window.", {
+  card:Toggle("Profile when inspecting", "Shows a player's profile next to the inspect window.", {
     get = function() return S().inspectPanel ~= false end,
     set = function(v) S().inspectPanel = v; CP:RefreshTheirs() end,
   })
-  card:Toggle("Roleplay items on the gear slots", "On the Roleplay tab, the character screen's gear slots show what your "
-    .. "character wears in roleplay instead. Click one to put something on or take it off.", {
+  card:Toggle("Roleplay items on the gear slots", "On the Roleplay tab, the gear slots show your roleplay items instead of your real gear. Click a slot to equip or remove an item.", {
     get = function() return S().rpDoll ~= false end,
     set = function(v) S().rpDoll = v; ShowDoll(active) end,
   })
-  card:Toggle("Roleplay name in window titles", "The character window shows your roleplay name, with your character's name "
-    .. "beside it; the inspect window does the same for anyone whose profile has arrived.", {
+  card:Toggle("Roleplay name in window titles", "Shows roleplay names in the character and inspect windows, next to the character name.", {
     get = function() return S().rpTitles == true end,
     set = function(v) S().rpTitles = v; CP:ApplyTitles() end,
   })

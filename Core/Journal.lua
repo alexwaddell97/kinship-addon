@@ -29,7 +29,7 @@ local DEFAULT_GROUP = {
   chronicle = "Stories", quests = "Stories", gatherings = "Stories",
   warfront = "World", inventory = "World",
 }
--- 12 pages in 4 groups: 64 + 12*28 + 4*20 + 3*4 = 492px, clear of the Settings row at the foot.
+-- 10 pages in 4 groups: 64 + 10*28 + 4*20 + 3*4 = 436px, clear of the Settings row at the foot.
 local ROW, GROUP_GAP = 28, 20
 
 local function NavIcon(page)
@@ -43,6 +43,8 @@ end
 -- hidden = reachable by id (J:Open) but not listed in the sidebar (Settings).
 -- enabled = fn() -> false while the page's feature is switched off; it then
 -- leaves the sidebar and can't be opened (fire "EXTENDED" when it changes).
+-- host = another page's id: this page is a tab of that one (hostTab names the
+-- tab) and isn't listed in the sidebar. See J:Embed below.
 function K:RegisterPage(def) table.insert(J.pages, def) end
 
 local function Group(page) return page.group or DEFAULT_GROUP[page.id] or "World" end
@@ -101,7 +103,7 @@ function J:Build()
   for _, group in ipairs(GROUPS) do
     local g = { buttons = {} }
     for i, page in ipairs(self.pages) do
-      if not page.hidden and Group(page) == group then
+      if not page.hidden and not page.host and Group(page) == group then
         if not g.header then
           g.header = UI.Text(side, group:upper(), "Label", "deskSubtle")
           g.header:SetAlpha(0.8)
@@ -183,7 +185,7 @@ end
 -- The first page that's switched on (the fallback when one is switched off).
 function J:FirstEnabled()
   for i, p in ipairs(self.pages) do
-    if not p.hidden and Enabled(p) then return i end
+    if not p.hidden and not p.host and Enabled(p) then return i end
   end
   return 1
 end
@@ -236,6 +238,13 @@ function J:Index(id)
 end
 
 function J:Show(i)
+  -- A page that's a tab of another: show that one, on its tab.
+  local hosted = self.pages[i]
+  local h = hosted and hosted.host and self:Index(hosted.host)
+  if h then
+    self.content[h].wantTab = hosted.hostTab
+    i = h
+  end
   if not Enabled(self.pages[i]) then i = self:FirstEnabled() end
   local changed = self.current ~= i
   self.current = i
@@ -285,7 +294,62 @@ end
 
 -- True when the journal is open on this page (for features refreshing on their own events).
 function J:IsShowing(id)
-  return self.frame and self.frame:IsShown() and self.current and self.pages[self.current].id == id
+  if not (self.frame and self.frame:IsShown() and self.current) then return false end
+  local cur = self.pages[self.current]
+  if cur.id == id then return true end
+  local i = self:Index(id)
+  local page = i and self.pages[i]
+  if page and page.host == cur.id then
+    local c = self.content[self.current]
+    return c.tabKeys ~= nil and c.tabKeys[c.tab] == page.hostTab
+  end
+  return false
+end
+
+-- A page shown as a tab of another (def.host). The host builds it into a
+-- frame of its own with J:Embed and refreshes it with J:RefreshEmbedded. The
+-- host keeps c.tabKeys (each tab's key) and, when c.wantTab is set (opening
+-- the page by its own id), switches to that tab.
+function J:Embed(id, frame)
+  local i = self:Index(id)
+  local page = i and self.pages[i]
+  if not page then return end
+  frame.page = page
+  local ok, err = pcall(page.build, frame)
+  frame.ok = ok
+  if not ok then K:CaughtError(id, err) end
+end
+
+function J:RefreshEmbedded(frame)
+  if not (frame and frame.ok and frame.page) then return end
+  local page = frame.page
+  if page.refresh then
+    local ok, err = pcall(page.refresh, frame)
+    if not ok then K:CaughtError(page.id, err) end
+  end
+  -- Its tour on the first visit, as it had when it was a page of its own.
+  if not frame.toured then
+    frame.toured = true
+    C_Timer.After(0.35, function()
+      local G = K.Guide
+      if not (G and G.PageGuide and G:AutoOn() and J:IsShowing(page.id)) then return end
+      local gid = G.PageGuide(page.id)
+      if gid then G:Maybe(gid, frame, J.frame) end
+    end)
+  end
+end
+
+-- The host's tab for c.wantTab, if one was asked for.
+function J:WantedTab(c)
+  local want = c.wantTab
+  c.wantTab = nil
+  if not want or not c.tabKeys then return nil end
+  for i, key in ipairs(c.tabKeys) do if key == want then return i end end
+end
+
+function J:PageEnabled(id)
+  local i = self:Index(id)
+  return i ~= nil and Enabled(self.pages[i])
 end
 
 for _, e in ipairs({ "PROFILE", "CHRONICLE", "KIN", "GATHERINGS" }) do

@@ -238,9 +238,11 @@ end
 
 K:RegisterPage({
   id = "gatherings", title = "Gatherings", heading = "Gatherings",
+  host = "house", hostTab = "gatherings",   -- a tab of the Community page
   subtitle = "Roleplay events for your guild and friends.",
 
   build = function(c)
+    local H = (c:GetHeight() or 0) > 200 and c:GetHeight() or H   -- the tab it sits in
     c.scope, c.pageNum = "guild", 1
 
     c.scopes = UI.Segments(c, SCOPES, 90, function(key)

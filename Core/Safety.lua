@@ -571,11 +571,19 @@ function S:RefreshSettings()
     ui.wordCount:SetText(("%d words  ·  %d covered"):format(#words, flagged))
   end
   ui.wordList:SetItems(words, function(row, w) row.word:SetText(UI.Escape(w)) end)
+  -- The words stay out of sight until you ask to see them.
+  -- The list itself is hidden, not just covered, so nothing shows through.
+  local shown = ui.wordsShown and true or false
+  ui.wordList:SetShown(shown)
+  ui.wordCover:SetShown(not shown)
+  ui.hideWords:SetShown(shown)
+  ui.wordCoverText:SetText(#words == 0 and "Your list is empty."
+    or ((#words == 1 and "1 word" or (#words .. " words")) .. " in your list."))
 end
 
 K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = function(card)
   local W = card:GetWidth() - 32
-  card:Toggle("Mature content filter", "Cover profiles that use words from your list until you choose to see them.", {
+  card:Toggle("Mature content filter", "Hides profiles that use words from your list. You can still choose to view them.", {
     get = function() return K.db.settings.matureFilter and true or false end,
     set = function(v) K.db.settings.matureFilter = v; K:Fire("SAFETY"); RefreshJournal() end,
   })
@@ -596,7 +604,7 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   ui.ignoreCount:SetPoint("LEFT", lh, "RIGHT", 8, 0)
   ui.ignoreCount:SetAlpha(0.8)
   ui.ignoreList = UI.List(card, colW, LIST_H, 42,
-    "No one ignored. If someone makes roleplay unpleasant, ignore them from the target bar and they vanish from Kinship.",
+    "You haven't ignored anyone. Ignore someone from the target bar or below to hide them from Kinship.",
     function(row)
       row.name = UI.Text(row, "", "Body", "heading", colW - 140)
       row.name:SetPoint("TOPLEFT", 10, -7)
@@ -628,7 +636,7 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   ui.wordCount:SetPoint("LEFT", wh, "RIGHT", 8, 0)
   ui.wordCount:SetAlpha(0.8)
   ui.wordList = UI.List(card, colW, LIST_H, 26,
-    "Your list is empty, so nothing will be covered. Add words below, or bring back the starting list.",
+    "Your list is empty, so no profiles are hidden. Add words below, or click Reset for the default list.",
     function(row)
       row.word = UI.Text(row, "", "Body", "text", colW - 60)
       row.word:SetPoint("LEFT", 10, 0)
@@ -639,6 +647,32 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
       UI.Tooltip(row.remove, "Remove word")
     end, { emptyIcon = K.Art("IconNote") })
   ui.wordList:SetPoint("TOPLEFT", x2, y - 16)
+
+  -- A cover over the list, so the words don't scroll past while you look
+  -- through Settings. They come back hidden each time Settings opens.
+  local cover = UI.Panel(card)
+  cover:SetAllPoints(ui.wordList)
+  cover:SetFrameLevel(ui.wordList:GetFrameLevel() + 10)
+  cover:EnableMouse(true)
+  local art = cover:CreateTexture(nil, "ARTWORK")
+  art:SetTexture(K.Art("IconNote"))
+  art:SetSize(40, 40)
+  art:SetPoint("CENTER", 0, 30)
+  art:SetAlpha(0.75)
+  ui.wordCoverText = UI.Text(cover, "", "Body", "subtle", colW - 40)
+  ui.wordCoverText:SetPoint("TOP", art, "BOTTOM", 0, -8)
+  ui.wordCoverText:SetJustifyH("CENTER")
+  ui.wordCoverText:SetWordWrap(true)
+  local show = UI.Button(cover, "Show words", 110, 24)
+  show:SetPoint("TOP", ui.wordCoverText, "BOTTOM", 0, -10)
+  show:SetScript("OnClick", function() ui.wordsShown = true; S:RefreshSettings() end)
+  ui.wordCover = cover
+  ui.hideWords = UI.Button(card, "Hide words", 90, 20)
+  ui.hideWords:SetPoint("BOTTOMRIGHT", ui.wordList, "TOPRIGHT", 0, 2)
+  ui.hideWords:SetScript("OnClick", function() ui.wordsShown = false; S:RefreshSettings() end)
+  ui.hideWords:Hide()
+  -- Hidden again when Settings closes (the card goes, and the list with it).
+  card:HookScript("OnHide", function() ui.wordsShown = false end)
 
   local we = HintEdit(card, colW - 152, "Add words", 60)
   we:SetPoint("TOPLEFT", x2, y - 16 - LIST_H - 8)
@@ -652,13 +686,11 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   local reset = UI.Button(card, "Reset", 72, 24)
   reset:SetPoint("LEFT", wb, "RIGHT", 8, 0)
   reset:SetScript("OnClick", function() S:ResetWords() end)
-  UI.Tooltip(reset, "Reset words", "Bring back Kinship's starting list, replacing your changes.")
+  UI.Tooltip(reset, "Reset words", "Restores the default list. Your own changes are lost.")
 
   y = y - 16 - LIST_H - 8 - 24
   card:Space(card.y - y + 12)
-  card:Note("Words match whole, in every part of a profile: names, descriptions, history and glances. "
-    .. "Plurals, stretched letters (\"sexxx\"), spaced-out letters and look-alikes such as \"s3x\" match too. "
-    .. "Ignoring someone also forgets the profile Kinship holds for them.")
+  card:Note("Kinship checks every part of a profile, including names, descriptions, history and glances. It also catches plurals, repeated letters (\"sexxx\"), spaced-out letters and swaps like \"s3x\". Ignoring someone also deletes the profile Kinship saved for them.")
   card:OnRefresh(function() S:RefreshSettings() end)
 end })
 

@@ -60,28 +60,21 @@ K:RegisterGuide({
   title = "Your journal",
   steps = {
     { title = "Welcome to Kinship",
-      text = "This is your roleplay journal. Your character, the people you meet and the stories you share all live here. "
-        .. "A few quick notes first, then it's yours to explore." },
-    { title = "Pages, in four groups",
-      text = "The sidebar keeps every page. You is your own character; People holds those you meet, your house and letters; "
-        .. "Stories keeps your chronicle, quests and gatherings; World covers the warfront and your belongings.",
+      text = "This is your roleplay journal. It holds your character, the people you meet and your stories. Here's a quick look around." },
+    { title = "The sidebar",
+      text = "Pages are grouped in the sidebar. You has your character and companions. People has the Directory, Kin, Community and Letters. Stories has your Chronicle and quests. World has the Warfront and your inventory.",
       target = function(J) return J.nav and J.nav[1] and J.nav[1]:GetParent() end },
     { title = "Where you are",
-      text = "Each page names itself up here, with a line on what it's for. Whatever you open, from your profile to your letters, "
-        .. "you can always tell where you are and what the page can do for you.",
+      text = "The page name and a short description show here.",
       target = function(J) return J.frame and Around(J.frame.heading, J.frame.sub) end },
     { title = "Settings",
-      text = "Settings sits at the foot of the sidebar: the target bar, nameplates, the character sheet, safety and more. "
-        .. "Whole features can be switched on or off there too.",
+      text = "Settings is at the bottom of the sidebar. You can change the target bar, nameplates, safety options and more, and turn whole features on or off.",
       target = function(J) return J.gear end },
-    { title = "Tours on request",
-      text = "The ? replays the tour for whichever page you're on. Tours only start by themselves the first time; "
-        .. "Settings > Guides turns them off, or shows them all again.",
+    { title = "Tours",
+      text = "Click ? to replay the tour for the page you're on. Tours only start on their own the first time. You can turn them off in Settings > Guides.",
       target = function(J) return J.helpButton end },
-    { title = "Make a start",
-      text = "Begin with your Profile: a name, a few details and a line about what you're doing now go a long way. "
-        .. "Every page has its own short tour the first time you open it. Come back any time with /kin, the "
-        .. "minimap button or a key of your own (Key Bindings > AddOns > Kinship RP)." },
+    { title = "Getting started",
+      text = "Start with your Profile: add a name, a few details and what your character is doing. Open the journal any time with /kin, the minimap button or a key binding (Key Bindings > AddOns > Kinship RP)." },
   },
 })
 
@@ -92,46 +85,38 @@ K:RegisterGuide({
   id = "profile", page = "profile",
   title = "Your character",
   steps = {
-    { title = "Your name, as others see it",
-      text = "This is how your name reads to other players, with your title and epithet. It changes as you type, "
-        .. "so try a few and keep the one that sounds like your character.",
+    { title = "Your name",
+      text = "This is your name as other players see it, with your title and epithet. It updates as you type.",
       target = function(c) return Around(c.name, c.epithet) end },
     { title = "Your status",
-      text = "In Character, Looking for RP or Out of Character. Your status shows on your tooltip and target bar, "
-        .. "so others know whether to come over in character or just say hello.",
+      text = "Choose In Character, Looking for RP or Out of Character. Your status shows on your tooltip and target bar.",
       target = function(c) return Around(c.gem, c.status) end },
-    { title = "The details",
-      text = "Quick facts: epithet, pronouns, age, height, home and house. Not sure what one is for? Hover the small (i) "
-        .. "beside it. Keep Currently fresh: it sits on your tooltip and tells people what your character is doing right now.",
+    { title = "Details",
+      text = "Short facts like epithet, pronouns, age, height, home and house. Hover the (i) next to a field for help. Currently shows on your tooltip, so keep it up to date.",
       target = function(c) return Up(c.fields.epithet, 2) end },
-    { title = "Who they are, in depth",
-      text = "Identity, Appearance, Personality, History and Boundaries. Write as much or as little as you like: these are "
-        .. "what people open when a first glance has made them curious about your character.",
+    { title = "Longer sections",
+      text = "Identity, Appearance, Personality, History and Boundaries. Fill in as much or as little as you like.",
       target = function(c) return c.sectionTabs end },
     { title = "Identity",
-      text = "Your full name, title and nickname, plus race, class and more. Leave the name empty to use your character's own; "
-        .. "race and class only show when you fill them in.",
+      text = "Your full name, title, nickname, race, class and more. Leave the name blank to use your character's name. Race and class only show if you fill them in.",
       target = function(c) return c.identity end,
       before = function(c)
         if c.section ~= "identity" then c.section = "identity"; c:LoadSection() end
       end },
-    { title = "Free writing",
-      text = "Appearance, Personality and History are yours to write freely. The toolbar adds headings, emphasis, colour, "
-        .. "icons and dividers, and everything saves as you type.",
+    { title = "Appearance, Personality and History",
+      text = "Write these however you like. The toolbar adds headings, emphasis, colours, icons and dividers. Everything saves as you type.",
       target = function(c) return Up(c.sectionTabs) end,
       before = function(c)
         if c.section == "identity" or c.section == "boundaries" then c.section = "appearance"; c:LoadSection() end
       end },
     { title = "Boundaries",
-      text = "Yes, Ask or No for injury, death, capture, crime and romance. Others see them before a story turns rough, "
-        .. "other RP addons read them too, and Kinship's wounds and captures always respect them.",
+      text = "Set Yes, Ask or No for injury, death, capture, crime and romance. Other players see these, other RP addons can read them, and Kinship's wounds and captures follow them.",
       target = function(c) return c.bounds end,
       before = function(c)
         if c.section ~= "boundaries" then c.section = "boundaries"; c:LoadSection() end
       end },
     { title = "Profiles and preview",
-      text = "Keep a separate profile for each story or character idea, and switch between them in one click. Preview, beside it, "
-        .. "shows your profile exactly as other players will see it.",
+      text = "Keep separate profiles for different characters or stories and switch between them here. Preview shows your profile as other players see it.",
       target = function(c) return Around(c.profileBtn, c.preview) end },
   },
 })
@@ -143,51 +128,40 @@ K:RegisterGuide({
   id = "persona", page = "persona",
   title = "Persona",
   steps = {
-    { title = "First impressions",
-      text = "Glances, Traits, Look and Effects: what people notice about your character before they ever open your profile. "
-        .. "Preview profile, on the right, shows the result.",
+    { title = "Persona",
+      text = "Glances, Traits, Look, Effects and Companions describe what people notice about your character. Preview profile shows the result.",
       target = function(c) return Around(c.tabs, c.preview) end,
       before = Tab(1) },
-    { title = "Five glances",
-      text = "Up to five details people notice the moment they see you: a scar, a scent, a sigil. Click the empty slot to add one, "
-        .. "or a filled slot to change it. They show in the order you set.",
+    { title = "Glances",
+      text = "Add up to five things people notice when they see you, like a scar or a scent. Click an empty slot to add one, or a filled slot to edit it.",
       target = function(c) local g = c.frames[1]; return Around(g.slots[1], g.slots[5]) end,
       before = Tab(1) },
-    { title = "Shaping a glance",
-      text = "Give each glance an icon, a few words of title and a line or two on what people notice. Move it left or right to reorder, "
-        .. "switch off Show to others to keep it aside, or Save for reuse to add it to other profiles later.",
+    { title = "Editing a glance",
+      text = "Give a glance an icon, a short title and a line of text. Use the arrows to reorder, turn off Show to others to hide it, or Save for reuse to use it in other profiles.",
       target = function(c) return c.frames[1].editor end,
       before = Tab(1) },
-    { title = "As others see it",
-      text = "See your glances on someone's target bar and in the tooltip when they hover. "
-        .. "Saved glances, above, adds ones you've kept to any profile, and keeps whole sets to swap in a click: "
-        .. "travelling clothes, court dress, after the battle.",
+    { title = "Saved glances",
+      text = "Glances show on other players' target bars and in your tooltip. Saved glances lets you add saved glances to any profile, or swap between whole sets.",
       target = function(c) return Around(c.presets, c.frames[1].preview) end,
       before = Tab(1) },
-    { title = "Personality traits",
-      text = "Drag each slider toward the side that fits your character. Pick a ready-made pair on the right or write your own; "
-        .. "click a side's icon to change its colour.",
+    { title = "Traits",
+      text = "Drag each slider towards the side that fits your character. Pick a preset pair or write your own. Click an icon to change its colour.",
       target = function(c) return c.frames[2] end,
       before = Tab(2) },
-    { title = "Your look",
-      text = "Choose the emblem beside your name, the colour your name is shown in, and a theme tune others can play "
-        .. "from your target bar. The small tooltip shows how it all looks.",
+    { title = "Look",
+      text = "Choose the icon next to your name, your name colour and a theme tune others can play from your target bar. The tooltip preview shows how it looks.",
       target = function(c) return c.frames[3] end,
       before = Tab(3) },
-    { title = "Effects on you",
-      text = "Effects are the wounds, boons and states your character carries for a while: a bandaged arm, a blessing, a hangover. "
-        .. "What's on you now is listed here with the time left; End takes one off early.",
+    { title = "Effects",
+      text = "Effects are wounds, boons and states your character has for a while, like a bandaged arm or a blessing. Your current effects are listed here with the time left. Click End to remove one early.",
       target = function(c) local e = c.frames[4]; return e and e.active and Up(e.active) end,
       before = Tab(4) },
-    { title = "Rest, and what comes on its own",
-      text = "At an inn or in a city, wounds and exhaustion pass twice as fast, and half an hour's rest leaves you "
-        .. "Well rested. A few light effects come from the game itself: a drink too many, a long swim, a real "
-        .. "bandage on a wound. Every one can be taken off with Not now, and each has its own switch in Settings.",
+    { title = "Rest and automatic effects",
+      text = "Wounds and exhaustion heal twice as fast at an inn or in a city, and resting for half an hour makes you Well rested. Some effects come from the game, like drinking too much or a long swim. Click Not now to remove one, or turn them off in Settings.",
       target = function(c) local e = c.frames[4]; return e and e.active and Up(e.active) end,
       before = Tab(4) },
-    { title = "Laying an effect",
-      text = "Choose an effect, how long it lasts and a note, then take it on or offer it to your target. "
-        .. "Wounds and captures follow each player's boundaries, so no one carries what they haven't agreed to.",
+    { title = "Adding an effect",
+      text = "Choose an effect, how long it lasts and a note, then add it to yourself or offer it to your target. Wounds and captures follow each player's boundaries.",
       target = function(c) local e = c.frames[4]; return e and e.right end,
       before = Tab(4) },
   },
@@ -206,29 +180,23 @@ K:RegisterGuide({
   id = "companions", page = "companions",
   title = "Companions",
   steps = {
-    { title = "Your companions",
-      text = "A loyal wolf, a stubborn kodo, an imp with opinions. Every pet and mount you've given a story is listed here, "
-        .. "with what it's bound to. Click one to open it on the right.",
+    { title = "Companions",
+      text = "Your pets and mounts with stories are listed here. Click one to edit it on the right.",
       target = function(c) return c.list end },
-    { title = "A new companion",
-      text = "Start a story for any pet or mount, even one you only call on now and then. It begins as a pet; "
-        .. "you can make it a mount on the right, and give it a name of its own.",
+    { title = "New companion",
+      text = "Create a story for any pet or mount. It starts as a pet; you can change it to a mount on the right.",
       target = function(c) return c.newBtn end },
-    { title = "Who they are",
-      text = "Give them a name, a title and an icon, and say whether they're a pet or a mount. "
-        .. "The title sits under their name, like an epithet of their own, such as Eater of boots.",
+    { title = "Name and icon",
+      text = "Give your companion a name, title and icon, and choose pet or mount. The title shows under their name.",
       target = function(c) local ed = c.ed; return Editor(c, ed.iconBtn, ed.nameField, ed.kind, ed.iconField) end },
-    { title = "Their story",
-      text = "The glance is one line, shown on their tooltip. The description has room for the rest: "
-        .. "where you found them, what they're like, and the trouble they keep getting into.",
+    { title = "Description",
+      text = "The glance is one line shown on their tooltip. Use the description for everything else.",
       target = function(c) local ed = c.ed; return Editor(c, ed.glanceField, ed.desc) end },
-    { title = "Binding them",
-      text = "Bind the story to your pet or mount by name, or with the button while it's out. "
-        .. "Anyone hovering over that pet meets it properly, and a bound mount shows on your tooltip while you ride.",
+    { title = "Linking a pet or mount",
+      text = "Link the story to your pet or mount by typing its name, or use the button while it's summoned. For a companion pet, target it first. Other players see it when they hover your pet, and a linked mount shows on your tooltip while you ride.",
       target = function(c) local ed = c.ed; return Editor(c, ed.chipArea, ed.bindEdit, ed.current) end },
-    { title = "Saved as you go",
-      text = "Everything saves as you type and travels with your profile, so others meet your companions too. "
-        .. "Delete asks twice, so a slip of the mouse won't cost you a story.",
+    { title = "Saving",
+      text = "Changes save as you type and are shared with your profile. Delete asks you to confirm.",
       target = function(c) return Editor(c, c.ed.delete) end },
   },
 })
@@ -250,46 +218,35 @@ K:RegisterGuide({
   id = "charpane",
   title = "Roleplay pane",
   steps = {
-    { title = "Your Roleplay pane",
-      text = "This tab on your character sheet keeps your roleplay close at hand: who you are, how you're playing right now, "
-        .. "and your boundaries, all changeable in place." },
-    { title = "Who you are",
-      text = "Your icon, roleplay name and epithet, as others see them; with no epithet, your house shows instead. "
-        .. "Click the icon to change your look, name colour and theme music on the Persona page.",
+    { title = "Roleplay tab",
+      text = "This tab on your character sheet shows your roleplay details and lets you change them without opening the journal." },
+    { title = "Name and icon",
+      text = "Your icon, roleplay name and epithet. If you have no epithet, your house shows instead. Click the icon to change your look on the Persona page.",
       target = function(p) return Around(p.med, p.name, p.epithet) end },
     { title = "Your status",
-      text = "In Character, Looking for RP or Out of Character, in one click. Your status shows on your tooltip and target bar, "
-        .. "so people know whether to approach you in character or simply say hello.",
+      text = "Set In Character, Looking for RP or Out of Character in one click. Your status shows on your tooltip and target bar.",
       target = function(p) return p.status end },
-    { title = "Names on the screen",
-      text = "Show your roleplay name in the character window's title and on your player frame. With it on, other players' "
-        .. "roleplay names show on your target and focus frames too, in gold with the character's own name beside them. "
-        .. "More in Settings > Unit frames.",
+    { title = "Names on frames",
+      text = "Shows your roleplay name in the character window title and on your player frame. When on, other players' roleplay names also show on your target and focus frames. More options in Settings > Unit frames.",
       target = function(p) return Around(p.titleToggle, p.frameToggle) end,
       before = Scroll(0) },
-    { title = "Right now",
-      text = "Change your notes without opening the journal. Currently says what your character is doing; "
-        .. "the out-of-character note is for anything the players behind them should know.",
+    { title = "Notes",
+      text = "Edit your notes here. Currently says what your character is doing. The OOC note is for anything other players should know.",
       target = function(p) return Around(p.currently, p.ooc) end,
       before = Scroll(56) },
     { title = "Glances and effects",
-      text = "Your glances and effects at a look; hover over one for details, or click to open it in the journal. "
-        .. "Right-click an effect to end it, or use + to take one on: a wound, a blessing, a bottle too many.",
+      text = "Hover one for details, or click to open it in the journal. Right-click an effect to end it, or click + to add one.",
       target = function(p) return Around(p.glances, p.effects, p.addEffect) end,
       before = Scroll(180) },
-    { title = "What you're wearing",
-      text = "While this tab is open, the gear slots beside your character show the Kinship items they wear in roleplay: "
-        .. "a hat, a cloak, a ring, a blade at the hip. Click one to put something on or take it off. Other Kinship users "
-        .. "see them around you on your profile.",
+    { title = "Roleplay items",
+      text = "While this tab is open, the gear slots show your roleplay items instead of your real gear. Click a slot to equip or remove an item. Other Kinship users see these on your profile.",
       target = function() return Around(_G.CharacterHeadSlot, _G.CharacterWristSlot) end },
     { title = "Stance and boundaries",
-      text = "Click a line to change it. Your stance says how you meet a fight; Injury, Death, Capture and Crime say "
-        .. "what your character can go through. Others see these before a story turns rough.",
+      text = "Click a line to change it. Your stance says how you approach PvP. Injury, Death, Capture and Crime say what your character can go through.",
       target = function(p) return Around(p.stance, unpack(p.consent or {})) end,
       before = Scroll(10000) },
-    { title = "More, a click away",
-      text = "Switch profiles when you start a different story, open the full journal for everything else, "
-        .. "or preview your profile exactly as other players will see it when they click your portrait.",
+    { title = "More options",
+      text = "Switch profiles, open the full journal, or preview your profile as other players see it.",
       target = function(p) return Around(p.profileBtn, p.journal, p.preview) end },
   },
 })
@@ -301,34 +258,28 @@ K:RegisterGuide({
   id = "targetbar",
   title = "Target bar",
   steps = {
-    { title = "Who you're looking at",
-      text = "When you target a roleplayer, this bar shows who they are. Click their portrait for their full profile; the small gem "
-        .. "on it shows whether they're in character, looking for roleplay or out of character.",
+    { title = "Target bar",
+      text = "When you target a roleplayer, this bar shows who they are. Click the portrait to open their profile. The gem shows if they're IC, LFRP or OOC.",
       target = function(f) return f.portrait end,
       side = "bottom" },
-    { title = "Name and standing",
-      text = "Their roleplay name in their chosen colour. Underneath: their epithet, status and war stance, "
-        .. "plus how you know them, if you've set a relationship. Enough to tell whether to wave or keep walking.",
+    { title = "Name and status",
+      text = "Their roleplay name in their chosen colour. Below it are their epithet, status, war stance and your relationship with them, if you've set one.",
       target = function(f) return Around(f.name, f.sub) end,
       side = "bottom" },
-    { title = "At first glance",
-      text = "Their glances: what you'd notice at first sight, like a scar or the smell of pipe smoke. "
-        .. "Hover over one to read it, so a scene can start before either of you has said a word.",
+    { title = "Glances",
+      text = "Their glances, the things you'd notice at first sight. Hover one to read it.",
       target = function(f) return Around(unpack(f.glances or {})) end,
       side = "bottom" },
-    { title = "What they carry",
-      text = "Effects they're carrying, each ringed in its colour: red for wounds, green for boons. Hover over one to see "
-        .. "what it is and how long it lasts, so a fresh wound from last night's skirmish doesn't go unnoticed.",
+    { title = "Effects",
+      text = "Their current effects. Wounds have a red ring and boons a green one. Hover one to see what it is and how long it lasts.",
       target = function(f) return Around(unpack(f.auras or {})) end,
       side = "bottom" },
-    { title = "Things to do",
-      text = "View their profile, write a letter, roll dice, say how you know them, lay an effect and more. "
-        .. "Hover over any button to see what it does before you click.",
+    { title = "Actions",
+      text = "View their profile, write a letter, roll dice, set your relationship, add an effect and more. Hover a button to see what it does.",
       target = function(f) return Around(f.split, unpack(f.buttons or {})) end,
       side = "bottom" },
-    { title = "Put it where you like",
-      text = "Drag the bar wherever suits you. Settings > Target bar can lock it in place, hide it during combat, "
-        .. "or show it for players who don't use a roleplay addon at all.",
+    { title = "Moving the bar",
+      text = "Drag the bar to move it. In Settings > Target bar you can lock it, hide it in combat, or show it for players without a roleplay addon.",
       target = function(f) return f end,
       side = "bottom" },
   },
@@ -341,32 +292,25 @@ K:RegisterGuide({
   id = "viewer",
   title = "Profile viewer",
   steps = {
-    { title = "On the stage",
-      text = "Their character stands here when they're nearby; drag to turn them round. Their glances sit along "
-        .. "the foot of the stage, so hover over one to read what people notice first.",
+    { title = "The stage",
+      text = "Their character shows here when they're nearby. Drag to rotate. Their glances are along the bottom; hover one to read it.",
       target = function(V) return V.stage end },
     { title = "Name and stance",
-      text = "Name, epithet and house, then their status and war stance. The stance tells you how they feel about a fight, "
-        .. "from open war to non-combatant, before you start one. Click their house to see its motto, history and members.",
+      text = "Name, epithet and house, then their status and war stance. The stance shows how they feel about PvP. Click their house to see its motto, history and members.",
       target = function(V) return Around(V.name, V.epithet, V.house, V.gem, V.stance) end },
-    { title = "Quick facts",
-      text = "Pronouns, age, height and home at a look. Under them is what they're doing right now in their own words, "
-        .. "or where you first met, if they haven't said.",
+    { title = "Facts",
+      text = "Pronouns, age, height and home. Below them is what they're doing right now, or where you first met if they haven't said.",
       target = function(V) return Around(V.facts and V.facts.Pronouns, V.facts and V.facts.Home, V.currently) end },
-    { title = "Reading their profile",
-      text = "About gathers their glance, identity, house, boundaries and any effects they carry. Nature holds their "
-        .. "personality and traits, and Looks and History the rest. Your own profile has your Chronicle too.",
+    { title = "Tabs",
+      text = "About has their glance, identity, house, boundaries and effects. Nature has their personality and traits. Looks and History have the rest. Your own profile also has your Chronicle.",
       target = function(V) return Around(V.tabs, V.body) end },
-    { title = "Set the stage",
-      text = "On your own profile, the palette in the corner of the stage sets the scene behind your character: a backdrop, "
-        .. "a spotlight, and what's under their feet. Other Kinship users see it when they open your profile.",
+    { title = "Your stage",
+      text = "On your own profile, use the palette in the corner to set a backdrop, lighting and floor behind your character. Other Kinship users see it when they open your profile.",
       target = function(V) return V.palette and V.palette:IsShown() and V.palette or nil end, pad = 6 },
-    { title = "Covered, if you like",
-      text = "If a profile's words match your mature filter, it stays covered until you choose to look. "
-        .. "You can look anyway or leave it covered; Settings > Safety sets what the filter catches.",
+    { title = "Hidden profiles",
+      text = "If a profile matches your mature filter, it stays hidden until you choose to view it. Set what the filter catches in Settings > Safety.",
       target = function(V) return V.cover and V.cover:IsShown() and V.cover or nil end },
     { title = "Finding profiles",
-      text = "Open anyone's profile from their target bar portrait, a profile link in chat or the Directory. "
-        .. "Preview, on your own pages, shows yours just as others see it, which is handy after an edit." },
+      text = "Open a profile from someone's target bar portrait, a profile link in chat or the Directory. Preview shows your own profile as others see it." },
   },
 })

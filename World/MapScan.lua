@@ -458,7 +458,7 @@ end)
 -- Settings
 ---------------------------------------------------------------------------
 K:RegisterSettings({ id = "mapscan", trp3 = "hide", title = "Find roleplayers on the map", order = 45, build = function(card)
-  card:Toggle("Share my location", "Answer when a Kinship user nearby looks for roleplayers on their world map.", "mapShare")
+  card:Toggle("Share my location", "Lets nearby Kinship users see you when they look for roleplayers on the world map.", "mapShare")
   card:Toggle("Not while out of character", "Stay hidden from scans while your status is OOC.", "mapHideOOC")
   card:Toggle("Not while flagged for PvP", "Stay hidden from scans while you're PvP-flagged.", "mapHidePvP")
   card:EndRow()
@@ -466,6 +466,6 @@ K:RegisterSettings({ id = "mapscan", trp3 = "hide", title = "Find roleplayers on
   card:OnRefresh(function()
     local why = M:Hidden()
     note:SetText(why and HIDDEN_TEXT[why]
-      or "You're visible right now. Use \"Find roleplayers\" at the top right of the world map to see who's around.")
+      or "You're visible right now. Click \"Find roleplayers\" on the world map to see who's nearby.")
   end)
 end })

@@ -699,10 +699,9 @@ K:On("LOGIN", function()
 end)
 
 K:RegisterSettings({ id = "dice", title = "Dice", order = 40, build = function(card)
-  card:Toggle("Shared rolls as toasts", "A card at the top of the screen when someone shares a roll with you.", "diceToasts")
-  card:Toggle("Shared rolls in chat", "A coloured line in your chat window for every roll shared with you.", "diceChat")
-  card:Note("Roll from the dice tray, the target bar, or with /kin roll 2d6+3. Only Kinship users receive shared rolls, "
-    .. "and anyone rolling too often is quietly ignored for a few seconds.")
+  card:Toggle("Shared rolls as toasts", "Shows a message at the top of the screen when someone shares a roll with you.", "diceToasts")
+  card:Toggle("Shared rolls in chat", "Shows shared rolls in your chat window.", "diceChat")
+  card:Note("Roll from the dice tray, the target bar or with /kin roll 2d6+3. Only Kinship users see shared rolls. Anyone rolling too often is ignored for a few seconds.")
   card:Button("Open the dice tray", function() D:Open() end, 160)
 end })
 

@@ -1389,6 +1389,7 @@ function UI.List(parent, w, h, rowH, emptyText, buildRow, opts)
   box:SetSize(w, h)
   local pad, barW = opts.bare and 0 or 6, 12
   local sf = CreateFrame("ScrollFrame", nil, box)
+  box.scroll = sf
   sf:SetPoint("TOPLEFT", pad, -pad)
   sf:SetPoint("BOTTOMRIGHT", -(pad + barW), pad)
   local cw = w - 2 * pad - barW

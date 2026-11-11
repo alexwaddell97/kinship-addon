@@ -194,11 +194,11 @@ K:On("LOGIN", function()
 end)
 
 K:RegisterSettings({ id = "language", title = "Chat languages", order = 12, build = function(card)
-  card:Toggle("Language switcher", "A small button on the chat box: click to change the language you speak.", {
+  card:Toggle("Language switcher", "Adds a button to the chat box for changing the language you speak.", {
     get = function() return S().langSwitcher ~= false end,
     set = function(v) S().langSwitcher = v; L:Update() end,
   })
-  card:Toggle("Keep my language", "The game resets it after loading screens; Kinship puts your choice back.", {
+  card:Toggle("Keep my language", "The game resets your language after loading screens. This sets it back.", {
     get = function() return S().langRemember ~= false end,
     set = function(v) S().langRemember = v; if v then L:Restore() end end,
   })
@@ -208,6 +208,6 @@ K:RegisterSettings({ id = "language", title = "Chat languages", order = 12, buil
     local names = {}
     for _, l in ipairs(known) do names[#names + 1] = l.name end
     note:SetText(#known > 1 and ("You speak " .. table.concat(names, ", ") .. ".")
-      or "This character speaks only one language, so the switcher stays hidden.")
+      or "This character only knows one language, so the button is hidden.")
   end)
 end })

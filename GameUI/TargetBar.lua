@@ -512,13 +512,13 @@ K:On("LOGIN", function()
 end)
 
 K:RegisterSettings({ id = "targetbar", trp3 = "hide", title = "Target bar", order = 14, build = function(card)
-  card:Toggle("Show the target bar", "A bar with someone's roleplay name, glances and actions when you target them.",
+  card:Toggle("Show the target bar", "Shows a bar with a player's roleplay name, glances and actions when you target them.",
     { get = function() return S().targetBar ~= false end, set = function(v) K.db.settings.targetBar = v; Queue() end })
-  card:Toggle("Hide it in combat", "Steps aside while you fight and comes back afterwards.",
+  card:Toggle("Hide it in combat", "Hides the bar during combat.",
     { get = function() return S().targetBarCombat ~= false end, set = function(v) K.db.settings.targetBarCombat = v; Queue() end })
-  card:Toggle("Players without a profile", "Also show it for players who don't use a roleplay addon.",
+  card:Toggle("Players without a profile", "Shows the bar for players who don't use a roleplay addon too.",
     { get = function() return S().targetBarAll end, set = function(v) K.db.settings.targetBarAll = v; Queue() end })
-  card:Toggle("Lock its position", "Stop it moving when dragged.",
+  card:Toggle("Lock its position", "Stops the bar from being dragged.",
     { get = function() return S().targetBarLock end, set = function(v) K.db.settings.targetBarLock = v end })
   card:Button("Reset its position", function()
     K.db.settings.targetBarPos = nil

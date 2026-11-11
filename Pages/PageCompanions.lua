@@ -207,8 +207,9 @@ local function BindCurrent(c, button)
       end
     end)
   else
-    local pet = Comp:CurrentPetName()
-    if not pet then return Feedback(c, "Summon your pet first, then bind it.") end
+    -- A companion pet you've targeted, or your hunter or warlock pet.
+    local pet = Comp:TargetCompanionPet() or Comp:CurrentPetName()
+    if not pet then return Feedback(c, "Summon your pet, or target your companion pet, then try again.") end
     BindName(c, pet)
   end
 end
@@ -305,17 +306,18 @@ local function BuildEditor(c)
 
   local dl = UI.Text(ed, "Description", "Label", "subtle")
   dl:SetPoint("TOPLEFT", 17, -152)
-  ed.desc = UI.TextArea(ed, IN, 116, L.desc, Set("desc"))
+  local d = 466 - CH   -- a shorter description box when the tab is shorter
+  ed.desc = UI.TextArea(ed, IN, 116 - d, L.desc, Set("desc"))
   ed.desc:SetPoint("TOPLEFT", 16, -166)
 
   -- Bindings
   local bl = UI.Text(ed, "Bound to", "Label", "subtle")
-  bl:SetPoint("TOPLEFT", 17, -296)
+  bl:SetPoint("TOPLEFT", 17, -296 + d)
   local bh = UI.Text(ed, "These pets' or mounts' tooltips tell this story", "Label", "subtle")
-  bh:SetPoint("TOPRIGHT", -17, -296)
+  bh:SetPoint("TOPRIGHT", -17, -296 + d)
   bh:SetAlpha(0.8)
   ed.chipArea = CreateFrame("Frame", nil, ed)
-  ed.chipArea:SetPoint("TOPLEFT", 16, -312)
+  ed.chipArea:SetPoint("TOPLEFT", 16, -312 + d)
   ed.chipArea:SetSize(IN, 54)
   ed.chips = {}
   ed.noChips = UI.Text(ed.chipArea, "Not bound yet. Bind your current pet or mount, or type its name below.", "Small", "subtle", IN)
@@ -323,7 +325,7 @@ local function BuildEditor(c)
   ed.noChips:SetAlpha(0.85)
 
   ed.bindEdit = UI.Edit(ed, 170, 26, nil, 60)
-  ed.bindEdit:SetPoint("TOPLEFT", 16, -372)
+  ed.bindEdit:SetPoint("TOPLEFT", 16, -372 + d)
   ed.bindHint = UI.Text(ed.bindEdit, "Pet or mount name", "Small", "subtle")
   ed.bindHint:SetPoint("LEFT", 8, 0)
   ed.bindHint:SetAlpha(0.7)
@@ -337,7 +339,7 @@ local function BuildEditor(c)
   ed.addBtn:SetPoint("LEFT", ed.bindEdit, "RIGHT", 6, 0)
   ed.addBtn:SetScript("OnClick", addTyped)
   ed.current = UI.Button(ed, "Bind current pet", 166, 26)
-  ed.current:SetPoint("TOPRIGHT", -16, -372)
+  ed.current:SetPoint("TOPRIGHT", -16, -372 + d)
   ed.current:SetScript("OnClick", function(self) BindCurrent(c, self) end)
   ed.current:HookScript("OnEnter", function(self)
     local rec = Ref(c)
@@ -346,16 +348,16 @@ local function BuildEditor(c)
       GameTooltip:SetText("Bind current mount", 1, 0.82, 0)
       GameTooltip:AddLine("While riding, binds the mount you're on. Others see this companion on your tooltip while you ride it.", 1, 1, 1, true)
     else
-      local pet = Comp:CurrentPetName()
+      local pet = Comp:TargetCompanionPet() or Comp:CurrentPetName()
       GameTooltip:SetText("Bind current pet", 1, 0.82, 0)
-      GameTooltip:AddLine(pet and ("Binds " .. pet .. ", your pet right now.") or "Summon your hunter or warlock pet first.", 1, 1, 1, true)
+      GameTooltip:AddLine(pet and ("Binds " .. pet .. ".") or "Summon your hunter or warlock pet, or target your companion pet.", 1, 1, 1, true)
     end
     GameTooltip:Show()
   end)
   ed.current:HookScript("OnLeave", function() GameTooltip:Hide() end)
 
   ed.feedback = UI.Text(ed, "", "Small", "subtle", IN)
-  ed.feedback:SetPoint("TOPLEFT", 17, -406)
+  ed.feedback:SetPoint("TOPLEFT", 17, -406 + d)
   ed.feedback:SetWordWrap(false)
 
   -- Footer
@@ -501,11 +503,14 @@ end
 ---------------------------------------------------------------------------
 K:RegisterPage({
   id = "companions", trp3 = "hide", title = "Companions", heading = "Companions",
+  host = "persona", hostTab = "companions",   -- a tab of the Persona page
   subtitle = "Your pets and mounts, with stories of their own. Others see them on their tooltips.",
   group = "You",
   icon = { "Interface\\Icons\\Ability_Hunter_Pet_Wolf", round = true },
 
   build = function(c)
+    local h = c:GetHeight() or 0
+    if h > 200 then CH = math.floor(h + 0.5) end   -- the tab it sits in
     BuildList(c)
     BuildEditor(c)
     local ev = CreateFrame("Frame", nil, c)

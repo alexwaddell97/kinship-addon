@@ -434,8 +434,7 @@ function A:RefreshList()
 end
 
 K:RegisterSettings({ id = "automation", title = "Automation", order = 15, build = function(card)
-  card:Note("Let Kinship change your status, profile or war stance for you when something happens. "
-    .. "A rule can switch things back once the moment passes. Click a rule to edit it.")
+  card:Note("Rules change your status, profile or war stance when something happens, and can change it back afterwards. Click a rule to edit it.")
   card:EndRow()
   local w = card:GetWidth() - 32
   local h = ROW_H * ROWS
@@ -450,7 +449,7 @@ K:RegisterSettings({ id = "automation", title = "Automation", order = 15, build 
     holder.edge:SetColor(unpack(t.panelEdge))
   end)
   local list = UI.List(holder, w, h, ROW_H,
-    "No rules yet. Try one: in a dungeon or raid, go Out of Character, and switch back when you leave.",
+    "No rules yet. For example: go OOC in dungeons and raids, and switch back when you leave.",
     BuildRow, { bare = true, emptyIcon = K.Art("IconMilestone") })
   list:SetPoint("TOPLEFT")
   A.list = list
@@ -459,6 +458,6 @@ K:RegisterSettings({ id = "automation", title = "Automation", order = 15, build 
   local add = card:Button("Add a rule", function() A:Edit(nil) end, 140)
   A.count = UI.Text(card, "", "Small", "subtle")
   A.count:SetPoint("LEFT", add, "RIGHT", 12, 0)
-  card:Toggle("Tell me when a rule switches", "A short notice when a rule changes something (not for combat or mounting).", "autoNotify")
+  card:Toggle("Tell me when a rule switches", "Shows a message when a rule changes something. Not shown for combat or mounting.", "autoNotify")
   card:OnRefresh(function() A:RefreshList() end)
 end })

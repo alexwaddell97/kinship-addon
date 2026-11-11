@@ -11,3 +11,5 @@ Embedded libraries (unmodified), with thanks to their authors:
   (https://github.com/BigWigsMods/LibDBIcon-1.0): the minimap button, which minimap button collectors pick up.
 - AceSerializer-3.0: from Ace3 (https://github.com/WoWUIDev/Ace3). See AceSerializer-3.0/LICENSE.txt (the Ace3 licence).
   Used for Total RP 3: Extended-compatible import and export strings.
+- The icon and music names in Profile/IconNames.lua and Profile/MusicNames.lua come from LibRPMedia (https://github.com/wow-rp-addons/LibRPMedia,
+  public domain). Used so icons and theme music can be searched by name.

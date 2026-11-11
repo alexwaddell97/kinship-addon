@@ -331,6 +331,30 @@ local function OwnerOf(unit, tooltip)
   end
 end
 
+-- Your companion pet's name, when you have it targeted. Companion pets have
+-- no unit of their own (only hunter and warlock pets are "pet"), so the
+-- target is checked instead: someone's pet, and that someone is you.
+local scan
+function C:TargetCompanionPet()
+  local unit = "target"
+  if not UnitExists(unit) then return nil end
+  local isPlayer = UnitIsPlayer(unit)
+  if not Safe(isPlayer) or isPlayer then return nil end
+  local isPet = UnitIsUnit(unit, "pet")
+  if Safe(isPet) and isPet then return nil end   -- a hunter or warlock pet: CurrentPetName has it
+  local controlled = UnitPlayerControlled(unit)
+  if not (Safe(controlled) and controlled) then return nil end
+  scan = scan or CreateFrame("GameTooltip", "KinshipRPPetScan", nil, "GameTooltipTemplate")
+  scan:SetOwner(WorldFrame, "ANCHOR_NONE")
+  scan:ClearLines()
+  pcall(scan.SetUnit, scan, unit)
+  local owner = OwnerOf(unit, scan)
+  scan:Hide()
+  if not owner or K.NameKey(owner) ~= K.NameKey(K:MyName()) then return nil end
+  local n = UnitName(unit)
+  if Safe(n) and type(n) == "string" and n ~= "" and n ~= UNKNOWNOBJECT then return n end
+end
+
 local function OwnerName(owner, reg, isMe)
   if isMe then return K:DisplayName() end
   local p = reg and reg.profile
@@ -350,8 +374,30 @@ end
 
 local GOLD, TEAL, SOFT = { 1, 0.86, 0.55 }, { 0.30, 0.72, 0.68 }, { 0.80, 0.71, 0.51 }
 
--- The companion section: a big icon beside the name, title, owner, glance and a taste of the story.
-local function AddSection(tooltip, c, ownerName, riding)
+-- The game's "<owner>'s Companion" line, with the owner's roleplay name in it.
+-- False if there's no such line to change.
+local function RenameOwnerLine(tooltip, owner, ownerName)
+  local tname = tooltip.GetName and tooltip:GetName()
+  local short = owner and (Ambiguate and Ambiguate(owner, "none") or owner)
+  if not tname or not short or short == "" then return false end
+  for i = 2, math.min(4, tooltip:NumLines() or 0) do
+    local fs = _G[tname .. "TextLeft" .. i]
+    local text = fs and fs:GetText()
+    if Safe(text) and type(text) == "string" then
+      local a, b = text:find(short, 1, true)
+      if a then
+        if ownerName ~= short then fs:SetText(text:sub(1, a - 1) .. ownerName .. text:sub(b + 1)) end
+        return true
+      end
+    end
+  end
+  return false
+end
+
+-- The companion section: its title (with its icon), whose it is, the glance
+-- and a taste of the story. For a pet, the game's own lines already give its
+-- name and owner, so those aren't said again.
+local function AddSection(tooltip, c, ownerName, riding, owner)
   local name = strtrim(UI.Clean(c.name or ""))
   if name == "" then return end
   local icon = C.IconOf(c)
@@ -359,14 +405,20 @@ local function AddSection(tooltip, c, ownerName, riding)
     local first = tooltip.GetName and _G[(tooltip:GetName() or "") .. "TextLeft1"]
     if first then first:SetText(name) end
   end
-  tooltip:AddLine(" ")
-  tooltip:AddLine(("|T%s:32:32:0:0:64:64:5:59:5:59|t  %s%s"):format(tostring(icon), riding and "Riding " or "", name),
-    GOLD[1], GOLD[2], GOLD[3])
   local title = strtrim(UI.Clean(c.title or ""))
-  if title ~= "" then tooltip:AddLine(title, TEAL[1], TEAL[2], TEAL[3], true) end
-  if not riding then
-    tooltip:AddLine(("|T%s:12:12|t %s of %s"):format(K.ICON, c.kind == "mount" and "Mount" or "Companion", ownerName),
-      SOFT[1], SOFT[2], SOFT[3])
+  if riding then
+    tooltip:AddLine(" ")
+    tooltip:AddLine(("|T%s:32:32:0:0:64:64:5:59:5:59|t  Riding %s"):format(tostring(icon), name), GOLD[1], GOLD[2], GOLD[3])
+    if title ~= "" then tooltip:AddLine(title, TEAL[1], TEAL[2], TEAL[3], true) end
+  else
+    local renamed = RenameOwnerLine(tooltip, owner, ownerName)
+    if title ~= "" then
+      tooltip:AddLine(("|T%s:16:16:0:0:64:64:5:59:5:59|t %s"):format(tostring(icon), title), TEAL[1], TEAL[2], TEAL[3])
+    end
+    if not renamed then
+      tooltip:AddLine(("|T%s:12:12|t %s of %s"):format(K.ICON, c.kind == "mount" and "Mount" or "Companion", ownerName),
+        SOFT[1], SOFT[2], SOFT[3])
+    end
   end
   local glance = strtrim(UI.Clean(c.glance or ""))
   if glance ~= "" then tooltip:AddLine("\"" .. Trim(glance, 160) .. "\"", 0.92, 0.90, 0.84, true) end
@@ -400,7 +452,7 @@ local function OnUnitTooltip(tooltip)
   end
   local c, reg = C:Find(owner, petName, isMe)
   if c then
-    AddSection(tooltip, c, OwnerName(owner, reg, isMe), false)
+    AddSection(tooltip, c, OwnerName(owner, reg, isMe), false, owner)
     tooltip:Show()
   elseif not isMe and not (reg and reg.profile and reg.profile.companions) then
     C.waitingPet = petName

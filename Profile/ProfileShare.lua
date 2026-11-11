@@ -548,7 +548,7 @@ end
 -- Settings
 ---------------------------------------------------------------------------
 K:RegisterSettings({ id = "profiles", trp3 = "hide", title = "Profiles", order = 5, build = function(card)
-  card:Note("Back up a profile as a block of text, move it to another character, or share it with a friend.")
+  card:Note("Export a profile as text to back it up, use it on another character or share it.")
   local ex = card:Button("Export current profile", function() S:Open("export") end, 180)
   local im = UI.Button(card, "Import a profile", 160, 26)
   im:SetPoint("LEFT", ex, "RIGHT", 8, 0)

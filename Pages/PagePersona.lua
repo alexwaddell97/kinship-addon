@@ -903,6 +903,8 @@ local function SetNameColor(c)
   K:Fire("PROFILE")
 end
 
+local RefreshMusic   -- below: the list under Theme music
+
 local function BuildLook(tab)
   local lc = UI.Panel(tab)
   lc:SetPoint("TOPLEFT")
@@ -1008,7 +1010,7 @@ local function BuildLook(tab)
   local RW = LOOK_R - 32
   local h3 = UI.Section(rc, "Theme music")
   h3:SetPoint("TOPLEFT", 21, -15)
-  local mdesc = UI.Text(rc, "A tune others can play from your target bar. Enter a game music file ID, or pick one below.",
+  local mdesc = UI.Text(rc, "A tune others can play from your target bar. Pick one below, search all the game's music, or enter a file ID.",
     "Small", "subtle", RW)
   mdesc:SetPoint("TOPLEFT", 16, -40)
   mdesc:SetSpacing(2)
@@ -1030,6 +1032,13 @@ local function BuildLook(tab)
 
   local h4 = UI.Section(rc, "Suggestions")
   h4:SetPoint("TOPLEFT", 21, -164)
+  tab.musicHead = h4
+  tab.musicSearch = UI.Search(rc, 150, "Search all music", function(text)
+    tab.musicQuery = text ~= "" and text or nil
+    RefreshMusic(tab)
+  end)
+  tab.musicSearch:SetPoint("TOPRIGHT", -16, -158)
+  UI.Tooltip(tab.musicSearch, "Search all music", "Type part of a name, like " .. '"tavern", "forest" or "darkmoon"' .. ", to search every track in the game.")
   tab.list = UI.List(rc, RW, BODY_H - 186 - 14, 38, "No suggestions are available on this client. A file ID still works.",
     function(row)
       row.med = Medallion(row, 22, 2)
@@ -1108,7 +1117,19 @@ local function RefreshLook(tab)
   else
     tab.status:SetText("|cff" .. UI.Hex(t.subtle) .. "No theme yet.|r")
   end
-  tab.list:SetItems(P.MUSIC, function(row, m)
+  RefreshMusic(tab)
+end
+
+-- The list under Theme music: the suggestions, or what the search found.
+function RefreshMusic(tab)
+  local p, t = K:Profile(), K:Theme()
+  local mu = P.Music(p)
+  local q = tab.musicQuery
+  local items = q and P.SearchMusic(q) or P.MUSIC
+  tab.musicHead:SetText(q and ((#items == 1 and "1 track" or (#items .. " tracks")) .. " found") or "Suggestions")
+  tab.list.empty:SetText(q and "No music matches that. Try a shorter word."
+    or "No suggestions are available on this client. A file ID still works.")
+  tab.list:SetItems(items, function(row, m)
     row.name:SetText(m.name)
     row.sub:SetText(P.FormatTime(m.time) .. "  ·  file " .. m.id)
     local mine = mu == m.id
@@ -1129,14 +1150,20 @@ end
 ---------------------------------------------------------------------------
 K:RegisterPage({
   id = "persona", title = "Persona", heading = "Persona", group = "You",
+  guide = function(c)
+    if c.tab == c.compTab and K.Guide and K.Guide.PageGuide then return K.Guide.PageGuide("companions"), c.frames[c.compTab] end
+  end,
   subtitle = "Glances, traits, effects and the look of your character at first sight.",
   icon = { "Interface\\Icons\\Ability_Hunter_EagleEye", round = true },
 
   build = function(c)
     P = K.Persona
     c.tab = 1
-    c.tabs = UI.TabBar(c, K.Auras and { "Glances", "Traits", "Look", "Effects" } or { "Glances", "Traits", "Look" },
-      function(i) c.tab = i; Refresh() end, true)
+    local names, keys = { "Glances", "Traits", "Look" }, { "glances", "traits", "look" }
+    if K.Auras then names[4], keys[4] = "Effects", "effects" end
+    names[#names + 1], keys[#keys + 1] = "Companions", "companions"
+    c.compTab, c.tabKeys = #names, keys
+    c.tabs = UI.TabBar(c, names, function(i) c.tab = i; Refresh() end, true)
     c.tabs:SetPoint("TOPLEFT", -10, 2)
     c.preview = UI.Button(c, "Preview profile", 130, 24)
     c.preview:SetPoint("TOPRIGHT", 0, 0)
@@ -1153,7 +1180,7 @@ K:RegisterPage({
     UI.Tooltip(c.presets, "Saved glances", "Keep single glances to add to any profile, or save all five as a set "
       .. "and swap between sets, on any character.")
     c.frames = {}
-    for i = 1, K.Auras and 4 or 3 do
+    for i = 1, #names do
       local f = CreateFrame("Frame", nil, c)
       f:SetPoint("TOPLEFT", 0, -TOP)
       f:SetSize(CW, BODY_H)
@@ -1164,12 +1191,14 @@ K:RegisterPage({
     BuildTraits(c.frames[2], c)
     BuildLook(c.frames[3])
     if K.Auras then K.Auras:BuildTab(c.frames[4], c) end
+    K.Journal:Embed("companions", c.frames[c.compTab])   -- built by its own page
   end,
 
   refresh = function(c)
     -- Switching profiles: start again on the first glance
     local prof = K:Profile()
     if c.profile ~= prof then c.profile, c.gsel = prof, 1 end
+    c.tab = K.Journal:WantedTab(c) or c.tab
     if K.Auras and K.Auras.wantTab then c.tab = 4; K.Auras.wantTab = nil end
     -- Alongside Total RP 3: its glances and traits are the ones others see
     local compat = K:Compat()
@@ -1181,6 +1210,10 @@ K:RegisterPage({
       c.tabs:SetTabShown(4, on)
       if not on and c.tab == 4 then c.tab = 1 end
     end
+    -- Total RP 3 has companions of its own while it runs
+    local comps = K.Journal:PageEnabled("companions")
+    c.tabs:SetTabShown(c.compTab, comps)
+    if not comps and c.tab == c.compTab then c.tab = 3 end
     c.tabs:Select(c.tab)
     for i, f in ipairs(c.frames) do f:SetShown(i == c.tab) end
     if c.shownTab ~= c.tab then
@@ -1191,6 +1224,7 @@ K:RegisterPage({
     if c.tab == 1 then RefreshGlances(c.frames[1], c)
     elseif c.tab == 2 then RefreshTraits(c.frames[2])
     elseif c.tab == 3 then RefreshLook(c.frames[3])
+    elseif c.tab == c.compTab then K.Journal:RefreshEmbedded(c.frames[c.compTab])
     else K.Auras:RefreshTab(c.frames[4]) end
   end,
 })

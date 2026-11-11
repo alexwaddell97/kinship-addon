@@ -195,9 +195,8 @@ K:RegisterTargetButton({
 })
 
 K:RegisterSettings({ id = "chatlinks", title = "Profile links", order = 11, build = function(card)
-  card:Toggle("Clickable profile and item links", "[Kinship: Name] and [Kinship item: Name] in chat become links.", "chatLinks")
-  card:Note("Share a profile from the target bar, or shift-click a Kinship item while typing to link it. Everyone with "
-    .. "Kinship sees a link; everyone else reads the plain text.")
+  card:Toggle("Clickable profile and item links", "Turns [Kinship: Name] and [Kinship item: Name] in chat into links you can click.", "chatLinks")
+  card:Note("Share a profile from the target bar, or shift-click a Kinship item while typing. Players without Kinship see plain text.")
   local b = card:Button("Link my profile in chat", function() L:InsertMine() end, 180)
   UI.Tooltip(b, "Link my profile", "Puts a link to your own profile in the chat box.")
 end })

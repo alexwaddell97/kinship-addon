@@ -603,12 +603,11 @@ K:On("LOGIN", function()
 end)
 
 K:RegisterSettings({ id = "gatherings", title = "Gatherings", order = 36, build = function(card)
-  card:Toggle("House gatherings", "Share and receive gatherings with players who carry your house name, as you see each other.",
+  card:Toggle("House gatherings", "Share gatherings with players in your house.",
     { get = function() return S_().gatherHouse ~= false end, set = function(v) K.db.settings.gatherHouse = v; K:Fire("GATHERINGS") end })
-  card:Toggle("Public gatherings", "See and pass on gatherings posted by Kinship users near you.",
+  card:Toggle("Public gatherings", "See gatherings posted by nearby Kinship users, and pass them on.",
     { get = function() return S_().gatherPublic ~= false end, set = function(v) K.db.settings.gatherPublic = v; K:Fire("GATHERINGS") end })
-  card:Toggle("Add to my calendar when I'm going", "Saying you're going to a gathering with a date also puts it on your game calendar.",
+  card:Toggle("Add to my calendar when I'm going", "Adds gatherings you're going to to your game calendar.",
     { get = function() return S_().gatherCalendar ~= false end, set = function(v) K.db.settings.gatherCalendar = v end })
-  card:Note("Public gatherings reach Kinship users of your own faction near you, and travel further as people meet. "
-    .. "Each stranger can have three on your board at most, and anyone you ignore disappears from it.")
+  card:Note("Public gatherings spread between Kinship users of your faction as they meet. Each player can have up to three on your board, and gatherings from ignored players are hidden.")
 end })

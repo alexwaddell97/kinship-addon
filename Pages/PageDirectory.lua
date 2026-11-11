@@ -12,6 +12,9 @@ local FILTERS = {
 local ADDONS = {
   totalrp3 = "Total RP 3", kinshiprp = "Kinship", myroleplay = "MyRolePlay", xrp = "XRP", gnomtec_badge = "Badge",
 }
+local SORTS = {
+  { key = "recent", label = "Recent" }, { key = "name", label = "Name" }, { key = "bonds", label = "Bonds" },
+}
 local LIST_W, CW, CH = 404, 696, 466
 local NEARBY = 15 * 60
 
@@ -45,6 +48,16 @@ local function Matches(e, filter, search)
     if not hay:find(search, 1, true) then return false end
   end
   return true
+end
+
+-- How close someone is: a bond, then people you added to your Kin, then
+-- the rest of your Kin, then everyone else.
+local function Closeness(e)
+  if K.RelationKey and K:RelationKey(e.name) then return 3 end
+  local kin = K:KinFor(e.name)
+  if not kin then return 0 end
+  if (kin.rel or "") ~= "" then return 3 end
+  return kin.how == "manual" and 2 or 1
 end
 
 local function RowMenu(owner, e)
@@ -100,8 +113,15 @@ K:RegisterPage({
         row:SetScript("OnDoubleClick", function(self) K.Viewer:ShowName(self.item.name) end)
       end, { emptyIcon = K.Art("IconPlace") })
     c.list:SetPoint("TOPLEFT", 0, -34)
-    c.count = UI.Text(c, "", "Small", "deskSubtle", LIST_W)
+    c.count = UI.Text(c, "", "Small", "deskSubtle", LIST_W - 200)
     c.count:SetPoint("BOTTOMLEFT", 2, 4)
+    c.sorts = UI.Segments(c, SORTS, 64, function(key)
+      K.db.settings.directorySort = key ~= "recent" and key or nil
+      K.Journal:RefreshCurrent()
+    end)
+    c.sorts:SetPoint("BOTTOMLEFT", LIST_W - 3 * 64, 0)
+    UI.Tooltip(c.sorts, "Sort", "Recent: whose profile reached you last. Name: A to Z. "
+      .. "Bonds: people you have a bond with first, then your Kin, then everyone else.")
 
     -- Preview card ---------------------------------------------------------------
     local card = UI.Panel(c)
@@ -195,7 +215,22 @@ K:RegisterPage({
         if Matches(e, c.filter, c.search) then items[#items + 1] = e end
       end
     end
-    table.sort(items, function(a, b) return (a.t or 0) > (b.t or 0) end)
+    local sort = K.db.settings.directorySort or "recent"
+    c.sorts:Select(sort)
+    if sort == "name" then
+      local names = {}
+      for _, e in ipairs(items) do names[e] = UI.Clean(DisplayName(e)):lower() end
+      table.sort(items, function(a, b) return names[a] < names[b] end)
+    elseif sort == "bonds" then
+      local close = {}
+      for _, e in ipairs(items) do close[e] = Closeness(e) end
+      table.sort(items, function(a, b)
+        if close[a] ~= close[b] then return close[a] > close[b] end
+        return (a.t or 0) > (b.t or 0)
+      end)
+    else
+      table.sort(items, function(a, b) return (a.t or 0) > (b.t or 0) end)
+    end
     c.count:SetText(total == 1 and "1 profile" or (total .. " profiles"))
 
     c.list:SetItems(items, function(row, e)

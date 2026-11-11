@@ -1,5 +1,71 @@
 # Kinship RP changelog
 
+## 1.4.4
+
+A tidier journal, search for icons and music, and a typing indicator. This version adds new files, so restart the game rather than using /reload.
+
+### New
+- A typing indicator. While a Kinship user near you writes in say, emote
+  or yell, three small dots appear over their nameplate, and on your target
+  bar if they're your target. Only "writing" is shared, never a word of what
+  you write. Settings > Typing indicator turns showing and sharing on or off.
+
+### Changed
+- A tidier journal: the sidebar has 10 pages instead of 12. House is now
+  Community, with three tabs: House, Group and Gatherings. Companions is a
+  tab on the Persona page. `/kin gatherings`, `/kin companions` and the new
+  `/kin community` open them where they now live.
+- Finding an icon is easier. Type part of a name, like "sword", "book" or
+  "fire bolt", and the icon grid narrows as you type. Enter takes the first
+  match. A full name or a file ID still works. This works in the icon picker
+  and in the formatting bar's icon picker.
+- Clicking your crest on the House or Group tab opens the same icon picker,
+  with every icon to search. It replaces the old crest pop-over and its
+  themed sets.
+- Theme music on the Persona page can be searched. Type part of a name, like
+  "tavern", "forest" or "darkmoon", to search every track in the game,
+  not only the suggestions.
+- Grouping no longer fills your Kin with everyone from a dungeon run. By
+  default only people with a roleplay profile join, from Kinship or any other
+  RP addon. Settings > Kin lets you choose RP players, Everyone or Nobody.
+- Your Chronicle no longer gets a "Travelled with" entry for everyone you
+  group with. It notes the bonds you make instead, like "Became friends with
+  Vivou" or "Made a rival of Zito". The Kin page still keeps who you met,
+  where and when. Old "Travelled with" entries are cleared once, except any
+  you've written in.
+- Warfront is quieter. Duels and battleground kills still count towards
+  your tally with someone, but no longer add a Chronicle entry or a toast.
+  Battleground kills only count for people already in your Warfront, and
+  the "You have fallen" prompt doesn't appear in battlegrounds. Fights out
+  in the world work as before.
+- Warfront marks someone a Rival on its own only after three fights. Before,
+  it happened after one. Duels with your Kin, or anyone you have a bond
+  with, never do it. You can still mark anyone yourself.
+- The mature filter's word list in Settings > Safety is hidden until you
+  click "Show words", so the words don't scroll past while you look through
+  Settings. It's hidden again each time you open Settings.
+- The wording in Settings and the page tours is plainer and shorter. The tours
+  for Kin and Chronicle match how they work now.
+- "Bind current pet" on Companions works for companion pets too: target
+  your companion pet and click it. Before, only hunter and warlock pets
+  could be bound with the button.
+- Pet tooltips are tidier. The name shows once, the game's "<owner>'s
+  Companion" line uses the owner's roleplay name, and the pet's title sits
+  under it with a small icon.
+- Settings > Kin has a "Tidy Kin" button. It removes the people you only
+  grouped with: no bond with you, not added by you, and no roleplay profile.
+- Kin lists the people you have a bond with first, then the people you
+  added, then everyone else.
+- Directory can sort by Recent, Name or Bonds. Bonds puts the people you have
+  a bond with first, then your Kin. The choice is under the list.
+
+### Fixed
+- Entering a dungeon or raid adds one Chronicle entry, "Entered", not a
+  "Set foot in" beside it. Old doubles are cleared once, except any you've
+  written in.
+- Typing an icon's full name (INV_Misc_Book_09) now finds it. Before, some
+  names were turned down and only the file ID worked.
+
 ## 1.4.3
 
 Tidier names and titles. No new files, so a /reload is enough.

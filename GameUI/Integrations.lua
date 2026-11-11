@@ -423,6 +423,5 @@ K:RegisterSettings({ id = "tooltips", trp3 = "hide", title = "Tooltips", order =
     { key = "full", label = "Everything" },
   }, function() return K.Settings().tooltipDetail == "full" and "full" or "short" end,
   function(v) K.Settings().tooltipDetail = v == "full" and "full" or nil end, 100)
-  card:Note("Short shows who they are, how they're playing and what they're up to. Hold Shift over them for "
-    .. "everything else: house, group, consent, OOC notes, effects, mounts and your own notes.")
+  card:Note("Short shows a player's name, status and what they're doing. Hold Shift to see the rest, such as house, group, consent, OOC notes, effects and your own notes.")
 end })

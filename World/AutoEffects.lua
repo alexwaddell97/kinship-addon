@@ -213,8 +213,7 @@ end)
 
 K:RegisterSettings({ id = "autoEffects", title = "Effects that come on their own", order = 17,
   shown = function() return K:ExtOn("auras") end, build = function(card)
-  card:Toggle("Let effects come on their own", "Light effects from what happens in the game. Every one can be taken off "
-    .. "with Not now.", { get = function() return S().auraAuto ~= false end,
+  card:Toggle("Let effects come on their own", "Adds small effects based on what happens in the game. Click Not now to remove one.", { get = function() return S().auraAuto ~= false end,
     set = function(v) K.db.settings.auraAuto = v end })
   for _, fx in ipairs(AE.LIST) do
     card:Toggle(fx.label, fx.desc, {
@@ -225,5 +224,5 @@ K:RegisterSettings({ id = "autoEffects", title = "Effects that come on their own
       end,
     })
   end
-  card:Note("Only time you're playing counts, and nothing that would get in the way of your roleplay comes on its own.")
+  card:Note("Only time spent playing counts. Nothing that would affect your roleplay is added automatically.")
 end })
