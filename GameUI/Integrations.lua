@@ -193,9 +193,38 @@ end
 ---------------------------------------------------------------------------
 -- Right-click menus
 ---------------------------------------------------------------------------
+-- The gamepad interface moves through the right-click menu with the D-pad,
+-- and entries added by addons can freeze it. With a gamepad on, Kinship stays
+-- out of the menu unless you ask for it (Settings > Right-click menus).
+local function Gamepad()
+  if C_GamePad and C_GamePad.IsEnabled then
+    local ok, on = pcall(C_GamePad.IsEnabled)
+    if ok and Safe(on) and on then return true end
+  end
+  local get = (C_CVar and C_CVar.GetCVarBool) or rawget(_G, "GetCVarBool")
+  if get then
+    local ok, on = pcall(get, "GamePadEnable")
+    if ok and Safe(on) and on then return true end
+  end
+  return false
+end
+
+-- "auto" (the default: in the menu unless a gamepad is on), "on" or "off".
+function K:MenusMode()
+  local v = self.db and self.db.settings.playerMenus
+  return (v == "on" or v == "off") and v or "auto"
+end
+
+function K:MenusOn()
+  local mode = self:MenusMode()
+  if mode == "auto" then return not Gamepad() end
+  return mode == "on"
+end
+
 local function SetupMenus()
   if not (Menu and Menu.ModifyMenu) then return end
   local function modify(_, root, ctx)
+    if not K:MenusOn() then return end
     if not ctx or not ctx.name or not Safe(ctx.name) then return end
     -- The target menu is shared with NPCs and mobs: Kinship only belongs on players'.
     if ctx.unit then
@@ -416,6 +445,17 @@ _G["BINDING_NAME_KINSHIPRP_VIEW"] = "View your target's profile"
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
+K:RegisterSettings({ id = "menus", title = "Right-click menus", order = 14,
+  keywords = "context menu right click gamepad controller handheld steam deck freeze", build = function(card)
+  card:Segments("Kinship in players' right-click menus", {
+    { key = "auto", label = "Auto" }, { key = "on", label = "On" }, { key = "off", label = "Off" },
+  }, function() return K:MenusMode() end,
+  function(v) K.db.settings.playerMenus = v ~= "auto" and v or nil end, 70)
+  card:Note("Auto leaves Kinship out of the menu while a gamepad is turned on, because the gamepad interface can freeze "
+    .. "on menu entries added by addons. You can still open a profile from the target bar, or with a key set under "
+    .. "Key Bindings > AddOns > Kinship RP.")
+end })
+
 K:RegisterSettings({ id = "tooltips", trp3 = "hide", title = "Tooltips", order = 13,
   keywords = "mouseover hover shift short full detail crowded", build = function(card)
   card:Segments("When you mouse over a player", {

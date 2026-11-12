@@ -1,5 +1,16 @@
 # Kinship RP changelog
 
+## 1.4.5
+
+A fix for the gamepad interface. No new files, so a /reload is enough.
+
+### Fixed
+- With a gamepad turned on, Kinship no longer adds its entries to players'
+  right-click menus. Addon entries there can freeze the gamepad interface.
+  Settings > Right-click menus can put them back (On) or keep them out
+  always (Off). Profiles still open from the target bar, or with the key
+  under Key Bindings > AddOns > Kinship RP.
+
 ## 1.4.4
 
 A tidier journal, search for icons and music, and a typing indicator. This version adds new files, so restart the game rather than using /reload.
