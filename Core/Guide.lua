@@ -137,6 +137,9 @@ local function Build()
     end
   end)
   o:SetScript("OnHide", function() if G.active then G:Finish(true, true) end end)
+  -- With a controller: the highlight starts on Next, B skips this tour.
+  o.padFirst, o.padBack, o.padAnchor = c.next, c.skip, c
+  if K.Pad then K.Pad.Overlay(o) end
   tinsert(UISpecialFrames, "KinshipRPGuide")   -- Esc skips this tour and any waiting after it
   return o
 end

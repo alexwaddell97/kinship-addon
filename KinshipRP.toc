@@ -2,7 +2,7 @@
 ## Title: Kinship RP
 ## Notes: A roleplay addon for WoW Forever: profiles, houses, quests you write yourself, items and RP-PvP. Works with Total RP 3 users.
 ## Author: Vaxorus
-## Version: 1.4.5
+## Version: 1.4.6
 ## Category: Roleplay
 ## X-Website: https://ko-fi.com/vaxorus
 ## SavedVariables: KinshipRPDB
@@ -99,4 +99,5 @@ guides\You.lua
 guides\People.lua
 guides\World.lua
 Core\Options.lua
+GameUI\Gamepad.lua
 GameUI\Integrations.lua

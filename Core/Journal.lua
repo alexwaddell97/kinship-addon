@@ -259,6 +259,21 @@ function J:Show(i)
   if changed then UI.FadeIn(self.content[i], 0.25) end
 end
 
+-- The next (dir 1) or previous (dir -1) page in the sidebar, going round,
+-- with Settings last.
+function J:Step(dir)
+  if not (self.frame and self.frame:IsShown() and self.nav) then return false end
+  local list = {}
+  for _, b in ipairs(self.nav) do
+    if Enabled(self.pages[b.index]) then list[#list + 1] = b.index end
+  end
+  list[#list + 1] = self:Index("settings")
+  local at = 1
+  for n, i in ipairs(list) do if i == self.current then at = n end end
+  self:Show(list[(at - 1 + dir) % #list + 1])
+  return true
+end
+
 -- Run a page's refresh, logging any error for /kin bug.
 function J:Refresh(i)
   local page = self.pages[i]

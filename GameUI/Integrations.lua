@@ -442,6 +442,50 @@ _G["BINDING_NAME_KINSHIPRP_DICE"] = "Dice tray"
 _G["BINDING_NAME_KINSHIPRP_STATUS"] = "Cycle IC / LFRP / OOC"
 _G["BINDING_NAME_KINSHIPRP_VIEW"] = "View your target's profile"
 
+-- Getting round Kinship's windows from the keyboard (or a controller set up
+-- outside the game): each acts on the Kinship window in front. With a
+-- controller turned on, GameUI/Gamepad.lua does all this without any setup.
+local Pad = K.Pad
+
+-- One step on the press, then steadily while the key is held.
+local scroller = CreateFrame("Frame")
+scroller:Hide()
+scroller:SetScript("OnUpdate", function(self, elapsed)
+  self.wait = self.wait - elapsed
+  if self.wait > 0 then return end
+  self.wait = 0.08
+  if self.sf and self.sf:IsVisible() then Pad.Scroll(self.sf, self.dir) else self:Hide() end
+end)
+local function ScrollKey(dir, keystate)
+  if keystate == "up" then
+    if scroller.dir == dir then scroller:Hide() end
+    return
+  end
+  local sf = Pad.FrontScroll()
+  if not sf then return end
+  Pad.Scroll(sf, dir)
+  scroller.sf, scroller.dir, scroller.wait = sf, dir, 0.35
+  scroller:Show()
+end
+
+function KinshipRP_PageKey(dir) K.Journal:Step(dir) end
+function KinshipRP_TabKey(dir)
+  local bar = Pad.FrontTabs()
+  if bar then bar:Step(dir) end
+end
+function KinshipRP_ScrollKey(dir, keystate) ScrollKey(dir, keystate) end
+function KinshipRP_CloseKey()
+  local win = K.UI.FrontWindow()
+  if win then win:Hide() end
+end
+_G["BINDING_NAME_KINSHIPRP_PAGENEXT"] = "Journal: next page"
+_G["BINDING_NAME_KINSHIPRP_PAGEPREV"] = "Journal: previous page"
+_G["BINDING_NAME_KINSHIPRP_TABNEXT"] = "Next tab"
+_G["BINDING_NAME_KINSHIPRP_TABPREV"] = "Previous tab"
+_G["BINDING_NAME_KINSHIPRP_SCROLLDOWN"] = "Scroll down"
+_G["BINDING_NAME_KINSHIPRP_SCROLLUP"] = "Scroll up"
+_G["BINDING_NAME_KINSHIPRP_CLOSE"] = "Close the Kinship window in front"
+
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------

@@ -17,4 +17,25 @@
   <Binding name="KINSHIPRP_SATCHEL" category="ADDONS">
     KinshipRP_SatchelKey()
   </Binding>
+  <Binding name="KINSHIPRP_PAGENEXT" category="ADDONS">
+    KinshipRP_PageKey(1)
+  </Binding>
+  <Binding name="KINSHIPRP_PAGEPREV" category="ADDONS">
+    KinshipRP_PageKey(-1)
+  </Binding>
+  <Binding name="KINSHIPRP_TABNEXT" category="ADDONS">
+    KinshipRP_TabKey(1)
+  </Binding>
+  <Binding name="KINSHIPRP_TABPREV" category="ADDONS">
+    KinshipRP_TabKey(-1)
+  </Binding>
+  <Binding name="KINSHIPRP_SCROLLDOWN" category="ADDONS" runOnUp="true">
+    KinshipRP_ScrollKey(-1, keystate)
+  </Binding>
+  <Binding name="KINSHIPRP_SCROLLUP" category="ADDONS" runOnUp="true">
+    KinshipRP_ScrollKey(1, keystate)
+  </Binding>
+  <Binding name="KINSHIPRP_CLOSE" category="ADDONS">
+    KinshipRP_CloseKey()
+  </Binding>
 </Bindings>

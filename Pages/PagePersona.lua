@@ -670,6 +670,7 @@ local function BuildTraitRow(parent, c, i)
 
   -- Dragging: a generous hit area over the bar
   local hit = CreateFrame("Button", nil, row)
+  hit.padSkip = true   -- dragged with the mouse: nothing for a controller's A to press
   hit:SetPoint("TOPLEFT", row.bar, "TOPLEFT", -8, 10)
   hit:SetPoint("BOTTOMRIGHT", row.bar, "BOTTOMRIGHT", 8, -10)
   hit:SetFrameLevel(thumb:GetFrameLevel() + 1)

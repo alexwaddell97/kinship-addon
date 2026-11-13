@@ -851,6 +851,20 @@ function UI.TabBar(parent, names, onSelect, desk)
     self:SetWidth(math.max(1, x))
   end
   function bar:Select(i) self.selected = i; self:Paint() end
+  -- Open the next (dir 1) or previous (dir -1) tab, as if it were clicked,
+  -- going round from the last to the first.
+  function bar:Step(dir)
+    local list = {}
+    for _, i in ipairs(self.order or {}) do if self.tabs[i] and not self.tabs[i].off then list[#list + 1] = i end end
+    if not self.order then
+      for i, b in ipairs(self.tabs) do if not b.off then list[#list + 1] = i end end
+    end
+    if #list < 2 then return false end
+    local at = 1
+    for n, i in ipairs(list) do if i == self.selected then at = n end end
+    self.tabs[list[(at - 1 + dir) % #list + 1]]:Click()
+    return true
+  end
   -- Dim a tab with nothing in it (it can still be opened).
   function bar:SetTabFaint(i, faint)
     local b = self.tabs[i]
@@ -936,6 +950,32 @@ end
 -- Windows: flat chrome, 1px edge, drawn close button, quick fade on open.
 -- opts.bare skips the title bar (the journal draws its own sidebar header).
 ---------------------------------------------------------------------------
+UI.windows = {}
+
+-- The Kinship window in front: the open one drawn highest; at the same
+-- height, any window over the journal, else the one opened last (noted the
+-- first time it's seen open). Used by the controller support and its keys.
+local opened = 0
+local function Over(f, best)
+  local fl, bl = f:GetFrameLevel(), best:GetFrameLevel()
+  if fl ~= bl then return fl > bl end
+  if f:GetName() == "KinshipRPJournal" then return false end
+  if best:GetName() == "KinshipRPJournal" then return true end
+  return (f.kinOpened or 0) > (best.kinOpened or 0)
+end
+function UI.FrontWindow()
+  local best
+  for _, f in ipairs(UI.windows) do
+    if f:IsShown() then
+      if not f.kinOpened then opened = opened + 1; f.kinOpened = opened end
+      if not best or Over(f, best) then best = f end
+    else
+      f.kinOpened = nil
+    end
+  end
+  return best
+end
+
 function UI.Window(name, title, w, h, opts)
   opts = opts or {}
   local f = CreateFrame("Frame", name, UIParent)
@@ -1034,6 +1074,7 @@ function UI.Window(name, title, w, h, opts)
   end)
 
   tinsert(UISpecialFrames, name)
+  UI.windows[#UI.windows + 1] = f
   f:SetScript("OnShow", function(self)
     if SOUNDKIT then PlaySound(SOUNDKIT.IG_CHARACTER_INFO_OPEN) end
     UI.FadeIn(self, 0.18)

@@ -14,14 +14,16 @@ globals = {
   "BINDING_NAME_KINSHIPRP_DICE", "BINDING_NAME_KINSHIPRP_JOURNAL", "BINDING_NAME_KINSHIPRP_PARLEY",
   "BINDING_NAME_KINSHIPRP_SATCHEL", "BINDING_NAME_KINSHIPRP_STATUS", "BINDING_NAME_KINSHIPRP_VIEW",
   "KinshipRP_OnCompartmentClick", "KinshipRP_DiceKey", "KinshipRP_StatusKey", "KinshipRP_ViewKey",
-  "KinshipRP_SatchelKey", "KinshipRP_ParleyKey", "msp_RPAddOn", "SlashCmdList", "StaticPopupDialogs",
+  "KinshipRP_SatchelKey", "KinshipRP_ParleyKey", "KinshipRP_PageKey", "KinshipRP_TabKey", "KinshipRP_ScrollKey",
+  "KinshipRP_CloseKey", "msp_RPAddOn", "SlashCmdList", "StaticPopupDialogs",
   "UISpecialFrames", "msp", "ColorPickerFrame",
 }
 
 -- The game's API that Kinship uses, and other addons it talks to
 read_globals = {
   "ADDONS", "AddOn_Chomp", "AddOn_TotalRP3", "Ambiguate", "BNET_CLIENT_WOW", "BreakUpLargeNumbers",
-  "ButtonFrameTemplate_HideButtonBar", "CANCEL", "CLASS_ICON_TCOORDS", "C_AddOns", "C_BattleNet", "C_CVar", "C_GamePad", "GetCVarBool",
+  "ButtonFrameTemplate_HideButtonBar", "CANCEL", "CLASS_ICON_TCOORDS", "C_AddOns", "C_BattleNet", "C_CVar", "C_GamePad", "GetCVarBool", "ClearOverrideBindings", "GamepadMode", "GetBindingAction",
+  "GetBindingText", "IsKeyDown", "SetOverrideBindingClick",
   "C_Calendar", "C_ChatInfo", "C_ClassColor", "C_EncodingUtil", "C_FriendList", "C_Item", "C_Map",
   "C_MountJournal", "C_NamePlate", "C_SuperTrack", "C_Texture", "C_Timer", "C_UIFileAsset", "C_UnitAuras",
   "ChatEdit_GetActiveWindow", "ChatEdit_ActivateChat", "ChatFrameUtil", "ChatFrame_AddMessageEventFilter", "ChatFrame_OpenChat",

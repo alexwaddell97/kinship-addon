@@ -1,5 +1,31 @@
 # Kinship RP changelog
 
+## 1.4.6
+
+Controller support. There's a new file, so restart the game after updating
+(a /reload isn't enough).
+
+### Added
+- Controller support. With a controller turned on, Kinship's windows can be
+  used without a mouse while they're open: the D-pad moves between buttons,
+  A presses, B goes back or closes, LB and RB change tab, and a trigger with
+  the D-pad scrolls. A short guide under the window shows the buttons. They
+  go back to the game as soon as the window closes, and when combat starts.
+- Two controller shortcuts that work from the start: hold View and press
+  D-pad up to open or close Kinship, or D-pad down to go to your target's
+  bar. On the bar, the D-pad moves across their glances (showing each
+  tooltip) and actions, and B steps back out. With no bar showing, it
+  opens their profile. Both buttons keep their usual jobs in the game.
+- The tours work with a controller: A for Next, B to skip.
+- The first time Kinship sees a controller turned on, it shows a short
+  window with the shortcuts and buttons. Settings > Controller shows it
+  again.
+- Settings > Controller: turn controller support off, hide the button
+  guide, or choose different buttons for either shortcut.
+- New key bindings under Key Bindings > AddOns > Kinship RP: next and
+  previous journal page, next and previous tab, scroll up and down, and close
+  the Kinship window in front.
+
 ## 1.4.5
 
 A fix for the gamepad interface. No new files, so a /reload is enough.
