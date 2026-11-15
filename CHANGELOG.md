@@ -1,5 +1,13 @@
 # Kinship RP changelog
 
+## 1.4.8
+
+A nameplate fix. No new files, so a /reload is enough.
+
+### Fixed
+- The IC / LFRP / OOC dot on nameplates could sit far to the left of a short
+  name. It now stays beside the name.
+
 ## 1.4.7
 
 Fixes for controller play. No new files, so a /reload is enough.

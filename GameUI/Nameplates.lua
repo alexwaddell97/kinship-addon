@@ -146,8 +146,11 @@ local function SetClamped(fs, text, max)
   fs:SetWidth(0)
   fs:SetText(text)
   local w = fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or fs:GetStringWidth()
-  -- A width the game keeps secret can't be compared: then it simply stops at the limit.
-  if not Safe(w) or w > max then fs:SetWidth(max) end
+  -- Only a name we know is too long gets the fixed width (it trails off and
+  -- fills it). A width the game keeps secret can't be compared, so that name
+  -- keeps its own size: a fixed box would centre a short name in it and leave
+  -- the status dot, which sits at the box's left edge, far away from it.
+  if Safe(w) and w > max then fs:SetWidth(max) end
 end
 
 ---------------------------------------------------------------------------
