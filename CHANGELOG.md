@@ -1,5 +1,21 @@
 # Kinship RP changelog
 
+## 1.4.7
+
+Fixes for controller play. No new files, so a /reload is enough.
+
+### Fixed
+- The controller shortcuts (View + D-pad up or down) no longer also cast
+  the spell you have on that D-pad button. While View is held, those two
+  buttons go to Kinship; let go and they're the game's again. In combat
+  the game still gets the press, since Kinship can't change buttons then.
+- Linking a profile in chat with a controller no longer brings up the
+  "blocked from an action" warning. Kinship can't open the controller's
+  chat box itself, so it now keeps the link and adds it when you open chat.
+- Closing a window with the controller no longer leaves the highlighted
+  item's tooltip stuck on screen.
+- Worn items on a profile no longer say where they're worn twice.
+
 ## 1.4.6
 
 Controller support. There's a new file, so restart the game after updating

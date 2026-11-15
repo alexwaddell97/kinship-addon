@@ -12,8 +12,10 @@
 -- starts. Two shortcuts work from the start, so nothing needs a mouse:
 --   hold View + D-pad up      open or close your journal
 --   hold View + D-pad down    your target's profile
--- They're only watched for, never bound, so both buttons keep their usual
--- jobs. Settings > Controller changes them or turns any of this off.
+-- While the first button is held, the second comes to Kinship instead of the
+-- game (so the shortcut doesn't also cast what's on the D-pad); both are the
+-- game's again once it's let go. Settings > Controller changes them or turns
+-- any of this off.
 
 local ADDON, ns = ...
 local K = ns.K
@@ -236,12 +238,14 @@ local function Paint()
   ring.edge:SetColor(u[1], u[2], u[3], 0.95)
 end
 
+-- The highlight leaving a control: as the mouse leaving it, even when the
+-- control has just gone (its window closed), so its tooltip goes too.
 local function Leave()
   local c = Pad.focus
-  if c and c:IsVisible() then
-    local fn = c:GetScript("OnLeave")
-    if fn then pcall(fn, c) end
-  end
+  if not c then return end
+  local fn = c:GetScript("OnLeave")
+  if fn then pcall(fn, c) end
+  if GameTooltip and GameTooltip:IsOwned(c) then GameTooltip:Hide() end
 end
 
 -- A control's place in what it's anchored to (a list row's place in the list).
@@ -431,6 +435,7 @@ local function BindAll()
   for key, button in pairs(WANTED) do
     if not Pad.held[Base(key)] then SetOverrideBindingClick(owner, true, key, button, "LeftButton") end
   end
+  if Pad.Rearm then Pad.Rearm() end
 end
 
 -- Every key still comes to us (the game can bind its own over ours later).
@@ -553,6 +558,84 @@ local SHORTCUTS = {
 }
 Pad.SHORTCUTS = SHORTCUTS
 
+-- While a shortcut's first button is held, its second is bound to Kinship
+-- (newest bindings win, so over the window's own too), so pressing it doesn't
+-- also cast the spell the game has on it. Let go, and it's the game's again.
+-- Bindings can't change in combat, so there the press still reaches the game.
+local chordOwner = CreateFrame("Frame", "KinshipRPPadChordOwner", UIParent)
+local armed = false
+for i, sc in ipairs(SHORTCUTS) do
+  local b = CreateFrame("Button", "KinshipRPPadChord" .. i, UIParent)
+  b:SetSize(1, 1)
+  b:RegisterForClicks("AnyDown")
+  b:SetScript("OnClick", function() Pad.RunShortcut(sc) end)   -- (once per press; below)
+end
+
+-- The shortcut each held first button is waiting on, by its second button.
+local function Waiting()
+  local w = {}
+  for i, sc in ipairs(SHORTCUTS) do
+    local chord = Pad.Shortcut(sc)
+    if chord and IsKeyDown(chord.hold) then w[chord.press] = i end
+  end
+  return w
+end
+
+local function Run(sc)
+  if sc.down then return end
+  sc.down = true
+  local ok, err = pcall(sc.run)
+  if not ok then K:CaughtError("controller shortcut", err) end
+end
+
+-- Forever's controller layer can read the D-pad itself, not only through
+-- bindings, so while armed a frame takes controller buttons before anything
+-- else does: the shortcut's second button stops here, every other button
+-- passes straight on.
+local catcher = CreateFrame("Frame", "KinshipRPPadCatcher", UIParent)
+catcher:SetFrameStrata("TOOLTIP")
+catcher:Hide()
+catcher:SetScript("OnGamePadButtonDown", function(self, button)
+  local i = Waiting()[button]
+  if not InCombat() and self.SetPropagateGamePadButtonInput then
+    self:SetPropagateGamePadButtonInput(not i)
+  end
+  if i then Run(SHORTCUTS[i]) end
+end)
+
+local function Catch(on)
+  if InCombat() or not catcher.EnableGamePadButton then return end
+  if catcher.SetPropagateGamePadButtonInput then catcher:SetPropagateGamePadButtonInput(true) end
+  catcher:EnableGamePadButton(on and true or false)
+  catcher:SetShown(on)
+end
+
+local function Arm(on)
+  if InCombat() or on == armed then return end
+  armed = on
+  ClearOverrideBindings(chordOwner)
+  Catch(on)
+  if not on then return end
+  for press, i in pairs(Waiting()) do
+    SetOverrideBindingClick(chordOwner, true, press, "KinshipRPPadChord" .. i, "LeftButton")
+  end
+end
+Pad.RunShortcut = Run
+function Pad.Rearm() if armed then armed = false; Arm(true) end end
+function Pad.Armed() return armed end
+
+-- While armed: the game can put its own D-pad bindings back over ours (it
+-- does as View is pressed), so take them again whenever that happens.
+local function KeepArmed()
+  if not armed or InCombat() then return end
+  for press, i in pairs(Waiting()) do
+    if not (GetBindingAction(press, true) or ""):find("KinshipRPPadChord" .. i, 1, true) then
+      Pad.Rearm()
+      return
+    end
+  end
+end
+
 function Pad.Shortcut(sc)
   local v = S()[sc.key]
   if v == false then return nil end
@@ -568,17 +651,25 @@ end
 tick:SetScript("OnUpdate", function()
   local now = GetTime()
 
-  -- The shortcuts: both buttons down together (once each time).
+  -- The shortcuts: both buttons down together (once each time). A held first
+  -- button takes the second for Kinship (above); watching both is the
+  -- fallback for combat, when that can't happen.
   if not Pad.capturing then
+    local holding = false
     for _, sc in ipairs(SHORTCUTS) do
       local chord = Pad.Shortcut(sc)
-      local down = chord and IsKeyDown(chord.hold) and IsKeyDown(chord.press) or false
+      local hold = chord and IsKeyDown(chord.hold) or false
+      holding = holding or hold
+      local down = hold and IsKeyDown(chord.press) or false
       if down and not sc.down and Pad.Connected() then
         local ok, err = pcall(sc.run)
         if not ok then K:CaughtError("controller shortcut", err) end
       end
       sc.down = down
     end
+    if holding ~= armed then Arm(holding and Pad.Connected()) else KeepArmed() end
+  elseif armed then
+    Arm(false)
   end
 
   -- The first time a controller is on, show how to use Kinship with it
@@ -613,7 +704,7 @@ tick:SetScript("OnUpdate", function()
   -- The game can bind its own over ours (letting go of a shoulder button puts
   -- its D-pad back, sometimes a moment later): take them back, unless one of
   -- its own windows has the pad.
-  if not Pad.noCheck and now >= nextCheck and not next(Pad.held) then
+  if not Pad.noCheck and not armed and now >= nextCheck and not next(Pad.held) then
     nextCheck = now + 0.25
     if not AllOurs() and not GameHasPad() then
       BindAll()
@@ -645,6 +736,7 @@ owner:RegisterEvent("GAME_PAD_DISCONNECTED")
 owner:SetScript("OnEvent", function()
   -- Combat: give the buttons back while it's still allowed. The watcher takes
   -- them again once it's over, if a window is still open.
+  Arm(false)
   if Pad.bound then Pad.Unbind() end
 end)
 

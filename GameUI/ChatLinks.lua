@@ -75,14 +75,34 @@ end
 
 L.ActiveEditBox = ActiveEditBox
 
+-- A link waiting for the chat box to open (see L:Insert), and until when.
+local pending, pendingUntil
+
 function L:Insert(name)
   name = CleanName(name)
   if not name then return end
   local token = L.Token(name) .. " "
   local eb = ActiveEditBox()
   if eb and eb.Insert then eb:Insert(token) return end
+  -- With a controller on, the game's controller chat opens through steps only
+  -- the game itself may take, so an addon opening it gets blocked. Keep the
+  -- link instead, and add it when you open the chat box yourself.
+  if K.Pad and K.Pad.Connected() then
+    pending, pendingUntil = token, GetTime() + 60
+    K:Print("Open your chat box and the link will be added.")
+    return
+  end
   local open = (ChatFrameUtil and ChatFrameUtil.OpenChat) or ChatFrame_OpenChat
   if type(open) == "function" then pcall(open, token) end
+end
+
+-- The chat box has opened: add the link that was waiting for it.
+local function AddPending(eb)
+  if not pending then return end
+  local token = pending
+  pending = nil
+  if GetTime() > (pendingUntil or 0) or not (eb and eb.Insert) then return end
+  C_Timer.After(0, function() if eb:HasFocus() then eb:Insert(token) end end)
 end
 
 -- Link your own profile.
@@ -155,6 +175,11 @@ local function HookFrames()
       L.hooked[f] = true
       f:HookScript("OnHyperlinkEnter", function(self, link) K.Try("chat links", Hover, self, link) end)
       f:HookScript("OnHyperlinkLeave", function() if L.hovering then L.hovering = false; GameTooltip:Hide() end end)
+    end
+    local eb = _G["ChatFrame" .. i .. "EditBox"]
+    if eb and not L.hooked[eb] then
+      L.hooked[eb] = true
+      eb:HookScript("OnEditFocusGained", function(self) K.Try("chat links", AddPending, self) end)
     end
   end
 end

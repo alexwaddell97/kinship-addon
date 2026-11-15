@@ -317,7 +317,11 @@ function V:Build()
         UI.Tween(self, 1, 0.1, paint)
         if not self.def then return end
         I:ShowTooltip(self, self.def, nil, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Worn: " .. (I.WEAR_LABEL[self.slot] or ""), 0.55, 0.80, 1)
+        -- Where it's worn, when that isn't already the "Worn on" line.
+        local where = I.WEAR_LABEL[self.slot]
+        if where and where ~= I.WEAR_LABEL[self.def.wear or ""] then
+          GameTooltip:AddLine("Worn: " .. where, 0.55, 0.80, 1)
+        end
         GameTooltip:Show()
       end)
       b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint); GameTooltip:Hide() end)
