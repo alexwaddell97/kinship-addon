@@ -1,12 +1,20 @@
 -- luacheck settings for Kinship RP (runs on GitHub with every push, and
--- before every release). It only looks for what can break the addon: syntax
--- errors, and names that aren't defined anywhere, such as a misspelt
--- function or a local used before the line that makes it.
+-- before every release). It looks for syntax errors, names that aren't
+-- defined anywhere (a misspelt function, or a local used before the line
+-- that makes it), unused variables and values, and names that shadow others.
 -- A new game function? Add it to read_globals below.
 std = "lua51"
 max_line_length = false
-only = { "011", "1" }
 exclude_files = { "Libs/**" }
+
+-- Methods and script handlers take `self` whether they use it or not, and a
+-- handler nested in a method has its own `self` (the frame), so neither is
+-- worth a warning. Other unused arguments are: name them _ or _name.
+self = false
+ignore = { "432/self" }
+
+-- Icon names exactly as the game's files spell them, trailing spaces and all.
+files["Profile/IconNames.lua"] = { ignore = { "613" } }
 
 -- Kinship's own globals, and the game's tables it adds to
 globals = {
