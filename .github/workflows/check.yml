@@ -1,6 +1,10 @@
-# Runs luacheck (settings in .luacheckrc) on every push to main and every
-# pull request: syntax errors, and names used that aren't defined anywhere.
-# Anything it finds is listed in one annotation on the run's summary page.
+# Runs on every push to main and every pull request:
+# - luacheck (settings in .luacheckrc): syntax errors, names used that aren't
+#   defined anywhere, unused variables and values, and shadowed names.
+# - the subject line of each new commit, which must follow Conventional
+#   Commits (https://www.conventionalcommits.org): "type(scope): summary",
+#   with one of the types listed in the step below.
+# Anything found is listed in one annotation on the run's summary page.
 name: Check
 
 on:
@@ -31,3 +35,40 @@ jobs:
             exit 1
           fi
           echo "No problems found."
+
+  commits:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          # The commits this push or pull request adds. A new branch (or a
+          # force push) has no usable "before": then just the latest commit.
+          if [ -n "$BASE" ]; then
+            range="$BASE..$HEAD"
+          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            range="$BEFORE..$HEAD"
+          else
+            range="-1 $HEAD"
+          fi
+          types='feat|fix|perf|refactor|docs|style|test|build|ci|chore|revert'
+          pattern="^($types)(\([a-z0-9][a-z0-9-]*\))?!?: [^ ]"
+          # shellcheck disable=SC2086
+          bad=$(git log --no-merges --format='%h %s' $range | while read -r sha subject; do
+            echo "$subject" | grep -Eq "$pattern" || echo "$sha $subject"
+          done)
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            msg=$(printf 'These commits do not follow Conventional Commits (type(scope): summary):\n%s' "$bad" \
+              | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+            echo "::error title=Commit messages::$msg"
+            exit 1
+          fi
+          echo "All commit messages follow Conventional Commits."
