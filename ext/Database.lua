@@ -114,7 +114,9 @@ local function BuildImport(page, tab)
   end
 
   local function Finish(decoded)
-    local obj, src = E:Store(decoded.id, decoded.object)
+    -- Filed as received, vouched for by nobody: a string can name anyone as
+    -- its maker, so it mustn't pass as yours or borrow trust you gave them.
+    local obj, src = E:Store(decoded.id, decoded.object, false, true)
     if not obj then m:Status("It couldn't be stored: " .. tostring(src) .. ".", true) return end
     local info = E.Info(obj)
     tab.importer:Hide()
@@ -122,7 +124,7 @@ local function BuildImport(page, tab)
     tab.selected = decoded.id
     if SOUNDKIT and SOUNDKIT.IG_BACKPACK_OPEN then PlaySound(SOUNDKIT.IG_BACKPACK_OPEN) end
     UI.Toast({ icon = E.IconTexture(info.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-      title = Plain(info.name), text = TypeLabel(info.type) .. (src == "my" and " (yours) imported." or " imported."),
+      title = Plain(info.name), text = TypeLabel(info.type) .. " imported.",
       duration = 4 })
     Refresh()
   end
