@@ -432,7 +432,8 @@ local function BuildPane()
     end
   end)
 
-  pane:SetScript("OnShow", function(self)
+  -- HookScript, not SetScript: SetScript would drop the lift hooked above.
+  pane:HookScript("OnShow", function(self)
     self:Layout()
     CP:Refresh()
     if K.Guide then C_Timer.After(0.3, function() if self:IsVisible() then K.Guide:Maybe("charpane", self, self) end end) end
