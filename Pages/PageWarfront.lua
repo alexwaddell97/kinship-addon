@@ -3,7 +3,7 @@
 --   Stance            - how you like PvP stories to go, and your boundaries (shared with others)
 --   Parley            - the emotes that cross the faction line
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local W = K.War

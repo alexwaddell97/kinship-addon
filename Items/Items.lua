@@ -3,7 +3,7 @@
 -- always show correctly), each character's bags, the item tooltip, using an
 -- item, and the item slot widget shared by the bags, trading and stashes.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = { SLOTS = 30, MAX_STACK = 99 }

@@ -3,7 +3,7 @@
 -- see Core.lua) and the addons that are loaded. It holds no profile text and
 -- no character or player names.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local R = {}

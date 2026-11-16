@@ -10,7 +10,7 @@
 --   K.ExtCodec:EncodeMessage(prefix, data [, token, logged]) -> payload | nil, why
 --   K.ExtCodec:DecodeMessage(payload [, logged])             -> prefix, data, token | nil, why
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local E = K.Ext
 local C = {}

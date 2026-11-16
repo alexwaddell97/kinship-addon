@@ -15,7 +15,7 @@
 -- Received messages are dropped for ignored players and rate-limited per
 -- sender. Whispers reach Battle.net friends on the other faction too.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local Safe = K.Safe
 local N = { handlers = {}, recv = {}, gates = {} }

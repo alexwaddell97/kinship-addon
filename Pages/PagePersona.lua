@@ -5,7 +5,7 @@
 --   Look    - profile icon, name colour and theme music
 --   Effects - timed wounds, boons and states (AurasTab.lua)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local P   -- K.Persona, picked up when the page is built
@@ -513,7 +513,7 @@ local function RefreshGlances(tab, c)
 
   -- Target bar preview: the glances that are showing
   local shown = 0
-  for i, b in ipairs(tab.bar.icons) do b.glance, b.index = nil, nil end
+  for _, b in ipairs(tab.bar.icons) do b.glance, b.index = nil, nil end
   for i, gl in ipairs(list) do
     if gl.active ~= false and P.HasContent(gl) and shown < 5 then
       shown = shown + 1
@@ -617,7 +617,7 @@ local function ValueAtCursor(bar)
   return math.floor((1 - frac) * 20 + 0.5)
 end
 
-local function BuildTraitRow(parent, c, i)
+local function BuildTraitRow(parent, _, i)
   local row = CreateFrame("Frame", nil, parent)
   row:SetSize(ROW_W, ROW_H)
   row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)

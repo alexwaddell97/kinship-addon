@@ -1,6 +1,6 @@
 -- Kinship RP: Profile page (edit your own character).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 

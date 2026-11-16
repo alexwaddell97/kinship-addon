@@ -13,7 +13,7 @@
 -- profile. Your Kinship profiles stay exactly as they were, and come back
 -- when Kinship runs on its own again.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local T = {}

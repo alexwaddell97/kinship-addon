@@ -4,7 +4,7 @@
 -- game's own emotes do cross that line, so the wheel puts the ones that
 -- matter in a fight one flick away. Hold the key, point, let go.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -131,7 +131,7 @@ function P:Build()
   f:SetScript("OnMouseDown", function(_, button)
     if button == "RightButton" then P:Close() elseif P.selected then P:Choose(P.selected) end
   end)
-  f:SetScript("OnUpdate", function(self, elapsed) P:Update(elapsed) end)
+  f:SetScript("OnUpdate", function(_, elapsed) P:Update(elapsed) end)
 
   UI:OnTheme(function(t)
     rim:SetVertexColor(t.ui[1], t.ui[2], t.ui[3], 0.35)

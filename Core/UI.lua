@@ -3,7 +3,7 @@
 -- in Kinship's own colours: deep teal chrome, gold trim, and cream cards with
 -- dark-brown text.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = {}
 K.UI = UI
@@ -303,17 +303,17 @@ end
 local function NineSlice(f, layout, lift)
   local NS = rawget(_G, "NineSliceUtil")
   if not (NS and NS.ApplyLayoutByName) then return nil end
-  local ok, ns = pcall(CreateFrame, "Frame", nil, f, "NineSlicePanelTemplate")
-  if not ok or not ns then return nil end
-  ns:SetAllPoints()
-  local piece = pcall(NS.ApplyLayoutByName, ns, layout) and (ns.TopLeftCorner or ns.TopEdge)
+  local ok, slice = pcall(CreateFrame, "Frame", nil, f, "NineSlicePanelTemplate")
+  if not ok or not slice then return nil end
+  slice:SetAllPoints()
+  local piece = pcall(NS.ApplyLayoutByName, slice, layout) and (slice.TopLeftCorner or slice.TopEdge)
   if not (piece and ((piece.GetAtlas and piece:GetAtlas()) or piece:GetTexture())) then
-    ns:Hide()
+    slice:Hide()
     return nil
   end
-  ns:EnableMouse(false)
-  ns:SetFrameLevel(f:GetFrameLevel() + lift)
-  return ns
+  slice:EnableMouse(false)
+  slice:SetFrameLevel(f:GetFrameLevel() + lift)
+  return slice
 end
 
 function Skin.Rim(f) return NineSlice(f, "ButtonFrameTemplateNoPortrait", 40) end

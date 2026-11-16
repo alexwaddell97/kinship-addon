@@ -11,9 +11,8 @@
 -- into another addon's settings or files, and switching off repaints the
 -- frames with the game's names.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
-local UI = K.UI
 local Safe = K.Safe
 local N = {}
 K.UnitNames = N

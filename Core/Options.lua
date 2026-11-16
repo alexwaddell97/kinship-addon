@@ -3,7 +3,7 @@
 -- the page is a short welcome with a button that opens them (closing the
 -- game's Options on the way), and a few shortcuts.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local O = {}

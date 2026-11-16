@@ -3,7 +3,7 @@
 -- profiles (and us theirs). Extra "K?" fields carry Kinship-only details;
 -- other addons simply ignore them.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local Safe = K.Safe
 local C = {}

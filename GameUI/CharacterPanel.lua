@@ -18,7 +18,7 @@
 -- window's own tabs, the panes are children laid over or beside the window,
 -- and titles are only re-labelled after the game sets them.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

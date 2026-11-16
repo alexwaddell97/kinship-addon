@@ -3,7 +3,7 @@
 -- space, then its name. Built from the icon list in LibRPMedia (public
 -- domain, https://github.com/wow-rp-addons/LibRPMedia) for the Forever client.
 
-local ADDON, ns = ...
+local _, ns = ...
 -- 30550 icons
 ns.ICON_NAMES = [=[
 5351056 10_2_raidability_black

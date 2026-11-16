@@ -17,11 +17,11 @@
 --   card:Space(px)
 -- The card is refreshed whenever the page is shown.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 
-local CW, CH = 696, 466
+local CW = 696
 local CARD_W = CW - 14
 local INNER = CARD_W - 32
 local HALF = (INNER - 24) / 2
@@ -245,8 +245,8 @@ local function NewCard(parent, def)
   -- (title, keywords or a line). Returns score, or 0; lights matching lines.
   -- state: "on" / "off" narrows matches to switches in that state.
   function card:Score(terms, state)
-    local title = Words(self.titleText .. " " .. (self.keywords or "") .. " " .. (def.id or ""))
-    local total, lit = 0, {}
+    local heading = Words(self.titleText .. " " .. (self.keywords or "") .. " " .. (def.id or ""))
+    local total = 0
     for _, it in ipairs(self.items) do
       local t = it.text
       if type(t) == "function" then local ok2, v = K.Try("settings", t); t = ok2 and v or "" end
@@ -254,7 +254,7 @@ local function NewCard(parent, def)
       it.hit = 0
     end
     for _, q in ipairs(terms) do
-      local best = TermScore(q, title) * 1.6
+      local best = TermScore(q, heading) * 1.6
       for _, it in ipairs(self.items) do
         local sc = TermScore(q, it.words) * (it.label and 1.2 or 1)
         if sc > 0 then it.hit = it.hit + sc end
@@ -566,15 +566,15 @@ local function Preview(parent, th)
   paper:SetAllPoints()
   paper:SetColorTexture(th.panel[1], th.panel[2], th.panel[3], 1)
   UI.Border(page, th.panelEdge)
-  local function Mark(c, w, hgt, x, y, a)
+  local function Bar(c, w, hgt, x, y, a)
     local r = page:CreateTexture(nil, "ARTWORK")
     r:SetColorTexture(c[1], c[2], c[3], a or 1)
     r:SetSize(w, hgt); r:SetPoint("TOPLEFT", x, y)
     return r
   end
-  Mark(th.heading, 54, 4, 10, -10)
-  Mark(th.text, 110, 2, 10, -25, 0.6)
-  Mark(th.text, 84, 2, 10, -34, 0.6)
+  Bar(th.heading, 54, 4, 10, -10)
+  Bar(th.text, 110, 2, 10, -25, 0.6)
+  Bar(th.text, 84, 2, 10, -34, 0.6)
   local btn = page:CreateTexture(nil, "ARTWORK", nil, 1)
   btn:SetColorTexture(th.btn[1], th.btn[2], th.btn[3], 1)
   btn:SetSize(44, 12); btn:SetPoint("BOTTOMRIGHT", -8, 8)
@@ -711,8 +711,8 @@ end })
 -- The game's Key Bindings, opened where Kinship's keys are (AddOns > Kinship RP).
 local function OpenKeyBindings()
   if InCombatLockdown() then K:Print("Key bindings can't be opened in combat.") return end
-  local S = rawget(_G, "Settings")
-  if S and S.OpenToCategory and S.KEYBINDINGS_CATEGORY_ID and pcall(S.OpenToCategory, S.KEYBINDINGS_CATEGORY_ID) then return end
+  local GS = rawget(_G, "Settings")
+  if GS and GS.OpenToCategory and GS.KEYBINDINGS_CATEGORY_ID and pcall(GS.OpenToCategory, GS.KEYBINDINGS_CATEGORY_ID) then return end
   local load = (C_AddOns and C_AddOns.LoadAddOn) or rawget(_G, "LoadAddOn")
   if load then pcall(load, "Blizzard_BindingUI") end
   local kb = rawget(_G, "KeyBindingFrame")

@@ -3,7 +3,7 @@
 -- ones you know, right-click to pick one. The game resets the language after
 -- loading screens, so Kinship puts your choice back.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local L = { pills = {} }

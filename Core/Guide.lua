@@ -23,7 +23,7 @@
 -- ctx is the page's content frame for journal pages, or whatever Maybe/Start
 -- was given. A step whose target is missing or hidden shows centred instead.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local G = { defs = {}, order = {}, queue = {} }
@@ -379,7 +379,7 @@ end
 
 hooksecurefunc(J, "Build", function() AddHelpButton() end)
 
-hooksecurefunc(J, "Show", function(self)
+hooksecurefunc(J, "Show", function()
   if not K.db then return end
   local page, content = CurrentPage()
   if not page or not content or not content.ok then return end

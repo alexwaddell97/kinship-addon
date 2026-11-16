@@ -14,7 +14,7 @@
 -- Restoring replaces the saved data and reloads; the schema migrations in
 -- Core.lua then bring an older backup up to date.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local B = {}

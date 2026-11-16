@@ -7,7 +7,7 @@
 -- only to Kinship users close enough to hear a yell (K.Net, "YELL").
 -- Settings > Typing indicator turns sharing and showing on or off.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

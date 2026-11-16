@@ -8,7 +8,7 @@
 --   state = { [charGUID] = { [ruleId] = { prev = value } } }         -- which rules are in effect
 -- }
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local A = {}

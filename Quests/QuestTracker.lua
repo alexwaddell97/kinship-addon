@@ -16,7 +16,7 @@
 -- tracker or quest log is different from what's expected, the feature steps
 -- aside quietly instead of breaking them.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local T = {}
@@ -600,8 +600,8 @@ function T:RefreshLog()
   local subHex = UI.Hex(K:Theme().subtle)
   local QM = K.QuestMarkers
   if QM and sel.marker then
-    local d = QM.Distance(sel.marker)
-    lines[#lines + 1] = ("|cff%s|T%s:12:12|t %s%s|r"):format(subHex, QM.PIN_ICON, QM.Label(sel.marker), d and ("  ·  " .. QM.DistText(d)) or "")
+    local dist = QM.Distance(sel.marker)
+    lines[#lines + 1] = ("|cff%s|T%s:12:12|t %s%s|r"):format(subHex, QM.PIN_ICON, QM.Label(sel.marker), dist and ("  ·  " .. QM.DistText(dist)) or "")
   end
   local QA = K.QuestAuto
   for i, o in ipairs(sel.objectives or {}) do
@@ -609,8 +609,8 @@ function T:RefreshLog()
       local words = (QA and QA.CounterPrefix(sel, i) or "") .. UI.Escape(o.text)
       local line = o.done and ("|cff%s- %s|r"):format(doneHex, words) or ("- " .. words)
       if QM and o.marker and not o.done then
-        local d = QM.Distance(o.marker)
-        line = line .. ("  |cff%s(%s)|r"):format(subHex, d and QM.DistText(d) or QM.Label(o.marker))
+        local dist = QM.Distance(o.marker)
+        line = line .. ("  |cff%s(%s)|r"):format(subHex, dist and QM.DistText(dist) or QM.Label(o.marker))
       end
       if o.opt then line = line .. ("  |cff%s(optional)|r"):format(subHex) end
       lines[#lines + 1] = line

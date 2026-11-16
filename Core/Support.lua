@@ -3,7 +3,7 @@
 -- It's offered quietly: a small cup at the top of the journal, a line on
 -- the Options > AddOns page, a button in Settings > General, and /kin kofi.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local S = {}

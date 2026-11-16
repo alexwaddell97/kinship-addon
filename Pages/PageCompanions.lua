@@ -2,7 +2,7 @@
 -- chosen one's story on the right: name, title, icon, glance, description,
 -- and the pet or mount names it's bound to (whose tooltips then tell it).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Comp = K.Companions

@@ -7,7 +7,7 @@
 -- (field KQ: name, icon, quality and a short description per slot) so other
 -- Kinship users see it too. Other addons ignore the field.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = K.Items

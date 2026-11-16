@@ -10,7 +10,7 @@
 --   stashTake    WHISPER  { sid, d, n, req, m, x, y, c, wx, wy }
 --   stashNo      WHISPER  { req, why }
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -360,7 +360,7 @@ function S:ExpectsTake(sender, req)
   return t ~= nil and t.owner == K.NameKey(sender) and GetTime() - t.at < 60
 end
 
-function S:Received(sender, req, r)
+function S:Received(_, req, r)
   local t = self.takes[req]
   if not t then return end
   self.takes[req] = nil

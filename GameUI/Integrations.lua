@@ -1,6 +1,6 @@
 -- Kinship RP: tooltips, right-click menus and the status button.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

@@ -2,7 +2,7 @@
 -- write at a desk on the Inventory page, read in a paper window with page
 -- turns, and hand over attached to items (the document travels with the item).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = K.Items

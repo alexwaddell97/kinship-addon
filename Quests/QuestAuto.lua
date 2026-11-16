@@ -48,7 +48,7 @@
 -- off), the follower's client only tells them. On any other quest the player
 -- ticks it themselves and the writer gets a notice.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -778,15 +778,15 @@ end
 -- Polled checks: true when the rule is met now.
 local CHECK = {
   place = function(o) return AtPin(o) end,
-  zone = function(o, a) return ZoneMatches(a.n) end,
-  talk = function(o, a) return TargetMatches(a.n) and (not a.near or Near()) end,
-  item = function(o, a) return K.Items ~= nil and K.Items:Has(a.d) >= a.c end,
-  gather = function(o, a)
+  zone = function(_, a) return ZoneMatches(a.n) end,
+  talk = function(_, a) return TargetMatches(a.n) and (not a.near or Near()) end,
+  item = function(_, a) return K.Items ~= nil and K.Items:Has(a.d) >= a.c end,
+  gather = function(_, a)
     local count = (C_Item and C_Item.GetItemCount) or GetItemCount
     local ok, n = pcall(count, a.i)
     return ok and type(n) == "number" and n >= a.c
   end,
-  wear = function(o, a) return Wearing(a.i) end,
+  wear = function(_, a) return Wearing(a.i) end,
   effect = function(o, a)
     local has = HasEffect(a.a)
     if a.lose then

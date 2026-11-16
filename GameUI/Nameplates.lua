@@ -9,7 +9,7 @@
 -- Kui, Platynator, ElvUI...) are left alone. Everything steps aside in
 -- dungeons and raids, where plates are protected and profiles can't travel.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

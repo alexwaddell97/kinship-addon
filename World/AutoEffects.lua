@@ -15,7 +15,7 @@
 --   Well rested  half an hour's rest (World/Auras.lua)
 -- Only time you're playing counts, never time logged out.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local A = K.Auras
 local AE = {}

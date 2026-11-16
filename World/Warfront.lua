@@ -8,7 +8,7 @@
 --   * clashes you log by hand (emote-and-dice fights never touch the log).
 -- Everything here is private to you: nothing is sent to anyone.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

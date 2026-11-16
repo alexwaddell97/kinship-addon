@@ -32,7 +32,7 @@
 -- bar: the satchel only anchors beside them, and the button is placed by
 -- reading where the bag bar is.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -1085,7 +1085,7 @@ end
 function SA:OpenPane(mode)
   if not K.Stashes then return end
   local f = self.frame
-  if not (f and f:IsShown()) then self:Open(false); f = self.frame end
+  if not (f and f:IsShown()) then self:Open(false) end
   if self:Collapsed() then self:SetCollapsed(false) end
   local look = self.look
   if not self.panes[look] then

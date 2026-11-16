@@ -3,7 +3,7 @@
 -- from the music list in LibRPMedia (public domain,
 -- https://github.com/wow-rp-addons/LibRPMedia) for the Forever client.
 
-local ADDON, ns = ...
+local _, ns = ...
 -- 970 tracks
 ns.MUSIC_LIBRARY = {
   { 53183, 40, "darnassus_intro" },

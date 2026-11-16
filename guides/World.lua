@@ -1,5 +1,5 @@
 -- Kinship RP: guided tours for the Warfront, Inventory and Settings pages. See Guide.lua for how tours work.
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 
 ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 --   qack    "I accepted / declined / finished / gave up" (to the author)
 --   qprog   the storyteller's progress (trusted only from the quest's author)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -879,8 +879,8 @@ function Q.Sheet(parent, w, h, opts)
         elseif where then
           extra = ("\n|cff%s|T%s:12:12|t %s|r"):format(sub, QM.PIN_ICON, where)
         end
-        local opts = QA and QA.DescribeOptions(ob, q, i)
-        if opts then extra = extra .. ("\n|cff%s%s|r"):format(sub, opts) end
+        local options = QA and QA.DescribeOptions(ob, q, i)
+        if options then extra = extra .. ("\n|cff%s%s|r"):format(sub, options) end
         local progress = QA and not ob.done and q.id and QA.ProgressText(q, i)
         if progress then extra = extra .. ("\n|cff%s%s|r"):format(UI.CardHex(K:Theme().accent), progress) end
         if state == "locked" then extra = extra .. ("\n|cff%sLocked until the one before is done|r"):format(sub)

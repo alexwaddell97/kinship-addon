@@ -7,7 +7,7 @@
 -- icon is a file ID (number), or a texture path when typed by name and the
 -- client can't turn it into an ID.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local IP = {}

@@ -7,7 +7,7 @@
 -- whisper) and still arrive that way:
 --   L  a letter          A  "it arrived" (sent back by the recipient)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

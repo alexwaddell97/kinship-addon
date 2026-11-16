@@ -10,7 +10,7 @@
 --       /e || The wind howls through the pass.
 --   * Emotes starting with 's or , attach to your name ("Aldric's horse snorts.")
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -81,7 +81,7 @@ local function HandleNPC(body, lineID)
   return " "
 end
 
-local function MessageFilter(frame, event, msg, sender, ...)
+local function MessageFilter(_, event, msg, sender, ...)
   if not Chat:Active() or not Safe(msg) or type(msg) ~= "string" then return false end
   local lineID = select(9, ...)
   local s = K.db.settings

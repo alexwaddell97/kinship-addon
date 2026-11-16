@@ -1,7 +1,7 @@
 -- Kinship RP: guided tours for the journal itself, the You pages (Profile,
 -- Persona, Companions), the Roleplay pane on the character sheet, the target
 -- bar and the profile viewer. See Guide.lua for how tours work.
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 
 -- One lit area around several regions (a row of icons, a group of fields).

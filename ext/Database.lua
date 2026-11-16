@@ -4,7 +4,7 @@
 -- from and export to Total RP 3: Extended Tools strings.
 --   K.ExtDB:BuildTab(frame, page), K.ExtDB:RefreshTab(frame)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local E = K.Ext
@@ -176,7 +176,7 @@ local function BuildExport(page, tab)
     m.area.edit:HighlightText()
   end)
 
-  function m:Open(id, text, info)
+  function m:Open(_, text, info)
     self.text = text
     self.pill:SetText("Export: " .. Plain(info.name))
     self.area.edit:SetText(text)

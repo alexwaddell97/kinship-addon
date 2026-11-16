@@ -16,7 +16,7 @@
 -- for dark tooltips are deepened on cream cards, and very dark ones lifted
 -- on dark panels.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local M = {}
@@ -464,9 +464,10 @@ function M:FillPicker(f)
   f.shown = icons
   f.list.empty:SetText(f.found and "No icons match that. Try a shorter word." or "No icons are available on this client.")
   if f.list.scroll then f.list.scroll:SetVerticalScroll(0) end
-  local rows, row = {}, nil
+  local rows = {}
   for i, icon in ipairs(icons) do
-    if (i - 1) % COLS == 0 then row = {}; rows[#rows + 1] = row end
+    if (i - 1) % COLS == 0 then rows[#rows + 1] = {} end
+    local row = rows[#rows]
     row[#row + 1] = icon
   end
   f.list:SetItems(rows, f.paintRow)

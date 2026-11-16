@@ -11,7 +11,7 @@
 --   itemReply  recipient -> giver   { id, ok, why }
 --   itemDone   giver -> recipient   { id }   (stops the recipient repeating its answer)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

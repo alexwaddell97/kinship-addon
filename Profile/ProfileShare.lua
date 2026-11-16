@@ -11,7 +11,7 @@
 --             a real parser: nothing in a code is ever run as Lua.
 -- Imported text is cleaned (no links or textures) and limited in size.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local S = {}
@@ -450,7 +450,7 @@ end
 function S:RefreshExport()
   local pg = self.frame.pages[1]
   local p, active = K:Profile(), K:MyProfiles().active
-  local code, size, cut = self:Encode(p, active)
+  local code, _, cut = self:Encode(p, active)
   self.code = code
   pg.card.name:SetText(K:DisplayName(p))
   SetPortraitTexture(pg.card.face, "player")

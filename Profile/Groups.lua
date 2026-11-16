@@ -9,7 +9,7 @@
 -- Shared:  KO name, KR role, KE crest, KB motto, KD story (Kinship's own
 --          fields; other RP addons ignore them).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 
 K.GROUP_CREST = "Interface\\Icons\\INV_BannerPVP_02"

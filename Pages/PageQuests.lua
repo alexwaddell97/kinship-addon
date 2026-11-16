@@ -4,7 +4,7 @@
 --   Write      - write a quest with a live preview, then share or run it
 --   Campaigns  - quests gathered by campaign, with progress
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Q = K.Quests
@@ -513,7 +513,7 @@ local function BuildWrite(tab)
       tab:Changed()
     end)
     r.pin:SetPoint("RIGHT", 0, 0)
-    r.edit:SetScript("OnTextChanged", function(self, user) if user then tab:ReadObjectives(); changed() end end)
+    r.edit:SetScript("OnTextChanged", function(_, user) if user then tab:ReadObjectives(); changed() end end)
     r.edit:SetScript("OnTabPressed", function()
       local nxt = tab.objectives[i + 1]
       if nxt and nxt:IsShown() then nxt.edit:SetFocus() end

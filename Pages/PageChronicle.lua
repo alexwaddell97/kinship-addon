@@ -1,7 +1,7 @@
 -- Kinship RP: Chronicle page, laid out as two cards side by side.
 -- Left: the timeline. Right: the chosen entry, or a new page being written.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 

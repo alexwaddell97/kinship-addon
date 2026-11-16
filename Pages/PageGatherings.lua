@@ -2,7 +2,7 @@
 -- house, public; see Sync.lua for how each travels). Clicking a card opens it
 -- over the grid; "Post a gathering" posts to the board you're looking at.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 
@@ -203,8 +203,8 @@ local function EventCard(parent, w, h)
   local function paint(p)
     local t = K:Theme()
     b.bg:SetColorTexture(unpack(t.panel))
-    local h = t.hover
-    b.tint:SetColorTexture(h[1], h[2], h[3], (h[4] or 1) * p * 1.5)
+    local hov = t.hover
+    b.tint:SetColorTexture(hov[1], hov[2], hov[3], (hov[4] or 1) * p * 1.5)
     local a = t.accent
     local er, eg, eb, ea = UI.Mix(t.panelEdge, { a[1], a[2], a[3], 0.9 }, p)
     b.edge:SetColor(er, eg, eb, ea)
@@ -242,7 +242,7 @@ K:RegisterPage({
   subtitle = "Roleplay events for your guild and friends.",
 
   build = function(c)
-    local H = (c:GetHeight() or 0) > 200 and c:GetHeight() or H   -- the tab it sits in
+    local paneH = (c:GetHeight() or 0) > 200 and c:GetHeight() or H   -- the tab it sits in
     c.scope, c.pageNum = "guild", 1
 
     c.scopes = UI.Segments(c, SCOPES, 90, function(key)
@@ -263,7 +263,7 @@ K:RegisterPage({
 
     -- The grid ---------------------------------------------------------------------
     local cw = math.floor((W - GAP * (COLS - 1)) / COLS)
-    local ch = math.floor((H - TOP - FOOT - GAP * (ROWS - 1)) / ROWS)
+    local ch = math.floor((paneH - TOP - FOOT - GAP * (ROWS - 1)) / ROWS)
     c.cards = {}
     for i = 1, COLS * ROWS do
       local col, row = (i - 1) % COLS, math.floor((i - 1) / COLS)

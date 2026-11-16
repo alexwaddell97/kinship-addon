@@ -1,7 +1,7 @@
 -- Kinship RP: Community page. Your house (a family, on a shared surname),
 -- your group, and Gatherings (PageGatherings.lua) as a third tab.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 
@@ -125,8 +125,8 @@ function K:HouseMembers()
 
   -- People whose shared profile names this house
   for _, reg in pairs(self.Registry) do
-    local house = reg.profile and strtrim(reg.profile.house or "") or ""
-    if house:lower() == key then
+    local theirs = reg.profile and strtrim(reg.profile.house or "") or ""
+    if theirs:lower() == key then
       add(Ambiguate and Ambiguate(reg.name, "none") or reg.name, reg.name,
         (reg.t or 0) > recent and "|cff5fd35fNearby|r" or nil)
     end

@@ -18,7 +18,7 @@
 --   def   = { id, name, icon, kind, desc, dur, next, custom }
 -- Fires "AURAS" whenever your effects or designs change.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -26,7 +26,6 @@ local A = {}
 K.Auras = A
 K.Net:Gate({ "auraOffer", "auraReply" }, "auras")
 
-local WHITE = "Interface\\Buttons\\WHITE8X8"
 local ICONS = "Interface\\Icons\\"
 local MAX_ACTIVE, MAX_SHARED = 12, 8
 local LIMIT = { id = 60, name = 40, desc = 300, note = 120, sharedDesc = 160 }
@@ -451,7 +450,7 @@ function A.Summary(list, other, max)
   return table.concat(parts, "   ")
 end
 
-K:AddTooltipLines(function(tooltip, unit, name, profile, isMe)
+K:AddTooltipLines(function(tooltip, _, name, _, isMe)
   if not K.db or S().auraTooltip == false then return end
   local list = A:Of(name, isMe)
   if #list == 0 then return end
@@ -755,12 +754,12 @@ end
 
 K:RegisterTargetButton({
   id = "aura", order = 30, label = "Lay an effect", icon = ICONS .. "Spell_Holy_MagicalSentry",
-  shown = function(unit, name)
+  shown = function(_, name)
     if not K:ExtOn("auras") or not name or K:IsIgnored(name) then return false end
     local me = UnitIsUnit("target", "player")
     return Safe(me) and not me
   end,
-  onClick = function(unit, name) A:OpenJournal(name) end,
+  onClick = function(_, name) A:OpenJournal(name) end,
 })
 
 ---------------------------------------------------------------------------

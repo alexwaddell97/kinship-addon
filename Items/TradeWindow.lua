@@ -9,7 +9,7 @@
 --   tradeStage  either side -> the other   { items = { { d = def, n }, ... } }
 -- The receiving side only takes what it was shown, no more.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

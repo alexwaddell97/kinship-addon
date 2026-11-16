@@ -17,7 +17,7 @@
 -- game's again once it's let go. Settings > Controller changes them or turns
 -- any of this off.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Pad = { bound = false, held = {} }

@@ -4,7 +4,7 @@
 -- your Kinship bags to put it in the vault, click one in the vault to take
 -- it back out. Each character has their own vault, reachable only at a bank.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = K.Items

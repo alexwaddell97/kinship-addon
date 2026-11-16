@@ -7,7 +7,7 @@
 -- Read loose fields through the E.Bool / E.Num / E.Str helpers, and change
 -- them with E.Write, which keeps the shape a field already has.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local E = { registry = {}, source = {} }
 K.Ext = E

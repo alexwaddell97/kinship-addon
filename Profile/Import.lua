@@ -10,7 +10,7 @@
 -- they log in, even after Total RP 3 is gone. Total RP 3's own files are
 -- never changed, so going back is always possible.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = {}

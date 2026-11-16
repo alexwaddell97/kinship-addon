@@ -14,7 +14,7 @@
 -- profile, "Kinship seal" is the monogram. Game mail holds less than a
 -- Kinship letter, so longer letters go in parts, joined back when they arrive.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local L = K.Letters
@@ -150,9 +150,9 @@ function P.Parts(letter, bodyMax, subjectMax)
   -- fit (one postage), otherwise cut to fit into parts of their own
   local data = P.Pack(letter.enclosed)
   if data then
-    local line = "~ for Kinship RP: " .. data .. " ~"
-    if #pieces[#pieces] + 2 + #line <= room then
-      pieces[#pieces] = pieces[#pieces] .. "\n\n" .. line
+    local dataLine = "~ for Kinship RP: " .. data .. " ~"
+    if #pieces[#pieces] + 2 + #dataLine <= room then
+      pieces[#pieces] = pieces[#pieces] .. "\n\n" .. dataLine
     else
       local per = room - #"~ for Kinship RP:  ~"
       for at = 1, #data, per do pieces[#pieces + 1] = "~ for Kinship RP: " .. data:sub(at, at + per - 1) .. " ~" end
@@ -677,7 +677,7 @@ for _, e in ipairs({ "MAIL_SHOW", "MAIL_CLOSED", "MAIL_INBOX_UPDATE", "MAIL_SEND
   -- A client without one of these can't tell us how posting went: note it for /kin bug
   if not pcall(ev.RegisterEvent, ev, e) then K:CaughtError("post", "this client has no " .. e .. " event") end
 end
-ev:SetScript("OnEvent", function(_, event, ...)
+ev:SetScript("OnEvent", function(_, event)
   if event == "MAIL_SHOW" then
     P.open = true
     if not P.hooked then

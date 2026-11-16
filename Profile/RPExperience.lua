@@ -6,7 +6,7 @@
 -- MyRolePlay and XRP users see it too) and Kinship's own "KX" as well.
 --   profile.rpExp = "new" | "casual" | "experienced" | "mentor" | nil
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local X = {}

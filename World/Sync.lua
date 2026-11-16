@@ -23,7 +23,7 @@
 -- Guild messages use their own prefix (as before); house and public ones
 -- travel on K.Net as kind "gath" = { t = "G"|"R"|"D"|"H"|"Q", b = board, ... }.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local Safe = K.Safe
 local S = {}

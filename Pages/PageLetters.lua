@@ -2,7 +2,7 @@
 -- right a sheet of paper that is either a sealed letter waiting to be
 -- opened, an open letter, or a fresh page being written.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local L = K.Letters
@@ -522,25 +522,25 @@ K:RegisterPage({
     r.sign:SetTextColor(unpack(UI.INK.inkAccent))
     r.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
     -- What's enclosed: Kinship items (to take), and real gold or items (from the mail)
-    local items = l.enclosed or {}
+    local enclosed = l.enclosed or {}
     local real = (l.purse or 0) > 0 or (type(l.goods) == "table" and #l.goods > 0) or (type(l.goods) == "number" and l.goods > 0)
-    r.encl:SetShown(#items > 0 or real)
+    r.encl:SetShown(#enclosed > 0 or real)
     local lastSlot
     for i, s in ipairs(r.enclSlots) do
-      local e = items[i]
+      local e = enclosed[i]
       s:SetItem(e and (K.Items:Get(e.d.id) or e.d), e and e.n)
       s:SetShown(e ~= nil)
       if e then lastSlot = s end
     end
     local anchor = lastSlot or r.encl.label
-    local canTake = l.dir == "in" and #items > 0 and not l.taken and l.read
+    local canTake = l.dir == "in" and #enclosed > 0 and not l.taken and l.read
     r.take:SetShown(canTake and true or false)
     r.take:ClearAllPoints()
     r.take:SetPoint("LEFT", anchor, "RIGHT", 10, 0)
     r.encl.extra:ClearAllPoints()
     r.encl.extra:SetPoint("LEFT", canTake and r.take or anchor, "RIGHT", 10, 0)
     local extra = real and L.EnclosedLine({ purse = l.purse, goods = l.goods }) or nil
-    r.encl.extra:SetText(extra and ((#items > 0 and "and " or "") .. extra .. (l.dir == "in" and " (take it from the mail)" or "")) or "")
+    r.encl.extra:SetText(extra and ((#enclosed > 0 and "and " or "") .. extra .. (l.dir == "in" and " (take it from the mail)" or "")) or "")
     local locked = l.dir == "in" and l.cipher and not l.solved
     r.key:SetShown(locked and true or false)
     r.decipher:SetShown(locked and true or false)

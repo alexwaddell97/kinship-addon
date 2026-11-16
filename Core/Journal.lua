@@ -2,7 +2,7 @@
 -- Stories, World), a gear for Settings, a page header across the top and the
 -- page itself on the desk below it.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local J = { pages = {} }

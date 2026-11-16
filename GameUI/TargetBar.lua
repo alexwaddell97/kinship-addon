@@ -5,7 +5,7 @@
 -- write a letter, roll dice, give an item, set a relationship, ignore...).
 -- Drag it to move it (unless locked); it steps aside in combat if you like.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -369,10 +369,10 @@ function B:Update()
       if not ab then
         ab = RoundButton(f, 20)
         local btn = ab
-        ab.paint = function(p)
+        ab.paint = function(t)
           local c = K.Auras.Color(btn.entry and btn.entry.kind)
-          btn.ring:SetVertexColor(c[1], c[2], c[3], 0.6 + 0.4 * p)
-          btn.icon:SetSize(20 + 2 * p, 20 + 2 * p)
+          btn.ring:SetVertexColor(c[1], c[2], c[3], 0.6 + 0.4 * t)
+          btn.icon:SetSize(20 + 2 * t, 20 + 2 * t)
         end
         ab:SetScript("OnEnter", function(self)
           UI.Tween(self, 1, 0.1, self.paint)
@@ -443,7 +443,7 @@ end
 ---------------------------------------------------------------------------
 -- Built-in actions
 ---------------------------------------------------------------------------
-local function Other(unit, name)
+local function Other(_, name)
   return name ~= nil and not IsMe() and not K:IsIgnored(name)
 end
 
@@ -455,19 +455,19 @@ K:RegisterTargetButton({
 K:RegisterTargetButton({
   id = "letter", order = 20, label = "Write a letter", icon = "Interface\\Icons\\INV_Letter_15",
   shown = function(unit, name) return Other(unit, name) and K.Letters ~= nil end,
-  onClick = function(unit, name) K.Letters:Compose(name) end,
+  onClick = function(_, name) K.Letters:Compose(name) end,
 })
 
 K:RegisterTargetButton({
   id = "music", order = 40, label = "Play their theme", icon = "Interface\\Icons\\INV_Misc_Drum_01",
-  shown = function(unit, name)
+  shown = function(_, name)
     local P = K.Persona
     if not P or not name or K:IsIgnored(name) then return false end
     local p
     if IsMe() then p = K:Profile() else local reg = K:ProfileOf(name); p = reg and reg.profile end
     return P.Music(p) ~= nil
   end,
-  onClick = function(unit, name)
+  onClick = function(_, name)
     local P = K.Persona
     local p
     if IsMe() then p = K:Profile() else local reg = K:ProfileOf(name); p = reg and reg.profile end

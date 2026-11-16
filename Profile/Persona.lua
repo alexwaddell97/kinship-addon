@@ -4,7 +4,7 @@
 -- coloured NA) in the formats other MSP profile addons read and write, so
 -- players on either side see each other's.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -637,7 +637,7 @@ local function OnFieldUpdated(name, field, contents)
   end
 end
 
-K:On("REGISTRY", function(key, entry)
+K:On("REGISTRY", function(_, entry)
   if type(entry) ~= "table" or type(entry.profile) ~= "table" or not msp or not msp.char then return end
   local char = type(entry.name) == "string" and rawget(msp.char, entry.name)
   local fields = char and rawget(char, "field")

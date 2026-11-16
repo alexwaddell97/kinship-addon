@@ -11,18 +11,16 @@
 -- Fires "IGNORE" (key) when the ignore list changes and "SAFETY" when the
 -- filter, its words or a profile's flag change.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
 local S = {}
 K.Safety = S
 
-local CROP = ":0:0:64:64:5:59:5:59"
 local SHIELD = "Interface\\Icons\\spell_holy_sealofprotection"
 local DANGER = { 0.88, 0.36, 0.32 }
 local WARN = { 0.92, 0.62, 0.30 }
-local OnCard = UI.OnCard or function(c) return c end
 
 -- A modest starting list. Words match whole (so "bloodlust" never matches "lust").
 local DEFAULT_WORDS = {
@@ -531,12 +529,12 @@ end
 K:RegisterTargetButton({
   id = "ignore", order = 90, label = "Ignore profile", icon = SHIELD,
   shown = function(unit, name) return IsOther(unit, name) and not K:IsIgnored(name) end,
-  onClick = function(unit, name) S:ConfirmIgnore(name) end,
+  onClick = function(_, name) S:ConfirmIgnore(name) end,
 })
 K:RegisterTargetButton({
   id = "unignore", order = 90, label = "Stop ignoring", icon = SHIELD,
   shown = function(unit, name) return IsOther(unit, name) and K:IsIgnored(name) end,
-  onClick = function(unit, name)
+  onClick = function(_, name)
     if K:Unignore(name) then
       UI.Toast({ icon = SHIELD, round = true, title = "No longer ignoring " .. Short(name),
         text = "Their profile will show again when it next arrives." })

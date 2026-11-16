@@ -1,6 +1,6 @@
 -- Kinship RP: profile viewer (inspect-style).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local V = {}
@@ -673,13 +673,13 @@ function V:Present(data, unit, keepTab)
 
   -- Model (left alone on live refreshes so it doesn't jump while you type,
   -- unless there wasn't one and they've just been found nearby)
-  if keepTab and f:IsShown() and (self.model:IsShown() or not unit) then
-    -- keep current model
-  elseif unit and UnitExists(unit) then
-    self:ShowModel(unit)
-  else
-    self.model:Hide(); self.stageEmpty:Show()
-    self.stageNote:SetText("Stand near them to see their appearance.")
+  if not (keepTab and f:IsShown() and (self.model:IsShown() or not unit)) then
+    if unit and UnitExists(unit) then
+      self:ShowModel(unit)
+    else
+      self.model:Hide(); self.stageEmpty:Show()
+      self.stageNote:SetText("Stand near them to see their appearance.")
+    end
   end
 
   -- Glances along the foot of the stage, centred

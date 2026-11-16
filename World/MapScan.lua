@@ -3,7 +3,7 @@
 -- nearby in the zone); those who allow it whisper back where they are
 -- ("scanr"), and they show as status-coloured dots on the map for a while.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe

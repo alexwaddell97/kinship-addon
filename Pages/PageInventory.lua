@@ -9,7 +9,7 @@
 -- Stash searching and dropping open as pop-overs from Stashes.lua; giving
 -- opens Trade.lua's give window.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -258,7 +258,7 @@ local function BuildBags(tab, c)
   tab.none.button:SetScript("OnClick", function() c.tab = 2; Refresh() end)
 end
 
-local function DetailText(def, slot)
+local function DetailText(def)
   local out = {}
   if def.description ~= "" then out[#out + 1] = UI.Clean(def.description) end
   if def.useText ~= "" then
@@ -456,7 +456,7 @@ local function BuildWorkshop(tab, c)
     if not def then return end
     I:ChooseIcon(self, def.icon, function(icon) SaveField(tab, "icon", icon) end)
   end)
-  ed.icon:HookScript("OnEnter", function(self)
+  ed.icon:HookScript("OnEnter", function()
     GameTooltip:AddLine("Click to choose its icon.", 0.55, 0.80, 1)
     GameTooltip:Show()
   end)

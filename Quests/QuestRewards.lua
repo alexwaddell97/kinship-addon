@@ -13,10 +13,9 @@
 -- player claims again (on login, and now and then), so a reward reaches
 -- someone who was offline. On a quest of your own, the items are made for you.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
-local Safe = K.Safe
 local R = { MAX = 4 }
 K.QuestRewards = R
 

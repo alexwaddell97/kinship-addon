@@ -144,7 +144,7 @@ end
 ---------------------------------------------------------------------------
 K.SCHEMA = 1
 local MIGRATIONS = {
-  [1] = function(db) end,   -- 1.0.0 keeps 0.3.x's layout; it only adds the schema field
+  [1] = function() end,   -- 1.0.0 keeps 0.3.x's layout; it only adds the schema field
 }
 
 -- Returns true when the data is at K.SCHEMA. A failed step stops the run and
@@ -347,7 +347,7 @@ end
 
 -- Players whose profiles, letters and messages you've chosen not to see.
 -- Replaced by the Safety module; everything checks it.
-function K:IsIgnored(name) return false end
+function K:IsIgnored(_name) return false end
 
 -- Forever characters have a first and last name. How the client reports them
 -- to addons still needs checking in the beta, so we split on the first space

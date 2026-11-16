@@ -1,6 +1,6 @@
 -- Kinship RP: guided tours for the People and Stories pages: Directory, Kin,
 -- House, Letters, Chronicle, Quests and Gatherings. See Guide.lua for how tours work.
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 
 -- A region if it's showing, else nil (so the next choice can take over).

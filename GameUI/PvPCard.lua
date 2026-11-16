@@ -5,7 +5,7 @@
 -- Warfront itself. The window is looked for by name when it shows, since it
 -- differs between clients; it is never changed, only sat beside.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local PC = { hooked = {} }

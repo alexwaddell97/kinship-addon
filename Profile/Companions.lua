@@ -4,7 +4,7 @@
 -- ("KA"), and the companion's story shows on that pet's tooltip (or on its
 -- rider's tooltip, for mounts).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -461,7 +461,7 @@ local function OnUnitTooltip(tooltip)
 end
 
 -- Mounts: a line on the rider's tooltip when they ride a bound mount.
-K:AddTooltipLines(function(tooltip, unit, name, profile, isMe)
+K:AddTooltipLines(function(tooltip, unit, _, profile, isMe)
   local list = isMe and C:Sorted() or (profile and profile.companions and profile.companions.list)
   if not list or #list == 0 then return end
   local mounts = {}

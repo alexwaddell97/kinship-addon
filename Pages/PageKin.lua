@@ -1,6 +1,6 @@
 -- Kinship RP: Kin page (everyone you've adventured with).
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 

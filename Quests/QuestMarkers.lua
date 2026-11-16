@@ -14,10 +14,9 @@
 --   K.QuestMarkers.Sanitize(v), .Here(), .Label(m), .Distance(m), :Pick(callback)
 --   K.QuestMarkers.LevelText(q), .LevelHex(q)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
-local Safe = K.Safe
 local QM = {}
 K.QuestMarkers = QM
 
@@ -535,7 +534,7 @@ local function HookForeverMap()
     key = FWM_KEY, label = "Roleplay quests (Kinship)", level = 42, size = 22, icon = { texture = QM.PIN_ICON },
     perMap = function(uiMapID, marks)
       if S().questPins == false then return end
-      for n, item in ipairs(QM.cache) do
+      for _, item in ipairs(QM.cache) do
         local mk = item.mk
         -- Each mark once: on its own map, or on the zone a city map sits in.
         local here = mk.m == uiMapID

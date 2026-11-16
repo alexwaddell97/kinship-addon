@@ -2,7 +2,7 @@
 -- "1d20 1d4-1"), shows them in a dice tray with a short spin, and shares them
 -- with your group, your target or everyone nearby (K.Net kind "dice").
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -399,7 +399,7 @@ function D:Build()
   f.expr:SetPoint("TOPLEFT", PAD, y - 14)
   f.expr:SetText("1d20")
   f.expr:SetScript("OnEnterPressed", function(self) self:ClearFocus(); D:TrayRoll() end)
-  f.expr:SetScript("OnTextChanged", function(self, user) if user then D:SetError(nil) end end)
+  f.expr:SetScript("OnTextChanged", function(_, user) if user then D:SetError(nil) end end)
 
   local ml = UI.Text(f, "Modifier", "Label", "deskSubtle")
   ml:SetPoint("TOPLEFT", PAD + EW + 10 + 1, y)

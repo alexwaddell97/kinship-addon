@@ -9,7 +9,7 @@
 --   K:RelationDef(key), K:RelationTypes(), K.RELATION_TYPES (built-ins, in order)
 --   K.Relations:Menu(owner, name), K.Relations:FillMenu(menuDescription, name)
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -304,7 +304,7 @@ end
 ---------------------------------------------------------------------------
 -- Tooltip line and target bar button
 ---------------------------------------------------------------------------
-K:AddTooltipLines(function(tooltip, unit, name, profile, isMe)
+K:AddTooltipLines(function(tooltip, _, name, _, isMe)
   if isMe or not K.db or not K.db.settings.relTooltip then return end
   local d = K:RelationOf(name)
   if not d then return end
@@ -323,7 +323,7 @@ end
 K:RegisterTargetButton({
   id = "relation", order = 25, label = "Relationship", icon = BUTTON_ICON,
   shown = function(unit, name) return IsOther(unit, name) end,
-  onClick = function(unit, name, owner) R:Menu(owner, name) end,
+  onClick = function(_, name, owner) R:Menu(owner, name) end,
 })
 
 ---------------------------------------------------------------------------

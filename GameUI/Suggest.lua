@@ -9,7 +9,7 @@
 --                                    up: open above the box (for one near the bottom)
 -- Up / Down move through the list; Enter or Tab picks; Esc closes it.
 
-local ADDON, ns = ...
+local _, ns = ...
 local K = ns.K
 local UI = K.UI
 
