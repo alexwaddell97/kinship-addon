@@ -1,6 +1,5 @@
--- Kinship RP: core data and helpers.
--- This build covers your own character: profiles, Chronicle, Kin, House and
--- local Gatherings. Profile exchange with other players (MSP) comes next.
+-- Kinship RP: the K namespace, saved data and migrations, the event bus, the
+-- error log, extension points, your profiles, Chronicle and Kin, and /kin.
 
 local ADDON, ns = ...
 local K = {}

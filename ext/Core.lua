@@ -3,7 +3,7 @@
 -- objects, the sanitiser every imported or received object passes through,
 -- and security levels worked out here (never taken from the data).
 -- Objects keep Total RP 3: Extended's own shapes (TY, MD, BA, IN, SC, LI ...),
--- described in docs/EXTENDED_FORMAT.md, so they go back out as they came in.
+-- so they go back out as they came in.
 -- Read loose fields through the E.Bool / E.Num / E.Str helpers, and change
 -- them with E.Write, which keeps the shape a field already has.
 

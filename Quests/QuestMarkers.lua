@@ -520,9 +520,9 @@ end
 
 ---------------------------------------------------------------------------
 -- Forever World Map's explorer map: a layer of its own, when that addon
--- offers a public way in (ForeverWorldMapAPI.AddLayer / .Refresh, version 1;
--- see docs/ForeverWorldMap-API.md). Without it, nothing happens here: its
--- Blizzard-map mode already shows the pins above.
+-- offers a public way in (ForeverWorldMapAPI.AddLayer / .Refresh, version 1).
+-- Without it, nothing happens here: its Blizzard-map mode already shows the
+-- pins above.
 ---------------------------------------------------------------------------
 local FWM_KEY = "kinshipQuests"
 local fwm
