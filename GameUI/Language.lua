@@ -37,7 +37,8 @@ function L:Current()
   local eb = EditBoxes()[1]
   local id = eb and eb.languageID
   for _, lang in ipairs(self:Known()) do if lang.id == id then return lang end end
-  local name, defID = GetDefaultLanguage and GetDefaultLanguage()
+  local name, defID
+  if GetDefaultLanguage then name, defID = GetDefaultLanguage() end
   return { name = name or "?", id = defID }
 end
 
