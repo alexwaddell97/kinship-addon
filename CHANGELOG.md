@@ -1,5 +1,42 @@
 # Kinship RP changelog
 
+## 1.4.9
+
+Kinship now runs on retail too, with the same download. On WoW Forever no
+files were added, so a /reload is enough.
+
+### New
+- Retail support. Install it into retail's AddOns folder the same way as on
+  Forever. It runs alongside Total RP 3 there too.
+- On retail's character sheet, a Roleplay tab after Stats, Titles and
+  Equipment Manager opens the Roleplay pane.
+- Pets with a companion profile show their companion name on your pet frame,
+  and on your target and focus frames.
+- Kinship's entries now also appear in the focus, chat roster, guild and
+  community member, and recent allies right-click menus.
+
+### Changed
+- The Roleplay quests list ticks a checkbox for tracked quests, instead of a
+  dot.
+- The language button no longer changes your chat language inside
+  instances, so your own messages are never held up there.
+
+### Fixed
+- The language button didn't recognise your default language, so cycling
+  could start from the wrong one.
+- The Roleplay pane on the character sheet now stays above other frames
+  that share its space.
+- Imported Extended creations are always filed as received, never as your
+  own, whoever the string says made them.
+- Parley no longer records a parley when the game refused the emote.
+- Rival marks on enemy nameplates no longer go missing when the game hides
+  the name's width.
+- On retail: the typing indicator, money on letters and the post card,
+  PvP-zone automation rules, the Satchel's bag-bar button and icon, the
+  Find roleplayers button on the map, the Warfront card by the PvP window,
+  and the Roleplay quests tab in the quest log all work as they do on
+  Forever.
+
 ## 1.4.8
 
 A nameplate fix. No new files, so a /reload is enough.
