@@ -266,7 +266,9 @@ local function SetupMenus()
     end
   end
   for _, tag in ipairs({ "MENU_UNIT_FRIEND", "MENU_UNIT_PLAYER", "MENU_UNIT_ENEMY_PLAYER", "MENU_UNIT_TARGET",
-                         "MENU_UNIT_PARTY", "MENU_UNIT_RAID_PLAYER", "MENU_UNIT_SELF" }) do
+                         "MENU_UNIT_PARTY", "MENU_UNIT_RAID_PLAYER", "MENU_UNIT_SELF", "MENU_UNIT_FOCUS",
+                         "MENU_UNIT_CHAT_ROSTER", "MENU_UNIT_COMMUNITIES_GUILD_MEMBER",
+                         "MENU_UNIT_COMMUNITIES_WOW_MEMBER", "MENU_UNIT_RECENT_ALLY" }) do
     K.Try("menus", Menu.ModifyMenu, tag, modify)
   end
 end
