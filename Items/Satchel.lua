@@ -773,9 +773,10 @@ local function BuildStrip(look)
   if blizz and SetPortraitToTexture then
     pcall(SetPortraitToTexture, st.icon, ICON)
   else
+    -- Newer clients dropped SetPortraitToTexture: a round mask does the same.
     st.icon:SetTexture(ICON)
     st.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    if look == "kinship" then UI.Round(st.icon) end
+    if blizz or look == "kinship" then UI.Round(st.icon) end
   end
 
   -- how full it is, under the icon
@@ -1279,7 +1280,7 @@ end
 -- The button by the bag bar, made like the bag bar's own buttons
 ---------------------------------------------------------------------------
 local BAR = { "MainMenuBarBackpackButton", "CharacterBag0Slot", "CharacterBag1Slot", "CharacterBag2Slot",
-              "CharacterBag3Slot", "CharacterReagentBag0Slot", "KeyRingButton" }
+              "CharacterBag3Slot", "CharacterReagentBag0Slot", "KeyRingButton", "BagBarExpandToggle" }
 
 local function Used()
   local n = 0
