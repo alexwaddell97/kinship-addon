@@ -120,11 +120,24 @@ function PC:ShowBeside(frame)
   f:Show()
 end
 
+-- A candidate inside another one is a panel of that window, not the window
+-- (retail's HonorFrame is the Quick Match panel inside PVPUIFrame).
+local function Inside(frame)
+  local p = frame:GetParent()
+  while p do
+    for _, name in ipairs(CANDIDATES) do
+      if rawget(_G, name) == p then return true end
+    end
+    p = p:GetParent()
+  end
+  return false
+end
+
 -- Hook whichever PvP windows this client has, now and as they load.
 function PC:Hook()
   for _, name in ipairs(CANDIDATES) do
     local frame = rawget(_G, name)
-    if frame and frame.HookScript and not self.hooked[frame] then
+    if frame and frame.HookScript and not self.hooked[frame] and not Inside(frame) then
       self.hooked[frame] = true
       frame:HookScript("OnShow", function(w) K.Try("pvp card", PC.ShowBeside, PC, w) end)
       frame:HookScript("OnHide", function(w) if PC.card and PC.card.owner == w then PC.card:Hide() end end)
