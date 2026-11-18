@@ -347,9 +347,29 @@ function M:BuildButton()
   self:UpdateButton()
 end
 
+-- How far down the map's top-right corner is free: retail keeps its map
+-- filter and map pin buttons there (Forever turns them off).
+local function CornerY(host)
+  local y = -10
+  local top, right = host:GetTop(), host:GetRight()
+  if not (top and right) then return y end
+  for _, f in ipairs(owner.overlayFrames or {}) do
+    if f ~= M.button and f.IsShown and f:IsShown() then
+      local ft, fb, fr = f:GetTop(), f:GetBottom(), f:GetRight()
+      if ft and fb and fr and right - fr < 60 and top - ft < 60 then y = math.min(y, fb - top - 6) end
+    end
+  end
+  return y
+end
+
 function M:UpdateButton()
   local b = self.button
   if not b then return end
+  if owner then
+    local host = owner.ScrollContainer or owner
+    b:ClearAllPoints()
+    b:SetPoint("TOPRIGHT", host, "TOPRIGHT", -10, CornerY(host))
+  end
   if owner then b:SetFrameLevel(math.min(9000, owner:GetCanvas():GetFrameLevel() + 1300)) end
   local text = self.flash or (b.scanning and "Looking for roleplayers..." or "Find roleplayers")
   b.label:SetText(text)
