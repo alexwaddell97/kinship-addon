@@ -42,10 +42,16 @@ function L:Current()
   return { name = name or "?", id = defID }
 end
 
--- Changing languages mid-encounter risks locking chat; wait until it's over.
+-- The chat box passes its language along when you send. Inside instances
+-- (where chat can be locked down) Kinship leaves it alone, so your own
+-- messages never go through anything Kinship has touched there.
 local function Blocked()
-  local inside, kind = IsInInstance()
-  return InCombatLockdown() and inside and (kind == "party" or kind == "raid")
+  if IsInInstance() then return true end
+  if C_ChatInfo and C_ChatInfo.InChatMessagingLockdown then
+    local ok, locked = pcall(C_ChatInfo.InChatMessagingLockdown)
+    if ok and K.Safe(locked) and locked then return true end
+  end
+  return false
 end
 
 function L:Set(id, remember)
@@ -54,8 +60,13 @@ function L:Set(id, remember)
   for _, l in ipairs(self:Known()) do if l.id == id then lang = l end end
   if not lang then return false end
   for _, eb in ipairs(EditBoxes()) do
-    eb.languageID = lang.id
-    eb.language = lang.name
+    -- Newer clients have a setter that also refreshes the box's header.
+    if eb.SetGameLanguage then
+      eb:SetGameLanguage(lang.name, lang.id)
+    else
+      eb.languageID = lang.id
+      eb.language = lang.name
+    end
   end
   if remember ~= false then K.db.language[K:CharKey()] = lang.id end
   self:Update()
