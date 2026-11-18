@@ -406,7 +406,12 @@ local function ContentArea(qmf)
   return qmf.ContentsAnchor or qmf.QuestsFrame or _G.QuestScrollFrame
 end
 
+-- Built the first time it opens: the log only has its real size once it's
+-- on screen, and the list's rows take their width when they're made.
+local BuildPane
+
 local function ShowPane(on)
+  if on and not pane then pane = BuildPane(_G.QuestMapFrame) end
   if not pane then return end
   pane:SetShown(on)
   if tab and tab.SetChecked then pcall(tab.SetChecked, tab, on) end
@@ -418,13 +423,19 @@ local function ShowPane(on)
   end
 end
 
-local function BuildPane(qmf)
+function BuildPane(qmf)
   local area = ContentArea(qmf)
   if not area then Debug("no quest list area to cover") return nil end
   local p = UI.Panel(qmf)
   p:SetPoint("TOPLEFT", area, "TOPLEFT", 0, 0)
   p:SetPoint("BOTTOMRIGHT", area, "BOTTOMRIGHT", 0, 0)
-  p:SetFrameLevel((area:GetFrameLevel() or 1) + 20)
+  -- Well above the log's own content (retail's map legend and events list sit
+  -- in the same space, higher than the quest list), and solid: the theme's
+  -- panel colour is a touch see-through.
+  p:SetFrameLevel(math.min(9000, (qmf:GetFrameLevel() or 1) + 200))
+  p.solid = p:CreateTexture(nil, "BACKGROUND", nil, -8)
+  p.solid:SetAllPoints()
+  UI:OnTheme(function(t) p.solid:SetColorTexture(t.panel[1], t.panel[2], t.panel[3], 1) end)
   p:EnableMouse(true)
   p:Hide()
 
@@ -454,13 +465,16 @@ local function BuildPane(qmf)
       row.sub:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 0, -3)
       row.sub:SetPoint("RIGHT", -30, 0)
       row.sub:SetWordWrap(false)
+      -- A checkbox, like the quest log's own rows: ticked when tracked.
       row.track = CreateFrame("Button", nil, row)
-      row.track:SetSize(18, 18)
-      row.track:SetPoint("RIGHT", -6, 0)
-      row.track.ring = UI.Circle(row.track, 16, "ARTWORK", 0)
-      row.track.ring:SetPoint("CENTER")
-      row.track.dot = UI.Circle(row.track, 10, "ARTWORK", 1)
-      row.track.dot:SetPoint("CENTER")
+      row.track:SetSize(22, 22)
+      row.track:SetPoint("RIGHT", -4, 0)
+      row.track:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+      row.track:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+      row.track:SetHighlightTexture("Interface\\Buttons\\UI-CheckBox-Highlight", "ADD")
+      row.track.check = row.track:CreateTexture(nil, "OVERLAY")
+      row.track.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+      row.track.check:SetAllPoints()
       row.track:SetScript("OnClick", function(self)
         local e = self:GetParent().item
         if e then K.Quests:Track(e.id, not e.tracked) end
@@ -471,7 +485,7 @@ local function BuildPane(qmf)
         T:RefreshLog()
       end)
       row:SetScript("OnDoubleClick", function(self) if self.item then K.Quests:Open(self.item.id) end end)
-    end, { bare = true, emptyIcon = K.Art("IconNote") })
+    end, { bare = true, fill = true, emptyIcon = K.Art("IconNote") })
   p.list:SetPoint("TOPLEFT", 8, -36)
 
   -- The chosen quest, under the list
@@ -498,10 +512,12 @@ local function BuildPane(qmf)
   d.objectives:SetJustifyV("TOP")
   d.objectives:SetPoint("BOTTOM", 0, 0)
 
-  p.open = UI.Button(p, "Open in journal", 120, 24)
+  -- A narrow log (retail's) gets shorter buttons, so the three fit in a row.
+  local narrow = W < 380
+  p.open = UI.Button(p, narrow and "Journal" or "Open in journal", narrow and 80 or 120, 24)
   p.open:SetPoint("BOTTOMRIGHT", -12, 12)
   p.open:SetScript("OnClick", function() if p.selected then K.Quests:Open(p.selected) end end)
-  p.trackBtn = UI.Button(p, "Track", 90, 24)
+  p.trackBtn = UI.Button(p, "Track", narrow and 80 or 90, 24)
   p.trackBtn:SetPoint("RIGHT", p.open, "LEFT", -6, 0)
   p.trackBtn:SetScript("OnClick", function()
     local e = p.selected and K.Quests:Log()[p.selected]
@@ -521,19 +537,26 @@ local function BuildTab()
   local own = LogTabs(qmf)
   local last = own[#own]
   if not last then Debug("couldn't find the quest log's tabs") return end
-  pane = BuildPane(qmf)
-  if not pane then return end
+  if not ContentArea(qmf) then Debug("no quest list area to cover") return end
   local ok, t = pcall(CreateFrame, "Button", "KinshipRPQuestLogTab", qmf, "QuestLogTabButtonTemplate")
   if not ok or not t then ok, t = pcall(CreateFrame, "Frame", "KinshipRPQuestLogTab", qmf, "LargeSideTabButtonTemplate") end
   if not ok or not t then Debug("couldn't make a quest log tab") return end
   tab = t
   tab.tooltipText = "Roleplay quests"
   if tab.Icon then
-    tab.Icon:SetTexture(TAB_ICON)
-    tab.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    -- Retail's tabs size their icon from an atlas, and put the atlas back each
+    -- time the selected tab changes: give ours a size, and paint it again.
+    local sized = last.activeAtlas ~= nil
+    local function Paint()
+      tab.Icon:SetTexture(TAB_ICON)
+      tab.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+      if sized then tab.Icon:SetSize(22, 22) end
+    end
+    Paint()
+    if tab.SetChecked then hooksecurefunc(tab, "SetChecked", Paint) end
   end
   tab:SetPoint("TOP", last, "BOTTOM", 0, -3)
-  local function Toggle() ShowPane(not pane:IsShown()) end
+  local function Toggle() ShowPane(not (pane and pane:IsShown())) end
   if tab.SetCustomOnMouseUpHandler then
     tab:SetCustomOnMouseUpHandler(function(_, button, upInside) if button == "LeftButton" and upInside ~= false then Toggle() end end)
   else
@@ -583,9 +606,7 @@ function T:RefreshLog()
     if e.campaign and e.campaign ~= "" then bits[#bits + 1] = UI.Escape(e.campaign)
     elseif e.giver and e.giver ~= "" then bits[#bits + 1] = "From " .. UI.Escape(e.giver) end
     row.sub:SetText(table.concat(bits, "  ·  "))
-    local t = K:Theme()
-    row.track.ring:SetVertexColor(t.accent[1], t.accent[2], t.accent[3], e.tracked and 1 or 0.35)
-    row.track.dot:SetVertexColor(t.accent[1], t.accent[2], t.accent[3], e.tracked and 1 or 0)
+    row.track.check:SetShown(e.tracked and true or false)
     row.sel:SetShown(e.id == pane.selected)
   end)
   local d = pane.detail

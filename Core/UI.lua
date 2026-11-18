@@ -1514,9 +1514,22 @@ function UI.List(parent, w, h, rowH, emptyText, buildRow, opts)
     end
   end
 
+  -- opts.fill: while nothing scrolls, the rows also take the scrollbar's space.
+  local function FitRows(total)
+    if not opts.fill then return end
+    local gutter = total > sf:GetHeight() + 0.5 and barW or 0
+    if gutter == box.gutter then return end
+    box.gutter = gutter
+    sf:SetPoint("BOTTOMRIGHT", -(pad + gutter), pad)
+    local width = w - 2 * pad - gutter
+    content:SetWidth(width)
+    for _, row in ipairs(box.rows) do row:SetWidth(width) end
+  end
+
   function box:SetItems(items, fill)
     self.items, self.fill = items, fill or self.fill
     local total = #items * rowH
+    FitRows(total)
     content:SetHeight(math.max(1, total))
     local maxScroll = math.max(0, total - sf:GetHeight())
     if sf:GetVerticalScroll() > maxScroll then sf:SetVerticalScroll(maxScroll) end
