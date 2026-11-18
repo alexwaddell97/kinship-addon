@@ -3,6 +3,8 @@
 -- profile has arrived, where the frame shows the character name: the
 -- roleplay name in its own colour, the character name kept after it in grey,
 -- "Aldric Vane (Leeroy)", so you can always see who to whisper or invite.
+-- A pet with a companion profile (yours on the pet frame, or anyone's as your
+-- target or focus) shows its companion name instead of the game's.
 --
 -- Works with EllesmereUI's unit frames (it paints names into "text zones";
 -- Kinship re-labels each zone right after it's painted) and with the game's
@@ -23,13 +25,14 @@ local S = K.Settings
 local EUI_FRAMES = {
   player = "EllesmereUIUnitFrames_Player", target = "EllesmereUIUnitFrames_Target",
   focus = "EllesmereUIUnitFrames_Focus", targettarget = "EllesmereUIUnitFrames_TargetTarget",
-  focustarget = "EllesmereUIUnitFrames_FocusTarget",
+  focustarget = "EllesmereUIUnitFrames_FocusTarget", pet = "EllesmereUIUnitFrames_Pet",
 }
 local function StockNames()
   return {
     player = _G.PlayerName or (_G.PlayerFrame and _G.PlayerFrame.name),
     target = (_G.TargetFrame and _G.TargetFrame.name) or _G.TargetFrameTextureFrameName,
     focus = (_G.FocusFrame and _G.FocusFrame.name) or _G.FocusFrameTextureFrameName,
+    pet = _G.PetName or (_G.PetFrame and _G.PetFrame.name),
   }
 end
 
@@ -74,13 +77,33 @@ local function GameNames(unit)
   return out
 end
 
+-- A pet's companion name (from its owner's companion profiles), or nil.
+local function PetName(unit)
+  local CO = K.Companions
+  if not (CO and CO.ForUnit) or not UnitExists(unit) then return nil end
+  if unit ~= "pet" and S().rpUnitNamesOthers == false then return nil end
+  local ok, c = pcall(CO.ForUnit, CO, unit)
+  local name = ok and c and Plain(strtrim(c.name or ""))
+  if name and name ~= "" then return name end
+end
+
+-- A pet's frame: its companion name where the game's pet name was.
+local function SwapPet(text, unit)
+  local pet = PetName(unit)
+  if not pet or text:find(pet, 1, true) then return nil end
+  local g = UnitName(unit)
+  if not Safe(g) or type(g) ~= "string" or g == "" then return nil end
+  local i, j = text:find(g, 1, true)
+  if i then return text:sub(1, i - 1) .. pet .. text:sub(j + 1), pet, g end
+end
+
 -- Put the roleplay name in front of the first plain occurrence of any game
 -- name in text, keeping that name after it. Returns the new text, the piece
 -- put in and the game name it went around.
 local function Swap(text, unit)
   if not Safe(text) or type(text) ~= "string" or text == "" then return nil end
   local rp, p, own = RPName(unit)
-  if not rp then return nil end
+  if not rp then return SwapPet(text, unit) end
   -- Already swapped (the frame asked twice): the first name would match
   -- inside the roleplay name itself ("Vax" in "Lord Vax Orius").
   if text:find(rp, 1, true) then return nil end
@@ -183,6 +206,8 @@ ev:RegisterEvent("PLAYER_ENTERING_WORLD")
 ev:RegisterEvent("PLAYER_TARGET_CHANGED")
 ev:RegisterEvent("PLAYER_FOCUS_CHANGED")
 ev:RegisterEvent("PORTRAITS_UPDATED")
+ev:RegisterUnitEvent("UNIT_PET", "player")
+ev:RegisterUnitEvent("UNIT_NAME_UPDATE", "pet")
 -- One full repaint of EllesmereUI's frames once everything has loaded, so a
 -- portrait painted blank during the loading screen gets its art.
 local function RepaintFrames()
@@ -239,8 +264,12 @@ K:On("LOGIN", function()
 end)
 K:On("PROFILE", Queue)
 K:On("IGNORE", Queue)
+K:On("COMPANIONS", Queue)
 K:On("REGISTRY", function(key)
   for _, unit in ipairs({ "target", "focus" }) do
+    -- Someone's pet: its owner's profile (and companions) may just have come.
+    local isPlayer = UnitExists(unit) and UnitIsPlayer(unit)
+    if UnitExists(unit) and Safe(isPlayer) and not isPlayer then Queue() return end
     if UnitExists(unit) then
       local n = GetUnitName(unit, true)
       if Safe(n) and n and K.NameKey(n) == key then Queue() return end
@@ -249,11 +278,11 @@ K:On("REGISTRY", function(key)
 end)
 
 K:RegisterSettings({ id = "unitNames", title = "Unit frames", order = 41, build = function(card)
-  card:Toggle("Roleplay names on unit frames", "Shows your roleplay name on your player frame, followed by your character name.", {
+  card:Toggle("Roleplay names on unit frames", "Shows your roleplay name on your player frame, followed by your character name, and your pet's companion name on your pet frame.", {
     get = function() return S().rpUnitNames ~= false end,
     set = function(v) K.db.settings.rpUnitNames = v; N:Refresh() end,
   })
-  card:Toggle("Include target and focus", "Shows roleplay names on your target and focus frames once Kinship has their profile.", {
+  card:Toggle("Include target and focus", "Shows roleplay names on your target and focus frames once Kinship has their profile. Pets with a companion profile show its name.", {
     get = function() return S().rpUnitNamesOthers ~= false end,
     set = function(v) K.db.settings.rpUnitNamesOthers = v; N:Refresh() end,
   })

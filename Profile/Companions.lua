@@ -355,6 +355,46 @@ function C:TargetCompanionPet()
   if Safe(n) and type(n) == "string" and n ~= "" and n ~= UNKNOWNOBJECT then return n end
 end
 
+-- The companion profile bound to a pet unit (yours or another player's):
+-- c, reg, owner, isMe, petName. tooltip: one already showing this unit, to
+-- read its owner line from; without it a hidden one is used.
+function C:ForUnit(unit, tooltip)
+  if not unit or not UnitExists(unit) then return nil end
+  local isPlayer = UnitIsPlayer(unit)
+  if not Safe(isPlayer) or isPlayer then return nil end
+  local isMe = UnitIsUnit(unit, "pet")
+  if not (Safe(isMe) and isMe) then
+    isMe = false
+    local other = UnitIsOtherPlayersPet and UnitIsOtherPlayersPet(unit)
+    if not (Safe(other) and other) then
+      local pc = UnitPlayerControlled(unit)
+      if not (Safe(pc) and pc) then return nil end
+    end
+  end
+  local petName = UnitName(unit)
+  if not Safe(petName) or type(petName) ~= "string" or petName == "" then return nil end
+  local owner
+  if isMe then
+    owner = K:MyName()
+  elseif tooltip then
+    owner = OwnerOf(unit, tooltip)
+  else
+    scan = scan or CreateFrame("GameTooltip", "KinshipRPPetScan", nil, "GameTooltipTemplate")
+    scan:SetOwner(WorldFrame, "ANCHOR_NONE")
+    scan:ClearLines()
+    pcall(scan.SetUnit, scan, unit)
+    owner = OwnerOf(unit, scan)
+    scan:Hide()
+  end
+  if not owner then return nil end
+  if not isMe then
+    if K.NameKey(owner) == K.NameKey(K:MyName()) then isMe = true
+    elseif K:IsIgnored(owner) then return nil end
+  end
+  local c, reg = self:Find(owner, petName, isMe)
+  return c, reg, owner, isMe, petName
+end
+
 local function OwnerName(owner, reg, isMe)
   if isMe then return K:DisplayName() end
   local p = reg and reg.profile
@@ -430,31 +470,12 @@ end
 local function OnUnitTooltip(tooltip)
   if tooltip ~= GameTooltip then return end
   local ok, _, unit = pcall(tooltip.GetUnit, tooltip)
-  if not ok or not unit or not Safe(unit) or not UnitExists(unit) then return end
-  local isPlayer = UnitIsPlayer(unit)
-  if not Safe(isPlayer) or isPlayer then return end
-  local isMe = UnitIsUnit(unit, "pet")
-  if not (Safe(isMe) and isMe) then
-    isMe = false
-    local other = UnitIsOtherPlayersPet and UnitIsOtherPlayersPet(unit)
-    if not (Safe(other) and other) then
-      local pc = UnitPlayerControlled(unit)
-      if not (Safe(pc) and pc) then return end
-    end
-  end
-  local petName = UnitName(unit)
-  if not Safe(petName) or type(petName) ~= "string" or petName == "" then return end
-  local owner = isMe and K:MyName() or OwnerOf(unit, tooltip)
-  if not owner then return end
-  if not isMe then
-    if K.NameKey(owner) == K.NameKey(K:MyName()) then isMe = true
-    elseif K:IsIgnored(owner) then return end
-  end
-  local c, reg = C:Find(owner, petName, isMe)
+  if not ok or not unit or not Safe(unit) then return end
+  local c, reg, owner, isMe, petName = C:ForUnit(unit, tooltip)
   if c then
     AddSection(tooltip, c, OwnerName(owner, reg, isMe), false, owner)
     tooltip:Show()
-  elseif not isMe and not (reg and reg.profile and reg.profile.companions) then
+  elseif owner and not isMe and not (reg and reg.profile and reg.profile.companions) then
     C.waitingPet = petName
     C:Ask(owner)
   end
