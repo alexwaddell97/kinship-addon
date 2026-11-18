@@ -1,12 +1,15 @@
 -- Kinship RP: roleplay on the character sheet and the inspect window.
 --
--- Character sheet (C): a native side tab joins the window's own column of
--- round tabs (built from the game's LargeSideTabButtonTemplate, the same as
--- its Character / Reputation / Skills tabs). Clicking it turns the right-hand
--- pane into a Roleplay pane in Kinship's own look: your portrait or profile
--- icon and roleplay name, status, "Currently" and OOC notes you can edit in
--- place, your glances and effects, and your war stance and boundaries. Any
--- other tab, or this one again, puts the stats back.
+-- Character sheet (C): a Roleplay tab that turns the right-hand pane into a
+-- Roleplay pane in Kinship's own look: your portrait or profile icon and
+-- roleplay name, status, "Currently" and OOC notes you can edit in place,
+-- your glances and effects, and your war stance and boundaries. Any other
+-- tab, or this one again, puts the stats back.
+--   WoW Forever: the tab joins the window's own column of round tabs (built
+--   from the game's LargeSideTabButtonTemplate, like its Character /
+--   Reputation / Skills tabs) and the pane fills its RightPaneHost.
+--   Retail: the tab joins the row of small tabs above the stats (Stats,
+--   Titles, Equipment Manager) and the pane covers CharacterFrameInsetRight.
 --
 -- Window titles: with "Roleplay name in window titles" on, the character
 -- window (and the inspect window, for someone whose profile has arrived)
@@ -148,9 +151,14 @@ end
 ---------------------------------------------------------------------------
 local function BuildPane()
   local cf = _G.CharacterFrame
-  local host = cf and cf.RightPaneHost
-  if not host then return end
-  local pane = CreateFrame("Frame", "KinshipRPCharacterPane", host)
+  if not cf then return end
+  -- Where it sits: Forever's right pane host, or retail's stats inset. On
+  -- retail the stats, titles and equipment panes are the character page's
+  -- children laid over that inset, so the pane joins them there.
+  local host, parent = cf.RightPaneHost, cf.RightPaneHost
+  if not host then host, parent = _G.CharacterFrameInsetRight, _G.PaperDollFrame end
+  if not (host and parent) then return end
+  local pane = CreateFrame("Frame", "KinshipRPCharacterPane", parent)
   pane:SetAllPoints(host)
   pane:SetFrameLevel(610)   -- above the stats lists (and another addon's pane at 600)
   pane:EnableMouse(true)
@@ -181,7 +189,7 @@ local function BuildPane()
   end
   pane:HookScript("OnShow", function(self)
     self.bg:SetAlpha(1)
-    local ok, top = K.Try("character pane", Highest, host, 1, self)
+    local ok, top = K.Try("character pane", Highest, parent, 1, self)
     if ok and top >= self:GetFrameLevel() and top < 9000 then
       -- Lift the pane and everything in it by the same step, so it all keeps its order.
       local delta = top + 5 - self:GetFrameLevel()
@@ -634,6 +642,85 @@ local function PlaceTab()
   end
 end
 
+-- Retail: a tab in the row above the stats, drawn like the game's three
+-- (PaperDollSidebarTabTemplate's art), but a button of Kinship's own: the
+-- template's click would ask the game for a fourth sidebar it doesn't have.
+local SIDEBAR_ART = "Interface\\PaperDollInfoFrame\\PaperDollSidebarTabs"
+local SIDEBAR_ON = { 0.015625, 0.796875, 0.7890625, 0.95703125 }
+local SIDEBAR_OFF = { 0.015625, 0.796875, 0.61328125, 0.78125 }
+
+local function NewSidebarTab(bar, after, onClick)
+  local t = CreateFrame("Button", "KinshipRPCharacterTab", bar)
+  t.sidebar = true
+  t:SetSize(33, 35)
+  t:SetPoint("LEFT", after, "RIGHT", 4, 0)
+  t.TabBg = t:CreateTexture(nil, "BACKGROUND")
+  t.TabBg:SetTexture(SIDEBAR_ART)
+  t.TabBg:SetSize(50, 43)
+  t.TabBg:SetPoint("BOTTOMLEFT", -9, -2)
+  t.Icon = t:CreateTexture(nil, "ARTWORK")
+  t.Icon:SetTexture(TAB_ICON)
+  t.Icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  t.Icon:SetSize(24, 24)
+  t.Icon:SetPoint("BOTTOM", 1, 4)
+  t.Hider = t:CreateTexture(nil, "OVERLAY")
+  t.Hider:SetTexture(SIDEBAR_ART)
+  t.Hider:SetTexCoord(0.015625, 0.546875, 0.11328125, 0.1875)
+  t.Hider:SetSize(34, 19)
+  t.Hider:SetPoint("BOTTOM")
+  t.Highlight = t:CreateTexture(nil, "HIGHLIGHT")
+  t.Highlight:SetTexture(SIDEBAR_ART)
+  t.Highlight:SetTexCoord(0.015625, 0.5, 0.1953125, 0.31640625)
+  t.Highlight:SetSize(31, 31)
+  t.Highlight:SetPoint("TOPLEFT", 2, -3)
+  function t:SetChecked(on)
+    self.TabBg:SetTexCoord(unpack(on and SIDEBAR_ON or SIDEBAR_OFF))
+    self.Hider:SetShown(not on)
+    self.Highlight:SetShown(not on)
+  end
+  t:SetChecked(false)
+  t:SetScript("OnClick", onClick)
+  t:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Roleplay")
+    GameTooltip:Show()
+  end)
+  t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  return t
+end
+
+-- The game leaves room for exactly its three tabs, so a fourth would hang
+-- off the window's edge: move the row one tab to the left while ours is
+-- there (the others follow the third), and back when it isn't.
+local SIDEBAR_STEP = 37
+local rowPoint
+local function ShiftSidebarRow(on)
+  local third = _G.PaperDollSidebarTab3
+  if not third or InCombatLockdown() then return end
+  if not rowPoint then rowPoint = { third:GetPoint(1) } end
+  local point, rel, relPoint, x, y = unpack(rowPoint)
+  if not point then return end
+  third:ClearAllPoints()
+  third:SetPoint(point, rel, relPoint, (x or 0) - (on and SIDEBAR_STEP or 0), y or 0)
+end
+
+-- While the Roleplay pane is up, the game's own tabs look unselected; once
+-- it's gone the game redraws them as they really are.
+local function MarkSidebarTabs(ours)
+  if ours then
+    for i = 1, 3 do
+      local t = _G["PaperDollSidebarTab" .. i]
+      if t and t.TabBg then
+        t.TabBg:SetTexCoord(unpack(SIDEBAR_OFF))
+        if t.Hider then t.Hider:Show() end
+        if t.Highlight then t.Highlight:Show() end
+      end
+    end
+  elseif _G.PaperDollFrame_UpdateSidebarTabs then
+    pcall(_G.PaperDollFrame_UpdateSidebarTabs)
+  end
+end
+
 ---------------------------------------------------------------------------
 -- On the Roleplay tab, the character screen's own gear slots show what your
 -- character wears in roleplay: Kinship's slots laid over the matching ones
@@ -759,13 +846,22 @@ local function SetActive(on)
     if cf.UpdatePortrait then pcall(cf.UpdatePortrait, cf) end
   end
   if tab and tab.SetChecked then tab:SetChecked(on) end
+  if tab and tab.sidebar then K.Try("character pane", MarkSidebarTabs, on) end
 end
 CP.SetActive = SetActive
 
 
+local function BuildSidebarTab()
+  local bar, last = _G.PaperDollSidebarTabs, _G.PaperDollSidebarTab3
+  if tab or not (bar and last) then return end
+  tab = NewSidebarTab(bar, last, function() SetActive(not active) end)
+  ShiftSidebarRow(true)
+end
+
 local function BuildTab()
   local cf = _G.CharacterFrame
-  if tab or not cf or not cf.ModeTabs then return end
+  if tab or not cf then return end
+  if not cf.ModeTabs then BuildSidebarTab() return end
   local ok, t = pcall(CreateFrame, "Frame", "KinshipRPCharacterTab", cf.ModeTabs, "LargeSideTabButtonTemplate")
   if not ok or not t then return end
   tab = t
@@ -805,12 +901,13 @@ local function ApplySetting()
   local wanted = S().charPanel ~= false
   if not wanted then SetActive(false) end
   tab:SetShown(wanted)
+  if tab.sidebar then ShiftSidebarRow(wanted) end
   if wanted then C_Timer.After(0, PlaceTab) end
 end
 
 local function HookCharacter()
   local cf = _G.CharacterFrame
-  if CP.hooked or not cf or not cf.ModeTabs then return end
+  if CP.hooked or not cf or not (cf.ModeTabs or _G.PaperDollSidebarTabs) then return end
   CP.hooked = true
   BuildTab()
   ApplySetting()
@@ -823,6 +920,10 @@ local function HookCharacter()
   end)
   if cf.UpdateTabLayout then hooksecurefunc(cf, "UpdateTabLayout", function() C_Timer.After(0, PlaceTab) end) end
   if cf.OnModeTabClicked then hooksecurefunc(cf, "OnModeTabClicked", function() SetActive(false) end) end
+  -- Retail: Stats, Titles or Equipment Manager takes the pane back.
+  if tab and tab.sidebar and _G.PaperDollFrame_SetSidebar then
+    hooksecurefunc("PaperDollFrame_SetSidebar", function() if active then SetActive(false) end end)
+  end
   -- The window keeps its own portrait (your character) on the Roleplay tab too.
   cf:HookScript("OnHide", function() SetActive(false) end)
   if _G.PaperDollFrame then _G.PaperDollFrame:HookScript("OnHide", function() SetActive(false) end) end
