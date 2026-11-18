@@ -374,9 +374,13 @@ end
 local function DrawFoe(o, anchor, rival, rec)
   Unfade(rec)
   o.name:Hide(); o.title:Hide(); o.real:Hide(); o.ring:Hide(); o.dot:Hide(); o.kin:Hide()
-  local w = anchor:GetStringWidth() or 0
+  local w = anchor:GetStringWidth()
   o.rival:ClearAllPoints()
-  o.rival:SetPoint("RIGHT", anchor, "CENTER", -(w / 2) - 3, 0)
+  if Safe(w) and type(w) == "number" then
+    o.rival:SetPoint("RIGHT", anchor, "CENTER", -(w / 2) - 3, 0)
+  else
+    o.rival:SetPoint("RIGHT", anchor, "LEFT", -3, 0)
+  end
   o.rival.ring:SetVertexColor(rival[1], rival[2], rival[3], 0.95)
   o.rival:Show()
   if not o:IsShown() then
