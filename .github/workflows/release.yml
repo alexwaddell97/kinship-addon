@@ -6,8 +6,10 @@
 # CurseForge needs, under Settings > Secrets and variables > Actions:
 #   secret   CF_API_KEY       an API token from your CurseForge account
 #   variable CF_PROJECT_ID    the project's ID (on its CurseForge page)
-#   variable CF_GAME_VERSION  the game version to file it under: its name as
-#                             CurseForge shows it, or its ID (several, comma-separated)
+#   variable CF_GAME_VERSION  the game versions to file it under, comma-separated:
+#                             each one's name as CurseForge shows it, or its ID.
+#                             One zip serves every client (each loads its own .toc),
+#                             so list Forever's and retail's to release for both.
 # Without CF_PROJECT_ID the CurseForge step is skipped.
 name: Release
 
@@ -62,7 +64,7 @@ jobs:
           v="${GITHUB_REF_NAME#v}"
           awk -v head="## $v" '$0 == head { on = 1; next } /^## / && on { exit } on' CHANGELOG.md > changelog.md
           cp changelog.md notes.md
-          printf '\n---\nUnzip into `World of Warcraft\\_forever_\\Interface\\AddOns`, so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
+          printf '\n---\nUnzip into your game'"'"'s `Interface\\AddOns` folder (`_forever_` or `_retail_`), so you have an `AddOns\\KinshipRP` folder.\n' >> notes.md
 
       - uses: softprops/action-gh-release@v3
         with:
@@ -80,22 +82,34 @@ jobs:
           v="${GITHUB_REF_NAME#v}"
           api="https://wow.curseforge.com/api"
           [ -n "$CF_API_KEY" ] || { echo "::error::Add the CF_API_KEY secret (an API token from your CurseForge account)."; exit 1; }
-          [ -n "$CF_GAME_VERSION" ] || { echo "::error::Add the CF_GAME_VERSION variable: the game version to file it under."; exit 1; }
+          [ -n "$CF_GAME_VERSION" ] || { echo "::error::Add the CF_GAME_VERSION variable: the game versions to file it under."; exit 1; }
 
-          # The game version: IDs as given, or looked up by name
-          if echo "$CF_GAME_VERSION" | grep -qE '^[0-9]+(,[0-9]+)*$'; then
-            ids="[$CF_GAME_VERSION]"
-          else
-            versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
-            ids=$(echo "$versions" | jq -c --arg n "$CF_GAME_VERSION" '[.[] | select(.name == $n) | .id]')
-            if [ "$ids" = "[]" ]; then
-              echo "::error::CurseForge has no game version called \"$CF_GAME_VERSION\". The names it knows are listed above."
-              echo "::group::CurseForge game versions (name, then ID)"
-              echo "$versions" | jq -r '.[] | "\(.name)  \(.id)"' | sort -u
-              echo "::endgroup::"
-              exit 1
+          # The game versions, comma-separated: IDs as given, names looked up
+          versions=""
+          ids="[]"
+          missing=""
+          IFS=',' read -ra wanted <<< "$CF_GAME_VERSION"
+          for item in "${wanted[@]}"; do
+            item=$(echo "$item" | sed 's/^ *//; s/ *$//')
+            [ -n "$item" ] || continue
+            if echo "$item" | grep -qE '^[0-9]+$'; then
+              found="[$item]"
+            else
+              [ -n "$versions" ] || versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
+              found=$(echo "$versions" | jq -c --arg n "$item" '[.[] | select(.name == $n) | .id]')
+              [ "$found" = "[]" ] && missing="$missing \"$item\""
             fi
+            ids=$(jq -cn --argjson a "$ids" --argjson b "$found" '$a + $b | unique')
+          done
+          if [ -n "$missing" ]; then
+            [ -n "$versions" ] || versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
+            echo "::error::CurseForge has no game version called$missing. The names it knows are listed above."
+            echo "::group::CurseForge game versions (name, then ID)"
+            echo "$versions" | jq -r '.[] | "\(.name)  \(.id)"' | sort -u
+            echo "::endgroup::"
+            exit 1
           fi
+          [ "$ids" != "[]" ] || { echo "::error::CF_GAME_VERSION names no game version."; exit 1; }
 
           meta=$(jq -n --rawfile cl changelog.md --arg name "Kinship RP $v" --argjson gv "$ids" \
             '{changelog: $cl, changelogType: "markdown", displayName: $name, gameVersions: $gv, releaseType: "release"}')
