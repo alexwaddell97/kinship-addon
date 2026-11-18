@@ -66,7 +66,8 @@ end
 
 local function HookAll()
   for i = 1, (NUM_CHAT_WINDOWS or 10) do Hook(_G["ChatFrame" .. i .. "EditBox"]) end
-  if ChatEdit_GetActiveWindow then Hook(ChatEdit_GetActiveWindow()) end
+  local active = (ChatFrameUtil and ChatFrameUtil.GetActiveWindow) or rawget(_G, "ChatEdit_GetActiveWindow")
+  if active then Hook(active()) end
 end
 
 ---------------------------------------------------------------------------
@@ -201,7 +202,10 @@ end
 K:On("LOGIN", function()
   if K.Net then K.Net:On(KIND, function(msg, sender) Heard(msg, sender) end) end
   HookAll()
-  if hooksecurefunc and ChatEdit_ActivateChat then
+  -- Newer clients moved this into ChatFrameUtil; hook whichever is there.
+  if ChatFrameUtil and ChatFrameUtil.ActivateChat then
+    hooksecurefunc(ChatFrameUtil, "ActivateChat", function(eb) Hook(eb) end)
+  elseif rawget(_G, "ChatEdit_ActivateChat") then
     hooksecurefunc("ChatEdit_ActivateChat", function(eb) Hook(eb) end)
   end
   local ev = CreateFrame("Frame")
