@@ -34,11 +34,14 @@ P.SLOTS = {
 
 local RADIUS, SLOT, HUB = 132, 60, 132
 
+-- True if the emote went out. Newer clients say when they refuse one.
 local function Emote(token)
   if C_ChatInfo and C_ChatInfo.PerformEmote then
-    if pcall(C_ChatInfo.PerformEmote, token) then return end
+    local ok, sent = pcall(C_ChatInfo.PerformEmote, token)
+    if ok then return sent ~= false end
   end
-  if DoEmote then pcall(DoEmote, token) end
+  if DoEmote then return (pcall(DoEmote, token)) end
+  return false
 end
 
 local function TargetInfo()
@@ -231,7 +234,7 @@ function P:Choose(i)
   local s = self.SLOTS[i]
   self:Close()
   if not s then return end
-  Emote(s.token)
+  if not Emote(s.token) then return end
   local name, enemy = TargetInfo()
   local short = name and (Ambiguate and Ambiguate(name, "none") or name)
   -- Optional words for your own side (the other faction sees strange gestures)
