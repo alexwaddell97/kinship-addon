@@ -70,7 +70,7 @@ end
 -- Drunk
 ---------------------------------------------------------------------------
 function AE:OnSystem(msg)
-  if type(msg) ~= "string" then return end
+  if not K.Safe(msg) or type(msg) ~= "string" then return end
   if msg == DRUNK_MESSAGE_SELF1 then
     local e = A:Find("drunk")
     if e and e.auto then A:Remove(e.key, true) end
