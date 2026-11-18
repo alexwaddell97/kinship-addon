@@ -491,7 +491,8 @@ function P:Postage()
 end
 
 local function Money(copper)
-  if GetCoinTextureString then return GetCoinTextureString(copper) end
+  local fn = (C_CurrencyInfo and C_CurrencyInfo.GetCoinTextureString) or rawget(_G, "GetCoinTextureString")
+  if fn then return fn(copper) end
   return ("%dc"):format(copper)
 end
 

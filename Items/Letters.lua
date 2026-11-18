@@ -268,7 +268,8 @@ function L.EnclosedLine(letter, plain)
     end
   end
   if (letter.purse or 0) > 0 then
-    parts[#parts + 1] = "a purse of " .. (GetCoinText and GetCoinText(letter.purse, " ") or (letter.purse .. " copper"))
+    local coins = (C_CurrencyInfo and C_CurrencyInfo.GetCoinText) or rawget(_G, "GetCoinText")
+    parts[#parts + 1] = "a purse of " .. (coins and coins(letter.purse, " ") or (letter.purse .. " copper"))
   end
   local goods = letter.goods
   if type(goods) == "table" then

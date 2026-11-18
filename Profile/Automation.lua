@@ -44,8 +44,9 @@ for _, a in ipairs(A.ACTIONS) do ACTION[a.key] = a end
 local inCombat = false
 
 local function ZonePvP()
-  if not GetZonePVPInfo then return nil end
-  local ok, kind = pcall(GetZonePVPInfo)
+  local fn = (C_PvP and C_PvP.GetZonePVPInfo) or rawget(_G, "GetZonePVPInfo")
+  if not fn then return nil end
+  local ok, kind = pcall(fn)
   return ok and K.Safe(kind) and kind or nil
 end
 

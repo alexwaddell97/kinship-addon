@@ -32,7 +32,7 @@ read_globals = {
   "ADDONS", "AddOn_Chomp", "AddOn_TotalRP3", "Ambiguate", "BNET_CLIENT_WOW", "BreakUpLargeNumbers",
   "ButtonFrameTemplate_HideButtonBar", "CANCEL", "CLASS_ICON_TCOORDS", "C_AddOns", "C_BattleNet", "C_CVar", "C_GamePad", "GetCVarBool", "ClearOverrideBindings", "GamepadMode", "GetBindingAction",
   "GetBindingText", "IsKeyDown", "SetOverrideBindingClick",
-  "C_Calendar", "C_ChatInfo", "C_ClassColor", "C_EncodingUtil", "C_FriendList", "C_Item", "C_Map",
+  "C_Calendar", "C_ChatInfo", "C_ClassColor", "C_CurrencyInfo", "C_PvP", "C_EncodingUtil", "C_FriendList", "C_Item", "C_Map",
   "C_MountJournal", "C_NamePlate", "C_SuperTrack", "C_Texture", "C_Timer", "C_UIFileAsset", "C_UnitAuras",
   "ChatEdit_GetActiveWindow", "ChatEdit_ActivateChat", "ChatFrameUtil", "ChatFrame_AddMessageEventFilter", "ChatFrame_OpenChat",
   "ChatTypeInfo", "CheckInteractDistance", "CopyTable", "CreateColor", "CreateFont", "CreateFrame",
