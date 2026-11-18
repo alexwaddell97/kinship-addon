@@ -1,0 +1,103 @@
+## Interface: 120105, 120007
+## Title: Kinship RP
+## Notes: A roleplay addon: profiles, houses, quests you write yourself, items and RP-PvP. Works with Total RP 3 users.
+## Author: Vaxorus
+## Version: 1.4.8
+## Category: Roleplay
+## X-Website: https://ko-fi.com/vaxorus
+## SavedVariables: KinshipRPDB
+## IconTexture: Interface\AddOns\KinshipRP\Media\Icon
+## AddonCompartmentFunc: KinshipRP_OnCompartmentClick
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\ChatThrottleLib\ChatThrottleLib.lua
+Libs\Chomp\Chomp.xml
+Libs\LibMSP\LibMSP.lua
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibDeflate\lib.xml
+Libs\AceSerializer-3.0\AceSerializer-3.0.xml
+
+Core\Core.lua
+Core\UI.lua
+GameUI\Suggest.lua
+Core\Net.lua
+ext\Core.lua
+ext\Codec.lua
+ext\Settings.lua
+Core\Markup.lua
+Profile\IconNames.lua
+Profile\MusicNames.lua
+Profile\IconPicker.lua
+Core\Journal.lua
+Core\Guide.lua
+Core\Support.lua
+Pages\PageProfile.lua
+Profile\Persona.lua
+World\Auras.lua
+World\AurasTab.lua
+World\AutoEffects.lua
+Pages\PagePersona.lua
+Profile\Companions.lua
+Pages\PageCompanions.lua
+Pages\PageChronicle.lua
+Pages\PageKin.lua
+Pages\PageDirectory.lua
+Profile\Groups.lua
+Pages\PageHouse.lua
+Pages\PageGatherings.lua
+Quests\QuestMarkers.lua
+Quests\Quests.lua
+Pages\PageQuests.lua
+Quests\QuestTracker.lua
+Quests\QuestAuto.lua
+World\Warfront.lua
+Pages\PageWarfront.lua
+World\Parley.lua
+Items\Letters.lua
+Items\Post.lua
+Pages\PageLetters.lua
+Items\Items.lua
+Items\Wardrobe.lua
+Items\Documents.lua
+Items\Trade.lua
+Items\TradeWindow.lua
+Items\Vault.lua
+Items\Stashes.lua
+Quests\QuestRewards.lua
+ext\Database.lua
+Pages\PageInventory.lua
+Items\Satchel.lua
+Pages\PageSettings.lua
+Profile\Viewer.lua
+Core\Comm.lua
+Profile\RPExperience.lua
+World\Sync.lua
+GameUI\Chat.lua
+GameUI\ChatLinks.lua
+Items\ItemLinks.lua
+GameUI\Language.lua
+World\Dice.lua
+Profile\Relations.lua
+Core\Safety.lua
+GameUI\Nameplates.lua
+World\MapScan.lua
+Profile\Automation.lua
+Profile\ProfileShare.lua
+Core\Backup.lua
+Core\BugReport.lua
+Profile\Import.lua
+Profile\Compat.lua
+GameUI\CharacterPanel.lua
+GameUI\UnitNames.lua
+GameUI\SocialNames.lua
+GameUI\PvPCard.lua
+GameUI\TargetBar.lua
+GameUI\Typing.lua
+guides\You.lua
+guides\People.lua
+guides\World.lua
+Core\Options.lua
+GameUI\Gamepad.lua
+GameUI\Integrations.lua

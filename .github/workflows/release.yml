@@ -44,7 +44,7 @@ jobs:
       - name: Check the version matches the tag
         run: |
           v="${GITHUB_REF_NAME#v}"
-          for toc in KinshipRP.toc KinshipRP_Camelot.toc; do
+          for toc in KinshipRP.toc KinshipRP_Camelot.toc KinshipRP_Mainline.toc; do
             grep -qx "## Version: $v" "$toc" || { echo "::error::$toc isn't at version $v"; exit 1; }
           done
           grep -q "K.VERSION = \"$v\"" Core/Comm.lua || { echo "::error::Core/Comm.lua isn't at version $v"; exit 1; }
