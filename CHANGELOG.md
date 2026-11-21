@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.10
+
+No files were added, so a /reload is enough.
 
 ### Changed
 - Roleplay names in chat now show in the colour each player picked, as they
