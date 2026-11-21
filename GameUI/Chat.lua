@@ -104,7 +104,8 @@ end
 ---------------------------------------------------------------------------
 -- A name as plain text: colours, links, textures and other UI codes are
 -- removed whole (dropping only the "|" used to leave "cffff0000Name" behind).
--- A profile's own name colour is dropped: roleplay names are all roleplay gold.
+-- The profile's own name colour is put back afterwards (K.NameHexOf: the
+-- colour its player chose, or roleplay gold).
 local function CleanName(n)
   n = tostring(n or "")
   n = n:gsub("||", "")                               -- literal pipes
@@ -127,19 +128,21 @@ local function NameFilter(event, _, _, sender, _, _, _, _, _, _, _, _, lineID, g
   local name
   if K.db.settings.chatNames then
     -- Your own lines use your own profile (it isn't among the ones received).
-    local rp
+    local rp, p
     if K:IsMe(sender) then
-      rp = K:Profile().rpName
+      p = K:Profile()
+      rp = p.rpName
     else
       local reg = K:ProfileOf(sender)
-      rp = reg and reg.profile and reg.profile.rpName
+      p = reg and reg.profile
+      rp = p and p.rpName
       -- Someone talking whose profile hasn't come yet: ask for it (the same
       -- slow, one-at-a-time queue the nameplates use), so the next line has it.
       if not (reg and reg.profile) and K.Plates and not K:IsIgnored(sender) then K.Plates:Ask(sender) end
     end
     if type(rp) == "string" and rp ~= "" then
       rp = CleanName(rp)
-      if rp ~= "" then name = K.BothNames(rp, Ambiguate and Ambiguate(sender, "none") or sender) end
+      if rp ~= "" then name = K.BothNames(rp, Ambiguate and Ambiguate(sender, "none") or sender, K.NameHexOf(p)) end
     end
   end
   if name then return name .. (tail or "") end

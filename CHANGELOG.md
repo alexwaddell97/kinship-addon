@@ -1,5 +1,12 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Changed
+- Roleplay names in chat now show in the colour each player picked, as they
+  already do on nameplates and unit frames. Settings > Nameplates >
+  "Players' own name colours" turns this off for all of them.
+
 ## 1.4.9
 
 Kinship now runs on retail too, with the same download. On WoW Forever no
