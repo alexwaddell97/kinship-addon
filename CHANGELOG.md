@@ -1,6 +1,9 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.11
+
+Eye colour, and images in descriptions. There's a new file, so restart the
+game after updating (a /reload isn't enough).
 
 ### New
 - Eye colour. Pick one with the round swatch next to Eyes on your Profile
