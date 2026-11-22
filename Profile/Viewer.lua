@@ -155,24 +155,7 @@ local function StageColors(st)
   return t.stageTop, t.stageBottom, { 1.00, 0.94, 0.80 }
 end
 
--- Open the game's colour picker. onChange(r, g, b) while choosing; onCancel() puts it back.
-local function PickColor(r, g, b, onChange, onCancel)
-  local cpf = ColorPickerFrame
-  if not cpf then return end
-  local function current() return cpf:GetColorRGB() end
-  if cpf.SetupColorPickerAndShow then
-    cpf:SetupColorPickerAndShow({ r = r, g = g, b = b, hasOpacity = false,
-      swatchFunc = function() onChange(current()) end, cancelFunc = function() onCancel() end })
-  else
-    cpf.hasOpacity, cpf.opacityFunc = false, nil
-    cpf.previousValues = { r, g, b }
-    cpf.func = function() onChange(current()) end
-    cpf.cancelFunc = function() onCancel() end
-    cpf:SetColorRGB(r, g, b)
-    cpf:Hide()
-    cpf:Show()
-  end
-end
+local PickColor = UI.PickColor
 
 local function Paragraphs(parts)
   local out = {}

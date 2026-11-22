@@ -1634,6 +1634,25 @@ function UI.ClassColor(class)
   return 0.8, 0.8, 0.8
 end
 
+-- Open the game's colour picker. onChange(r, g, b) while choosing; onCancel() puts it back.
+function UI.PickColor(r, g, b, onChange, onCancel)
+  local cpf = ColorPickerFrame
+  if not cpf then return end
+  local function current() return cpf:GetColorRGB() end
+  if cpf.SetupColorPickerAndShow then
+    cpf:SetupColorPickerAndShow({ r = r, g = g, b = b, hasOpacity = false,
+      swatchFunc = function() onChange(current()) end, cancelFunc = function() onCancel() end })
+  else
+    cpf.hasOpacity, cpf.opacityFunc = false, nil
+    cpf.previousValues = { r, g, b }
+    cpf.func = function() onChange(current()) end
+    cpf.cancelFunc = function() onCancel() end
+    cpf:SetColorRGB(r, g, b)
+    cpf:Hide()
+    cpf:Show()
+  end
+end
+
 -- Class crest from the shared class sheet.
 function UI.ClassIcon(tex, class)
   local c = class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]

@@ -92,27 +92,7 @@ local function EmptyState(parent, icon, text, w, dy)
   return f
 end
 
--- Open the game's colour picker. onChange(r, g, b) while choosing; onCancel() restores.
-local function PickColor(r, g, b, onChange, onCancel)
-  local cpf = ColorPickerFrame
-  if not cpf then return end
-  local function current() return cpf:GetColorRGB() end
-  if cpf.SetupColorPickerAndShow then
-    cpf:SetupColorPickerAndShow({
-      r = r, g = g, b = b, hasOpacity = false,
-      swatchFunc = function() onChange(current()) end,
-      cancelFunc = function() onCancel() end,
-    })
-  else
-    cpf.hasOpacity, cpf.opacityFunc = false, nil
-    cpf.previousValues = { r, g, b }
-    cpf.func = function() onChange(current()) end
-    cpf.cancelFunc = function() onCancel() end
-    cpf:SetColorRGB(r, g, b)
-    cpf:Hide()
-    cpf:Show()
-  end
-end
+local PickColor = UI.PickColor
 
 ---------------------------------------------------------------------------
 -- Glance presets: saving asks for a name
