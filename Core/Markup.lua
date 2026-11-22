@@ -6,8 +6,9 @@
 --   *emphasis*                                          in the accent colour
 --   {col:rrggbb}text{/col}                              coloured text
 --   {icon:IconName:size} or {icon:fileID:size}          an icon that exists
+--   {img:Interface\Path:width:height}                   a game image, on its own line
 -- Total RP 3's tags ({h1}..{/h1}, {h2}, {h3}, {p:c}, {col:r}, {icon:..},
--- {link*url*text}) are understood too, for imported or received text.
+-- {img:..}, {link*url*text}) are understood too, for imported or received text.
 --
 -- ctx (all optional): { other = true   -- another player's text: cleaned first
 --                       style = nil | "desk" | "ink"   -- what it's printed on
@@ -24,6 +25,7 @@ K.Markup = M
 
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 local ICON_MIN, ICON_MAX, ICON_SIZE = 8, 64, 16
+local IMAGE_MAX_H = 512
 local CROP = ":0:0:64:64:5:59:5:59"
 
 -- Total RP 3's one-letter colours ({col:r} and friends).
@@ -170,25 +172,70 @@ function M.IconTexture(spec)
   return result or nil
 end
 
+-- An {img:..} source -> a path or file ID |T accepts, or nil. Only game
+-- files that exist, or files of an addon that's loaded, so nothing shows as
+-- a missing-texture box.
+local images = {}
+function M.ImageTexture(src)
+  src = strtrim(tostring(src or "")):gsub("/", "\\")
+  if src == "" or #src > 200 then return nil end
+  if images[src] ~= nil then return images[src] or nil end
+  local result = false
+  local n = tonumber(src)
+  if n then
+    if n > 0 and n == math.floor(n) then
+      probe = probe or UIParent:CreateTexture(nil, "BACKGROUND")
+      probe:SetTexture(n)
+      if not probe.GetTextureFileID or probe:GetTextureFileID() then result = n end
+    end
+  elseif src:find("^[%w_%-%.\\ ]+$") and src:lower():find("^interface\\") then
+    local addon = src:lower():find("^interface\\addons\\") and src:sub(18):match("^([^\\]+)\\")
+    if addon then
+      local loaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or rawget(_G, "IsAddOnLoaded")
+      if loaded and loaded(addon) then result = src end
+    else
+      local getID = rawget(_G, "GetFileIDFromPath")
+      if type(getID) == "function" then
+        local ok, id = pcall(getID, src)
+        if ok and id then result = src end
+      else
+        probe = probe or UIParent:CreateTexture(nil, "BACKGROUND")
+        probe:SetTexture(src)
+        if not probe.GetTextureFileID or probe:GetTextureFileID() then result = src end
+      end
+    end
+  end
+  images[src] = result
+  return result or nil
+end
+
 ---------------------------------------------------------------------------
 -- Rendering
 ---------------------------------------------------------------------------
 -- Other players' text: drop links, textures and UI codes (UI.Clean), keep
 -- colours, and show any other "|" literally.
 local function Sanitise(text, other)
-  text = tostring(text or ""):gsub("\r\n?", "\n"):gsub("[\001\002\003]", "")
+  text = tostring(text or ""):gsub("\r\n?", "\n"):gsub("[\001-\004]", "")
   -- UI.Clean leaves only colours and |r as codes; every other pipe is escaped.
   if other then text = UI.Clean(text) end
   return text
 end
 
--- Total RP 3 structure tags become Kinship lines.
-local function Structure(s)
+-- Total RP 3 structure tags become Kinship lines. Images ({img:src:w:h[:align]})
+-- are collected into `found` and leave a marker line behind; without `found`
+-- they're dropped.
+local function Structure(s, found)
   s = s:gsub("{h(%d)[^}]*}(.-){/h%d}", function(n, inner)
     n = math.max(1, math.min(3, tonumber(n) or 1))
     return "\n" .. ("#"):rep(n) .. " " .. (inner:gsub("\n", " ")) .. "\n"
   end)
   s = s:gsub("{p:?%a?}", ""):gsub("{/p}", "\n")
+  if found then
+    s = s:gsub("{img:([^:}]+):([^:}]+):([^:}]+):?[^}]*}", function(src, w, h)
+      found[#found + 1] = { src = src, w = tonumber(w), h = tonumber(h) }
+      return "\n\004" .. #found .. "\n"
+    end)
+  end
   s = s:gsub("{img[^}]*}", "")
   s = s:gsub("{link%*[^*]*%*({icon:[^}]+})}", "%1")
   s = s:gsub("{link%*[^*]*%*([^}]*)}", "%1")
@@ -222,7 +269,8 @@ function M:Render(text, ctx)
   if type(text) ~= "string" or text == "" then return "" end
   local s = Sanitise(text, ctx.other)
   s = s:gsub("||", "\003")   -- escaped pipes stay out of the way until the end
-  s = Structure(s)
+  local found = {}
+  s = Structure(s, found)
 
   local surface = Surface(ctx)
   local head, accent, subtle = Roles(ctx)
@@ -235,7 +283,19 @@ function M:Render(text, ctx)
   local function Gap() if #out > 0 and out[#out] ~= "" then out[#out + 1] = "" end end
   for line in (s .. "\n"):gmatch("(.-)\n") do
     local hashes, title = line:match("^%s*(#+)%s*(%S.-)%s*$")
-    if hashes then
+    local img = found[tonumber(line:match("^%s*\004(%d+)%s*$") or "")]
+    if img then
+      local tex = M.ImageTexture(img.src)
+      if tex and img.w and img.h and img.w > 0 and img.h > 0 then
+        -- Scaled down to fit the page, never up.
+        local scale = math.min(1, width / img.w, IMAGE_MAX_H / img.h)
+        local w = math.max(8, math.floor(img.w * scale + 0.5))
+        local h = math.max(8, math.floor(img.h * scale + 0.5))
+        Gap()
+        out[#out + 1] = ("|T%s:%d:%d|t"):format(tostring(tex), h, w)
+        out[#out + 1] = ""
+      end
+    elseif hashes then
       local level = math.min(3, #hashes)
       title = Inline(title, accentHex, surface)
       Gap()
@@ -281,6 +341,7 @@ function M:Help(accentHex)
     a .. "*words*|r   emphasis, in the accent colour",
     a .. "{col:c94f4f}words{/col}|r   coloured words",
     a .. "{icon:INV_Misc_Note_01:18}|r   an icon, 8 to 64 pixels",
+    a .. "{img:Interface\\Path:width:height}|r   an image from the game",
     " ",
     "Total RP 3 tags such as {h1}, {p:c} and {col:r} work too.",
   }, "\n")
@@ -499,6 +560,162 @@ function M:PickIcon(onPick)
 end
 
 ---------------------------------------------------------------------------
+-- Image picker: the game images in ImageList.lua that this client has,
+-- narrowed as you type part of a path ("loading", "taxi").
+---------------------------------------------------------------------------
+local IMG_COLS, IMG_ROW = 3, 92
+local IMAGE_MAX = 512   -- the largest side an inserted image asks for, as in Total RP 3
+
+-- { path, w, h, hay } for each listed image this client has, built on first use.
+-- A path listed for both kinds of client with different sizes uses this client's.
+local imageList
+function M:ImageList()
+  if imageList then return imageList end
+  imageList = {}
+  local src = ns.IMAGE_LIST
+  if type(src) ~= "string" then return imageList end
+  local project = rawget(_G, "WOW_PROJECT_ID")
+  local mine = (project ~= nil and project == rawget(_G, "WOW_PROJECT_MAINLINE")) and "m" or "c"
+  local best, order = {}, {}
+  for w, h, tag, path in src:gmatch("(%d+) (%d+) (%a) ([^\r\n]+)") do
+    local rank = (tag == "a" or tag == mine) and 2 or 1
+    local cur = best[path]
+    if not cur then order[#order + 1] = path end
+    if not cur or rank > cur.rank then
+      best[path] = { path = path, w = tonumber(w), h = tonumber(h), rank = rank,
+                     hay = path:lower():gsub("^interface\\", "") }
+    end
+  end
+  for _, path in ipairs(order) do
+    if M.ImageTexture(path) then imageList[#imageList + 1] = best[path] end
+  end
+  return imageList
+end
+
+function M:BuildImagePicker()
+  if self.imagePicker then return self.imagePicker end
+  local f = UI.Window("KinshipRPMarkupImagePicker", "Choose an image", PICK_W, PICK_H)
+  f:SetFrameStrata("DIALOG")
+  self.imagePicker = f
+  local desk = UI.Desk(f)
+  desk:SetPoint("TOPLEFT", 1, -35)
+  desk:SetPoint("BOTTOMRIGHT", -1, 1)
+
+  f.scale = 1
+  f.sizes = UI.Segments(f, { { key = 0.33, label = "Small" }, { key = 0.5, label = "Medium" },
+    { key = 1, label = "Large" } }, 56, function(k) f.scale = k end)
+  f.sizes:SetPoint("TOPLEFT", 16, -46)
+  f.sizes:Select(1)
+  UI.Tooltip(f.sizes, "Image size", "How large the image is in your text. Large images are still made to fit the page.")
+
+  f.name = UI.Edit(f, 136, 24, "desk", 80)
+  f.name:SetPoint("TOPRIGHT", -16, -46)
+  f.name.hint = UI.Text(f.name, "Search", "Small", "deskSubtle")
+  f.name.hint:SetPoint("LEFT", 8, 0)
+  f.name:SetScript("OnTextChanged", function(self)
+    self.hint:SetShown((self:GetText() or "") == "")
+    if f.timer then f.timer:Cancel() end
+    f.timer = C_Timer.NewTimer(0.2, function() f.timer = nil; M:FillImagePicker(f) end)
+  end)
+  f.name:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+  UI.Tooltip(f.name, "Find an image", 'Type part of its name, like "loading" or "taxi", to narrow the list.')
+  f.status = UI.Text(f, "", "Small", "deskSubtle", PICK_W - 32)
+  f.status:SetPoint("TOPLEFT", 17, -78)
+
+  function f.Choose(img)
+    local fn = f.onPick
+    f:Hide()
+    local fit = math.min(1, IMAGE_MAX / math.max(img.w, img.h)) * f.scale
+    local w, h = math.max(8, math.floor(img.w * fit + 0.5)), math.max(8, math.floor(img.h * fit + 0.5))
+    if fn then K.Try("image picker", fn, img.path, w, h) end
+  end
+
+  local cellW = math.floor((PICK_W - 32 - 12) / IMG_COLS)
+  f.list = UI.List(f, PICK_W - 32, PICK_H - 112, IMG_ROW, "No images are available on this client.", function(row)
+    row:EnableMouse(false)
+    row.cells = {}
+    for i = 1, IMG_COLS do
+      local b = CreateFrame("Button", nil, row)
+      b:SetSize(cellW - 4, IMG_ROW - 4)
+      b:SetPoint("LEFT", (i - 1) * cellW, 0)
+      b.bg = b:CreateTexture(nil, "BACKGROUND")
+      b.bg:SetAllPoints()
+      b.bg:SetColorTexture(0, 0, 0, 0.25)
+      b.image = b:CreateTexture(nil, "ARTWORK")
+      b.image:SetPoint("CENTER")
+      b.edge = UI.Border(b)
+      local function paint(p)
+        local t = K:Theme()
+        b.edge:SetColor(UI.Mix(t.deskFieldEdge, { t.ui[1], t.ui[2], t.ui[3], 1 }, p))
+        b.image:SetAlpha(0.85 + 0.15 * p)
+      end
+      b:SetScript("OnEnter", function(self)
+        UI.Tween(self, 1, 0.1, paint)
+        local img = self.img
+        if not img then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(img.path:match("([^\\]+)$") or img.path, 1, 0.82, 0)
+        GameTooltip:AddLine(("%d x %d"):format(img.w, img.h), 1, 1, 1)
+        GameTooltip:Show()
+      end)
+      b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint); GameTooltip:Hide() end)
+      b:SetScript("OnClick", function(self) if self.img then f.Choose(self.img) end end)
+      UI:OnTheme(function() paint(UI.Progress(b)) end)
+      row.cells[i] = b
+    end
+  end, { bare = true, emptyIcon = K.Art("IconNote") })
+  f.list:SetPoint("TOPLEFT", 16, -96)
+
+  f.paintRow = function(r, item)
+    for i, b in ipairs(r.cells) do
+      local img = item[i]
+      b.img = img
+      b:SetShown(img ~= nil)
+      if img then
+        local bw, bh = b:GetWidth() - 6, b:GetHeight() - 6
+        local s = math.min(bw / img.w, bh / img.h)
+        b.image:SetTexture(img.path)
+        b.image:SetSize(math.max(1, img.w * s), math.max(1, img.h * s))
+      end
+    end
+  end
+  return f
+end
+
+-- Fill the grid: every image, or the ones whose names hold every word typed.
+function M:FillImagePicker(f)
+  local q = strtrim(f.name:GetText() or ""):lower()
+  local found = {}
+  for _, img in ipairs(self:ImageList()) do
+    local ok = true
+    for word in q:gmatch("%S+") do
+      if not img.hay:find(word, 1, true) then ok = false; break end
+    end
+    if ok then found[#found + 1] = img end
+  end
+  f.list.empty:SetText(q ~= "" and "No images match that. Try a shorter word." or "No images are available on this client.")
+  f.status:SetText(("%d %s"):format(#found, #found == 1 and "image" or "images"))
+  if f.list.scroll then f.list.scroll:SetVerticalScroll(0) end
+  local rows = {}
+  for i, img in ipairs(found) do
+    if (i - 1) % IMG_COLS == 0 then rows[#rows + 1] = {} end
+    local row = rows[#rows]
+    row[#row + 1] = img
+  end
+  f.list:SetItems(rows, f.paintRow)
+end
+
+-- onPick(path, width, height)
+function M:PickImage(onPick)
+  local f = self:BuildImagePicker()
+  f.onPick = onPick
+  if f.timer then f.timer:Cancel(); f.timer = nil end
+  f.name:SetText("")
+  self:FillImagePicker(f)
+  f:Show()
+end
+
+---------------------------------------------------------------------------
 -- Formatting toolbar for any multi-line edit box (the Profile page attaches
 -- one under its writing area).
 ---------------------------------------------------------------------------
@@ -530,6 +747,14 @@ function M:Toolbar(parent, editBox)
   Add("Icon", 40, "Icon", "Pick an icon to place in your text.", function()
     M:PickIcon(function(spec, size) InsertText(editBox, ("{icon:%s:%d}"):format(spec, size)) end)
   end)
+  local pic = Add("", 28, "Image", "Pick an image from the game. It sits on its own line in your text.", function()
+    M:PickImage(function(path, w, h) InsertBlock(editBox, ("{img:%s:%d:%d}"):format(path, w, h)) end)
+  end)
+  pic.icon = pic:CreateTexture(nil, "ARTWORK")
+  pic.icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
+  pic.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  pic.icon:SetSize(16, 16)
+  pic.icon:SetPoint("CENTER")
   Add("Line", 38, "Divider", "A line across the page:\n---", function() InsertBlock(editBox, "---") end)
   Add("?", 22, "Formatting", M:Help(), function() end)
   bar:SetWidth(math.max(1, x - 4))

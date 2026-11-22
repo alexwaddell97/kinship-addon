@@ -45,6 +45,17 @@ local function Strip(text)
   return strtrim(text)
 end
 
+-- Descriptions keep their images: Kinship shows {img:..} tags.
+local function Writing(text)
+  if type(text) ~= "string" then return "" end
+  local kept = {}
+  text = text:gsub("[\004]", ""):gsub("{img:[^}]+}", function(tag)
+    kept[#kept + 1] = tag
+    return "\004" .. #kept .. "\004"
+  end)
+  return (Strip(text):gsub("\004(%d+)\004", function(n) return kept[tonumber(n)] or "" end))
+end
+
 -- Glance icons are stored as Total RP 3 media ids, not texture paths. Turn
 -- them into something SetTexture understands while Total RP 3 is loaded.
 function I.ResolveIcon(ic)
@@ -148,18 +159,18 @@ function I:Convert(prof)
   -- About: Total RP 3 has three layouts; Kinship keeps Appearance / Personality / History.
   local te = tonumber(ab.TE) or 1
   if te == 3 and type(ab.T3) == "table" then
-    p.appearance = Strip(ab.T3.PH and ab.T3.PH.TX)
-    p.personality = Strip(ab.T3.PS and ab.T3.PS.TX)
-    p.history = Strip(ab.T3.HI and ab.T3.HI.TX)
+    p.appearance = Writing(ab.T3.PH and ab.T3.PH.TX)
+    p.personality = Writing(ab.T3.PS and ab.T3.PS.TX)
+    p.history = Writing(ab.T3.HI and ab.T3.HI.TX)
   elseif te == 2 and type(ab.T2) == "table" then
     local parts = {}
     for _, frame in ipairs(ab.T2) do
-      local t = type(frame) == "table" and Strip(frame.TX) or ""
+      local t = type(frame) == "table" and Writing(frame.TX) or ""
       if t ~= "" then parts[#parts + 1] = t end
     end
     p.appearance = table.concat(parts, "\n\n")
   else
-    p.appearance = Strip(type(ab.T1) == "table" and ab.T1.TX)
+    p.appearance = Writing(type(ab.T1) == "table" and ab.T1.TX)
   end
 
   p.currently, p.ooc = Strip(cr.CU), Strip(cr.CO)

@@ -7,6 +7,12 @@
   page (right-click it to remove it). It shows on your profile, and Total RP
   3 users see it too. Eye colours picked in Total RP 3 now show in Kinship,
   and come across when you import a Total RP 3 profile.
+- Images in descriptions. The new image button in the writing toolbar (the
+  map icon) opens a picker with the game's images that your client has, in
+  three sizes. Images show on their own line, scaled to fit the page.
+  Total RP 3's {img:...} tags now show the image instead of being removed,
+  and importing from Total RP 3 keeps them. Only images from the game, or
+  from an addon you have loaded, are shown.
 
 ## 1.4.10
 

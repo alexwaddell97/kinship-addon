@@ -29,6 +29,7 @@ ext\Settings.lua
 Core\Markup.lua
 Profile\IconNames.lua
 Profile\MusicNames.lua
+Profile\ImageList.lua
 Profile\IconPicker.lua
 Core\Journal.lua
 Core\Guide.lua

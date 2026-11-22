@@ -13,3 +13,6 @@ Embedded libraries (unmodified), with thanks to their authors:
   Used for Total RP 3: Extended-compatible import and export strings.
 - The icon and music names in Profile/IconNames.lua and Profile/MusicNames.lua come from LibRPMedia (https://github.com/wow-rp-addons/LibRPMedia,
   public domain). Used so icons and theme music can be searched by name.
+- The image list in Profile/ImageList.lua is built from Total RP 3's image lists
+  (https://github.com/Total-RP/Total-RP-3), copyright The Total RP 3 Authors, Apache License 2.0,
+  see LICENSE-TotalRP3.txt. Reformatted into one list for the image picker.
