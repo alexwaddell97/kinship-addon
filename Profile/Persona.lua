@@ -199,6 +199,12 @@ function P.NameColor(p)
   if ValidColor(c) then return Clamp(c[1], 0, 1), Clamp(c[2], 0, 1), Clamp(c[3], 0, 1) end
 end
 
+-- r, g, b of a profile's eye colour, or nil.
+function P.EyeColor(p)
+  local c = type(p) == "table" and p.eyeColor
+  if ValidColor(c) then return Clamp(c[1], 0, 1), Clamp(c[2], 0, 1), Clamp(c[3], 0, 1) end
+end
+
 function P.Music(p)
   local m = type(p) == "table" and tonumber(p.music)
   if m and m > 0 then return math.floor(m) end
@@ -598,6 +604,11 @@ K:AddProfileField({
     if r and type(my.NA) == "string" and my.NA ~= "" then
       my.NA = ("|cff%s%s|r"):format(P.ColorHex({ r, g, b }), my.NA)
     end
+    -- Eyes go out in their colour, the way Total RP 3 sends them.
+    r, g, b = P.EyeColor(p)
+    if r and type(my.AE) == "string" and my.AE ~= "" then
+      my.AE = ("|cff%s%s|r"):format(P.ColorHex({ r, g, b }), my.AE)
+    end
   end,
   read = function(fields, out)
     out.glances = ReadPeeks(fields.PE)
@@ -607,6 +618,8 @@ K:AddProfileField({
     out.music = (mu and mu > 0) and math.floor(mu) or nil
     local color, inner = SplitName(fields.NA)
     if color then out.nameColor, out.rpName = color, inner end
+    color, inner = SplitName(fields.AE)
+    if color then out.eyeColor, out.eyes = color, inner end
   end,
   full = { "PE", "PS", "MU", "IC" },
   tooltip = { "IC" },
@@ -627,11 +640,13 @@ local function Entry(name)
 end
 
 local function OnFieldUpdated(name, field, contents)
-  if not CLEARS[field] and field ~= "NA" then return end
+  if not CLEARS[field] and field ~= "NA" and field ~= "AE" then return end
   local e = Entry(name)
   if not e then return end
   if field == "NA" then
     if not SplitName(contents) then e.profile.nameColor = nil end
+  elseif field == "AE" then
+    if not SplitName(contents) then e.profile.eyeColor = nil end
   elseif contents == nil or contents == "" then
     e.profile[CLEARS[field]] = nil
   end

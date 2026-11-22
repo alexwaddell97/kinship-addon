@@ -43,6 +43,16 @@ local function WhoLine(info)
   return #parts > 0 and table.concat(parts, " ") or nil
 end
 
+-- Eyes in the colour their player picked, if any.
+local function EyesText(p, v)
+  local r, g, b
+  if K.Persona then r, g, b = K.Persona.EyeColor(p) end
+  if not r then return v end
+  local hex = K.Persona.ColorHex({ r, g, b })
+  if K.Markup then hex = K.Markup.Readable(hex, K:Theme().light and "light" or "dark") or hex end
+  return "|cff" .. hex .. v .. "|r"
+end
+
 -- Inline headings inside the reading text, in the theme's accent.
 local function Head(text) return "|cff" .. UI.Hex(K:Theme().accent) .. text .. "|r" end
 
@@ -487,6 +497,7 @@ function V:ShowTab(i)
                          { "Known as ", "nickname" }, { "Weighs ", "weight" }, { "", "relationship" },
                          { "Voice: ", "voice" } }) do
       local v = pr[f[2]] and strtrim(pr[f[2]]) or ""
+      if v ~= "" and f[2] == "eyes" then v = EyesText(pr, v) end
       if v ~= "" then who[#who + 1] = f[1] .. v .. (f[3] or "") end
     end
     local other = not d.mine

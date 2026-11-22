@@ -1,5 +1,13 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### New
+- Eye colour. Pick one with the round swatch next to Eyes on your Profile
+  page (right-click it to remove it). It shows on your profile, and Total RP
+  3 users see it too. Eye colours picked in Total RP 3 now show in Kinship,
+  and come across when you import a Total RP 3 profile.
+
 ## 1.4.10
 
 No files were added, so a /reload is enough.

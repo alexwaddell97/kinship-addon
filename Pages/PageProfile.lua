@@ -174,7 +174,43 @@ K:RegisterPage({
     addId("race",       "Race",                                              0, -84,  HW2, 40)
     addId("class",      "Class or calling",                                  176, -84, HW2, 40):Info("Class or calling",
       "What your character does in the story, if that isn't their class, like \"Herbalist\" or \"Sellsword\".")
-    addId("eyes",       "Eyes",                                              0, -126, HW2, 40)
+    addId("eyes",       "Eyes",                                              0, -126, HW2 - 28, 40)
+    -- Eye colour: a round swatch after the Eyes field. Right-click clears it.
+    local function SetEyeColor(col)
+      K:Profile().eyeColor = col and { col[1], col[2], col[3] } or nil
+      K:Fire("PROFILE")
+    end
+    local eye = CreateFrame("Button", nil, id)
+    eye:SetSize(22, 22)
+    eye:SetPoint("TOPLEFT", HW2 - 24, -126 - 14)
+    eye:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    eye.ring = UI.Circle(eye, 22, "ARTWORK", 0)
+    eye.ring:SetPoint("CENTER")
+    eye.dot = UI.Circle(eye, 16, "ARTWORK", 1)
+    eye.dot:SetPoint("CENTER")
+    function eye:Paint()
+      local t = K:Theme()
+      local r, g, b
+      if K.Persona then r, g, b = K.Persona.EyeColor(K:Profile()) end
+      local edge = self.hover and t.accent or t.panelEdge
+      self.ring:SetVertexColor(edge[1], edge[2], edge[3], self.hover and 1 or 0.6)
+      self.dot:SetShown(r ~= nil)
+      if r then self.dot:SetVertexColor(r, g, b, 1) end
+    end
+    eye:SetScript("OnEnter", function(self) self.hover = true; self:Paint() end)
+    eye:SetScript("OnLeave", function(self) self.hover = false; self:Paint() end)
+    eye:SetScript("OnClick", function(_, button)
+      if button == "RightButton" then SetEyeColor(nil); return end
+      local p = K:Profile()
+      local old = p.eyeColor and CopyTable(p.eyeColor) or nil
+      local r, g, b = K.Persona.EyeColor(p)
+      if not r then r, g, b = 0.45, 0.55, 0.65 end
+      UI.PickColor(r, g, b, function(nr, ng, nb) SetEyeColor({ nr, ng, nb }) end, function() SetEyeColor(old) end)
+    end)
+    UI.Tooltip(eye, "Eye colour", "Pick a colour for your character's eyes. It shows on your profile, "
+      .. "and Total RP 3 users see it too. Right-click to remove it.")
+    UI:OnTheme(function() eye:Paint() end)
+    c.eyeSwatch = eye
     addId("birthplace", "Birthplace",                                        176, -126, HW2, 60)
     addId("ooc",        "Out of character note",                             0, -168, IW, 255)
     local idHint = UI.Text(id, "Race and class only show when you fill them in; otherwise everyone sees your character's own. "
@@ -241,6 +277,7 @@ K:RegisterPage({
     for key, eb in pairs(c.fields) do
       if not eb:HasFocus() then eb:SetText(p[key] or ""); eb:SetCursorPosition(0) end
     end
+    if c.eyeSwatch then c.eyeSwatch:Paint() end
     if wantSection then c.section, wantSection = wantSection, nil end
     if not c.area.edit:HasFocus() then c:LoadSection() end
   end,

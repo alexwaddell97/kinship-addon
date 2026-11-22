@@ -80,6 +80,10 @@ function T:Mirror()
     if v == "" then v = nil end
     if p[key] ~= v then p[key] = v; changed = true end
   end
+  local ec, old = fresh.eyeColor, p.eyeColor
+  if (ec and K.Persona and K.Persona.ColorHex(ec)) ~= (old and K.Persona and K.Persona.ColorHex(old)) then
+    p.eyeColor = ec; changed = true
+  end
   local c = fresh.consent or {}
   p.consent = p.consent or {}
   for _, f in ipairs(CONSENT_KEYS) do

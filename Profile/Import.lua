@@ -128,6 +128,7 @@ function I:Convert(prof)
   p.race = (race ~= gameRace) and race or ""
   p.class = (class ~= gameClass) and class or ""
   p.age, p.height, p.eyes = Strip(ch.AG), Strip(ch.HE), Strip(ch.EC)
+  p.eyeColor = K.Persona and K.Persona.HexColor(type(ch.EH) == "string" and ch.EH:match("^#?(%x%x%x%x%x%x)") or nil)
   p.home, p.birthplace = Strip(ch.RE), Strip(ch.BP)
   if type(ch.MI) == "table" then
     for _, m in ipairs(ch.MI) do
@@ -424,7 +425,7 @@ function I:Show(fromSettings)
     local t = K:Theme()
     local bullet = "|cff" .. UI.Hex(t.accent) .. "•|r  "
     f.body:SetText(table.concat({
-      bullet .. "Names, titles, race, class, age, height, eyes, home and birthplace",
+      bullet .. "Names, titles, race, class, age, height, eyes and eye colour, home and birthplace",
       bullet .. "Your About text, as Appearance, Personality and History",
       bullet .. "Currently, your out-of-character note, and your IC / OOC status",
       bullet .. "Glances, personality traits, pronouns, motto, house and RP style (as consent)",

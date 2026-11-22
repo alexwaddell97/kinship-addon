@@ -219,6 +219,7 @@ local function Shape(src)
   end
   p.icon = Icon(src.icon)
   p.nameColor = Color(src.nameColor)
+  p.eyeColor = Color(src.eyeColor)
   p.music = type(src.music) == "number" and src.music > 0 and math.floor(src.music) or nil
   return p
 end
