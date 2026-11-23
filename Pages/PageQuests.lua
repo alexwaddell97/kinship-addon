@@ -242,7 +242,11 @@ local function RefreshJournal(tab, c)
     Button(tab.primary, e.tracked and "Untrack" or "Track", function() Q:Track(e.id, not e.tracked) end, 92)
     Button(tab.secondary, "Set aside", function() Q:Abandon(e.id) end, 92)
     local _, total = Q.Required(e)
-    if mine then
+    local CP = K.ExtCampaign
+    if e.ext and CP then
+      local playing = CP:Current() == e.ext.c
+      Button(tab.tertiary, playing and "Pause campaign" or "Play campaign", function() CP:Toggle(e.ext.c) end, 120)
+    elseif mine then
       Button(tab.tertiary, "Mark complete", function() Q:Complete(e.id) end, 112)
     elseif total == 0 or not e.st then
       Button(tab.tertiary, "Complete", function() Q:Complete(e.id) end, 96)
@@ -958,7 +962,8 @@ local function RefreshCampaigns(tab)
     row.title:SetText(Clean(q.title))
     if it.inLog then
       local done, total = Q.Progress(q)
-      row.sub:SetText(total > 0 and ("%d/%d objectives"):format(done, total) or (Q:IsMine(q) and "Your own story" or ("From " .. Short(q.author))))
+      row.sub:SetText(total > 0 and ("%d/%d objectives"):format(done, total)
+        or (q.ext and "A Total RP 3: Extended campaign" or (Q:IsMine(q) and "Your own story" or ("From " .. Short(q.author)))))
       row.chip:Set(Q:IsMine(q) and q.state == "active" and "Storyteller" or st.label, st.color)
     else
       row.sub:SetText("In your library, not yet begun")

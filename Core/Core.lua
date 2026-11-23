@@ -996,6 +996,8 @@ SlashCmdList.KINSHIPRP = function(input)
     K.Journal:Open(cmd)
   elseif (cmd == "effects" or cmd == "auras") and K.Auras then
     if K:ExtOn("auras") then K.Auras:OpenJournal() else K:Print("Effects are switched off (Settings > Extended features).") end
+  elseif (cmd == "look" or cmd == "listen" or cmd == "talk" or cmd == "interact") and K.ExtCampaign then
+    K.ExtCampaign:Act(cmd == "interact" and "ACTION" or cmd:upper())
   elseif cmd == "satchel" and K.Satchel then
     K.Satchel:Toggle()
   elseif (cmd == "outfit" or cmd == "wear") and K.Worn then

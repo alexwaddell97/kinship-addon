@@ -68,6 +68,9 @@ Items\Vault.lua
 Items\Stashes.lua
 Quests\QuestRewards.lua
 ext\Database.lua
+ext\Script.lua
+ext\Campaign.lua
+ext\Cutscene.lua
 Pages\PageInventory.lua
 Items\Satchel.lua
 Pages\PageSettings.lua

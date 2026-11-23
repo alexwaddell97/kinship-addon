@@ -68,4 +68,9 @@ read_globals = {
   "issecretvalue", "max", "min", "mod", "random", "securecall", "seterrorhandler", "sort", "sqrt", "strfind",
   "strjoin", "strlen", "strlower", "strmatch", "strrep", "strsplit", "strsub", "strtrim", "strupper",
   "tContains", "time", "tinsert", "tremove", "wipe",
+  -- Playing Total RP 3: Extended campaigns (ext/Script.lua, ext/Campaign.lua, ext/Cutscene.lua)
+  "CameraZoomIn", "CameraZoomOut", "CombatLogGetCurrentEventInfo", "Dismount", "GetAchievementInfo", "GetCameraZoom",
+  "GetUnitSpeed", "IsFalling", "IsFlying", "IsStealthed", "NO", "PlaySoundFile", "RaidNotice_AddMessage",
+  "RaidWarningFrame", "SaveView", "SetView", "StopSound", "ToggleSheath", "UnitClassification", "UnitCreatureFamily",
+  "UnitCreatureType", "UnitIsDeadOrGhost", "UnitPosition", "UnitSex", "YES",
 }

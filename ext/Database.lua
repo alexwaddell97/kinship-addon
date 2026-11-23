@@ -107,6 +107,19 @@ local function BuildImport(page, tab)
     m.area.edit:SetFocus()
   end)
 
+  -- With Total RP 3: Extended loaded, its campaigns can be copied straight in.
+  m.trp = UI.Button(card, "Copy campaigns from Total RP 3", 230, 26)
+  m.trp:SetPoint("BOTTOMLEFT", 16, 14)
+  UI.Tooltip(m.trp, "Copy campaigns from Total RP 3",
+    "Brings every campaign in your Total RP 3: Extended database into Kinship, so you can play them here. Total RP 3 keeps its own copies.")
+  m.trp:SetScript("OnClick", function()
+    local n, failed = DB:CopyFromTRP3()
+    if n == 0 and failed == 0 then m:Status("Total RP 3: Extended has no campaigns to copy.") return end
+    m:Status(("Copied %d %s.%s"):format(n, n == 1 and "campaign" or "campaigns",
+      failed > 0 and (" %d couldn't be copied."):format(failed) or ""), failed > 0 and n == 0)
+    Refresh()
+  end)
+
   function m:Status(text, bad)
     local c = bad and UI.CardHex({ 0.90, 0.36, 0.30 }) or Sub()
     self.status:SetText(text and ("|cff%s%s|r"):format(c, text) or "")
@@ -143,6 +156,7 @@ local function BuildImport(page, tab)
 
   function m:Open()
     self.decoded = nil
+    self.trp:SetShown(DB:TRP3Campaigns() ~= nil)
     self.area.edit:SetText("")
     self:Status()
     self:Show()
@@ -263,11 +277,26 @@ function DB:BuildTab(tab, page)
   d.body = UI.ReadArea(d, IW + 6, BODY_H - 128 - 52, "Read", "text")
   d.body:SetPoint("TOPLEFT", 16, -124)
 
-  d.export = UI.Button(d, "Export", 110, 26)
+  d.export = UI.Button(d, "Export", 90, 26)
   d.export:SetPoint("BOTTOMLEFT", 16, 14)
   d.export:SetScript("OnClick", function() if tab.selected then DB:OpenExport(tab, tab.selected) end end)
   UI.Tooltip(d.export, "Export", "A string Total RP 3: Extended Tools can import, or anyone using Kinship.")
-  d.remove = UI.Button(d, "Remove", 110, 26)
+
+  -- Campaigns: play, pause, start over (ext/Campaign.lua)
+  d.play = UI.Button(d, "Play", 90, 26)
+  d.play:SetPoint("LEFT", d.export, "RIGHT", 6, 0)
+  d.play:SetScript("OnClick", function()
+    if tab.selected and K.ExtCampaign then K.ExtCampaign:Toggle(tab.selected); Refresh() end
+  end)
+  UI.Tooltip(d.play, "Play", "Play this campaign. Its quests show in your quest journal and tracker, and the campaign bar gives you Look, Listen, Talk and Interact.")
+  d.restart = UI.Button(d, "Start over", 100, 26)
+  d.restart:SetPoint("LEFT", d.play, "RIGHT", 6, 0)
+  Confirming(d.restart, "Start over", "Sure?", function()
+    if tab.selected and K.ExtCampaign then K.ExtCampaign:Reset(tab.selected); Refresh() end
+  end)
+  UI.Tooltip(d.restart, "Start over", "Forget your progress in this campaign and its quests in your journal.")
+
+  d.remove = UI.Button(d, "Remove", 90, 26)
   d.remove:SetPoint("BOTTOMRIGHT", -16, 14)
   Confirming(d.remove, "Remove", "Sure?", function()
     if tab.selected then E:Remove(tab.selected); tab.selected = nil; Refresh() end
@@ -276,6 +305,32 @@ function DB:BuildTab(tab, page)
 
   tab.none = EmptyState(card, "", IW - 60, "Import a creation")
   tab.none.button:SetScript("OnClick", function() DB:OpenImport(tab) end)
+end
+
+DB.GROUP_LABEL = GROUP_LABEL
+
+-- Total RP 3: Extended's own databases while it's loaded: your creations and
+-- what you've received. nil when it isn't loaded.
+function DB:TRP3Campaigns()
+  local my, exchange = rawget(_G, "TRP3_Tools_DB"), rawget(_G, "TRP3_Exchange_DB")
+  if type(my) ~= "table" and type(exchange) ~= "table" then return nil end
+  return { my = type(my) == "table" and my or {}, exchange = type(exchange) == "table" and exchange or {} }
+end
+
+-- Copy its campaigns in. Yours stay yours if you made them; received ones
+-- are filed as received, vouched for by nobody. Returns copied, failed.
+function DB:CopyFromTRP3()
+  local dbs = self:TRP3Campaigns()
+  if not dbs then return 0, 0 end
+  local n, failed = 0, 0
+  for _, src in ipairs({ "exchange", "my" }) do
+    for id, obj in pairs(dbs[src]) do
+      if type(obj) == "table" and obj.TY == "CA" and E.ValidRootID(id) then
+        if E:Store(id, obj, false, src == "exchange") then n = n + 1 else failed = failed + 1 end
+      end
+    end
+  end
+  return n, failed
 end
 
 function DB:OpenImport(tab)
@@ -344,8 +399,15 @@ local function DetailText(id, obj, source)
   local T = E.TYPES[info.type]
   if T and not K:ExtOn(T.module) then
     out[#out + 1] = ("|cff%s%s are switched off in Settings > Extended features.|r"):format(sub, T.plural)
+  elseif info.type == "CA" then
+    local CP = K.ExtCampaign
+    local state = CP and CP:Current() == id and "It's playing now. Its quests are in your quest journal."
+      or (CP and CP:Started(id) and "You've begun it. Press Play to carry on where you left off.")
+      or "Press Play to begin it. Its quests show in your quest journal and tracker."
+    out[#out + 1] = ("|cff%s%s Kinship plays its quests, steps, cutscenes and documents; Total RP 3: Extended items and auras inside it are skipped.|r")
+      :format(sub, state)
   else
-    out[#out + 1] = ("|cff%sKinship keeps it ready to share and export. Playing Extended creations arrives in a later update.|r"):format(sub)
+    out[#out + 1] = ("|cff%sKinship keeps it ready to share and export. Campaigns can be played; other creations play as part of them.|r"):format(sub)
   end
   return table.concat(out, "\n\n")
 end
@@ -396,4 +458,11 @@ function DB:RefreshTab(tab)
   elseif level >= E.SECURITY.HIGH then d.safety:Set("Safe", { 0.30, 0.70, 0.40 })
   else d.safety:Set("Asks permission", { 0.95, 0.70, 0.30 }) end
   d.body:SetText(DetailText(id, obj, source))
+  local campaign = info.type == "CA" and K.ExtCampaign ~= nil and K:ExtOn("campaigns")
+  d.play:SetShown(campaign)
+  d.restart:SetShown(campaign and K.ExtCampaign:Started(id))
+  if campaign then d.play:SetText(K.ExtCampaign:Current() == id and "Pause" or (K.ExtCampaign:Started(id) and "Resume" or "Play")) end
 end
+
+-- The detail follows the campaign as it plays and pauses.
+K:On("EXT_CAMPAIGN", function() if K.Journal and K.Journal.RefreshCurrent then K.Journal:RefreshCurrent() end end)

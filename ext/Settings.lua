@@ -9,7 +9,7 @@ local MODULES = {
   { key = "inventory", label = "Inventory",  desc = "Bags, the Workshop, giving items and stashes." },
   { key = "documents", label = "Documents",  desc = "Books, letters and notices you write and read." },
   { key = "auras",     label = "Effects",    desc = "Wounds, boons and states on your character, shared with others." },
-  { key = "campaigns", label = "Campaigns and quests", desc = "Quests you follow and the ones you write." },
+  { key = "campaigns", label = "Campaigns and quests", desc = "Quests you follow and write, and Total RP 3: Extended campaigns." },
   -- Cutscenes ("dialogues"), workflows ("scripting") and Total RP 3: Extended
   -- trading ("interop") have switches in K.EXT_MODULES too, but nothing behind
   -- them yet, so they're left off this card until they do something.

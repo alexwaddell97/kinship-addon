@@ -820,6 +820,7 @@ function Q.Sheet(parent, w, h, opts)
     local lvl = QM and QM.LevelText(q)
     local lvlText = lvl and ("  ·  |cff%sLevel %s|r"):format(QM.LevelHex(q, true) or "ffffff", lvl) or ""
     if giver ~= "" then self.giver:SetText("Given by " .. giver .. lvlText)
+    elseif q.ext then self.giver:SetText(q.from and ("A Total RP 3: Extended campaign by " .. Short(q.from)) or "A Total RP 3: Extended campaign")
     elseif q.author and not Q:IsMine(q) then self.giver:SetText("From " .. Short(q.author) .. lvlText)
     else self.giver:SetText("A quest of your own making" .. lvlText) end
 
@@ -1091,4 +1092,8 @@ K:RegisterSettings({ id = "quests", title = "Quests", order = 35,
     set = function(v) K.db.settings.questLogTab = v; if K.QuestTracker then K.QuestTracker:ApplyLogSetting() end end,
   })
   card:Toggle("Quest offers", "Lets other Kinship users offer you quests. You can still say no.", "questOffers")
+  card:Toggle("Campaign bar", "Shows Look, Listen, Talk and Interact buttons while a Total RP 3: Extended campaign plays.", {
+    get = function() return K.db.settings.extBar ~= false end,
+    set = function(v) K.db.settings.extBar = v; if K.ExtCampaign then K.ExtCampaign:ShowBar() end end,
+  })
 end })

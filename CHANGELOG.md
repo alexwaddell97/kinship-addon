@@ -1,5 +1,21 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### New
+- Total RP 3: Extended campaigns now play in Kinship. Bring one into the
+  Database tab on the Inventory page (paste its export string, or, with Total
+  RP 3: Extended loaded, copy all your campaigns across), then press Play.
+  Its quests show in your quest journal, tracker and quest log tab, its
+  cutscenes and documents open, and its NPCs get their names and titles.
+  A small bar gives you Look, Listen, Talk and Interact while it plays (or
+  type /kin look, /kin listen, /kin talk or /kin interact). Pause it and
+  carry on later, or start it over.
+- Campaigns that use Total RP 3: Extended items or auras play without those
+  parts for now, and Kinship never runs a campaign's raw scripts or macros.
+  A campaign someone else made asks the first time it plays before it may
+  speak, emote or play sounds for the people around you.
+
 ## 1.4.11
 
 Eye colour, and images in descriptions. There's a new file, so restart the
