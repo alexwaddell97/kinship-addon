@@ -1,6 +1,9 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.12
+
+Total RP 3: Extended campaigns now play in Kinship. There are new files, so
+restart the game after updating (a /reload isn't enough).
 
 ### New
 - Total RP 3: Extended campaigns now play in Kinship. Bring one into the
