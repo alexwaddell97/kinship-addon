@@ -421,7 +421,8 @@ local function BuildWrite(tab)
   local sf = CreateFrame("ScrollFrame", nil, ed)
   sf:SetPoint("TOPLEFT", 16, -14)
   sf:SetPoint("BOTTOMRIGHT", -22, 14)
-  local IW = ED_W - 16 - 22
+  -- A few pixels short of the scroll area, so nothing sits on its clipped edge.
+  local IW = ED_W - 16 - 22 - 4
   local body = CreateFrame("Frame", nil, sf)
   body:SetSize(IW, 1)
   sf:SetScrollChild(body)
@@ -526,13 +527,13 @@ local function BuildWrite(tab)
     tab.objectives[i] = r
   end
 
-  tab.reward = UI.Field(body, "Reward (optional)", IW - 140, Q.MAX.reward, function(v) tab.draft.reward = v; changed() end)
+  tab.reward = UI.Field(body, "Reward (optional)", IW - 150, Q.MAX.reward, function(v) tab.draft.reward = v; changed() end)
 
   -- Kinship items as rewards: made from your designs, sent when players finish (QuestRewards.lua)
   local ir = CreateFrame("Frame", nil, body)
   ir:SetSize(IW, 48)
   tab.itemsRow = ir
-  ir.label = UI.Text(ir, "Reward items (made from your designs and sent for you)", "Label", "subtle")
+  ir.label = UI.Text(ir, "Reward items (from your designs, sent for you)", "Label", "subtle")
   ir.label:SetPoint("TOPLEFT", 1, 0)
   ir.slots = {}
   local function Items() tab.draft.items = tab.draft.items or {}; return tab.draft.items end
@@ -610,7 +611,7 @@ local function BuildWrite(tab)
   local function lvl(field) return function(v) tab.draft[field] = tonumber(v); changed() end end
   tab.levelMin = UI.Field(body, "Level", 56, 3, lvl("level"))
   tab.levelMin.edit:SetNumeric(true)
-  tab.levelMax = UI.Field(body, "to (optional)", 70, 3, lvl("levelMax"))
+  tab.levelMax = UI.Field(body, "to (optional)", 78, 3, lvl("levelMax"))
   tab.levelMax.edit:SetNumeric(true)
   UI.Tooltip(tab.levelMin.edit, "Level", "The level this quest is meant for. Shown in the colour the game uses for quests at that level.")
   -- Where it happens
@@ -674,9 +675,9 @@ local function BuildWrite(tab)
     self.reward:ClearAllPoints()
     self.reward:SetPoint("TOPLEFT", 0, y - 6)
     self.levelMin:ClearAllPoints()
-    self.levelMin:SetPoint("TOPLEFT", IW - 130, y - 6)
+    self.levelMin:SetPoint("TOPLEFT", IW - 142, y - 6)
     self.levelMax:ClearAllPoints()
-    self.levelMax:SetPoint("TOPLEFT", IW - 66, y - 6)
+    self.levelMax:SetPoint("TOPLEFT", IW - 78, y - 6)
     y = y - 6 - 40 - 6
     self.itemsRow:ClearAllPoints()
     self.itemsRow:SetPoint("TOPLEFT", 0, y)

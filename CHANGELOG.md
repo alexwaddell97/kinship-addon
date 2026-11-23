@@ -16,6 +16,10 @@
   A campaign someone else made asks the first time it plays before it may
   speak, emote or play sounds for the people around you.
 
+### Fixed
+- The quest editor no longer cuts off the objective buttons, the level range
+  and the reward items label at its right edge.
+
 ## 1.4.11
 
 Eye colour, and images in descriptions. There's a new file, so restart the
