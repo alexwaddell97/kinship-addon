@@ -11,6 +11,8 @@ local CW, CH, TOP = 696, 466, 34
 local LIST_W = 276
 local PAPER_W, PAPER_H = CW - LIST_W - 12, CH - TOP
 -- Letters are paper in either look: light, or dark if the writer chose it (L.PAPERS).
+-- Game mail kept as a letter shows with this in its seal.
+local MAIL_ICON = "Interface\\Icons\\INV_Letter_15"
 local STATES = {
   outbox      = { label = "To post",     color = { 0.95, 0.76, 0.36 } },
   posted      = { label = "Posted",      color = { 0.42, 0.82, 0.50 } },
@@ -494,7 +496,7 @@ K:RegisterPage({
     end
     c.list:SetItems(items, function(row, l)
       local who = l.dir == "in" and l.from or l.to
-      row.seal:SetSeal(l.seal, L.CrestTexture(l.crest))
+      if l.mail then row.seal:SetSeal("night", MAIL_ICON) else row.seal:SetSeal(l.seal, L.CrestTexture(l.crest)) end
       row.seal:SetAlpha((l.dir == "in" and not l.read) and 1 or 0.55)
       row.name:SetText((l.dir == "out" and "To " or "") .. Short(who))
       row.title:SetText(l.title ~= "" and UI.Escape(l.title) or UI.Escape(l.body:sub(1, 60):gsub("\n", " ")))
@@ -530,6 +532,7 @@ K:RegisterPage({
     local r = c.read
     local meta = { date("%d %B %Y", l.sent or l.t) }
     if l.place and l.place ~= "" then meta[#meta + 1] = UI.Escape(l.place) end
+    if l.mail then meta[#meta + 1] = "Kept from game mail" end
     r.meta:SetText(table.concat(meta, "  ·  "))
     r.title:SetText(l.title ~= "" and UI.Escape(l.title) or (l.dir == "in" and ("From " .. Short(l.from)) or ("To " .. Short(l.to))))
     -- In the writer's hand; a letter in cipher reads as nonsense until its key is found
@@ -566,6 +569,7 @@ K:RegisterPage({
       r.meta:SetText(table.concat(meta, "  ·  "))
     end
     r.seal:SetSeal(l.seal, L.CrestTexture(l.crest))
+    r.seal:SetShown(not l.mail)   -- game mail came unsealed
     local st = l.dir == "out" and STATES[l.state]
     r.state:Set(st and st.label or nil, st and st.color)
     local retry = l.dir == "out" and l.state == "failed"

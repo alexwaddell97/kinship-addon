@@ -7,6 +7,9 @@
   you write one. The person you send it to sees it on the same paper, if
   they have this version of Kinship. With the Blizzard look, letters start
   on dark paper until you choose.
+- Keep ordinary game mail with your letters. Open a mail at the mailbox and
+  press Keep it on the Kinship card beside it. A copy goes into your
+  Received letters and stays there after the mail is deleted.
 
 ### Fixed
 - The window that asks about Total RP 3 no longer runs its list into the

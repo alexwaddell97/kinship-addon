@@ -443,6 +443,94 @@ function P:OpenLetter()
 end
 
 ---------------------------------------------------------------------------
+-- Ordinary game mail, kept with your letters: a copy that stays after the
+-- mail itself is deleted or runs out.
+---------------------------------------------------------------------------
+local function MailID(sender, subject, body)
+  local n, s = 7, sender .. "\0" .. subject .. "\0" .. body
+  for i = 1, #s do n = (n * 31 + s:byte(i)) % 2147483647 end
+  return ("mail:%s:%x"):format(K.NameKey(sender) or sender, n)
+end
+
+-- The mail open in the game's mail window, unless it's a Kinship letter
+-- (that has its sheet): { id, from, title, body }
+function P:OpenMail()
+  local frame = rawget(_G, "InboxFrame")
+  local index = frame and frame.openMailID
+  if not (index and GetInboxHeaderInfo and GetInboxText) then return nil end
+  local _, _, sender, subject = GetInboxHeaderInfo(index)
+  local body = GetInboxText(index)
+  if type(sender) ~= "string" or sender == "" then return nil end
+  subject = type(subject) == "string" and strtrim(subject) or ""
+  if P.Read(subject, body) then return nil end
+  body = type(body) == "string" and strtrim(body) or ""
+  return { id = MailID(sender, subject, body), from = sender, title = subject, body = body }
+end
+
+function P:KeepMail()
+  local m = self:OpenMail()
+  if not m or m.body == "" or L:Find(m.id) then return end
+  L:Keep({
+    id = m.id, dir = "in", mail = true, from = m.from, to = K:MyName(),
+    title = L.Str(m.title, L.MAX_TITLE), body = L.Str(m.body, L.MAX_BODY), sign = "",
+    t = time(), read = true, state = "received",
+  })
+end
+
+function P:KeepCard()
+  if self.keep then return self.keep end
+  local om = rawget(_G, "OpenMailFrame")
+  if not om then return nil end
+  local f = UI.Panel(om)
+  f:SetSize(220, 120)
+  f:SetPoint("TOPLEFT", om, "TOPRIGHT", 6, 0)
+  f:SetFrameStrata(om:GetFrameStrata())
+  f:SetFrameLevel(om:GetFrameLevel() + 5)
+  local mono = f:CreateTexture(nil, "ARTWORK")
+  mono:SetTexture(K.ICON)
+  mono:SetSize(22, 22)
+  mono:SetPoint("TOPLEFT", 14, -12)
+  local head = UI.Text(f, "Kinship letters", "Header", "heading")
+  head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
+  f.status = UI.Text(f, "", "Small", "text", 192)
+  f.status:SetPoint("TOPLEFT", 14, -44)
+  f.status:SetSpacing(2)
+  f.button = UI.Button(f, "Keep it", 192, 24)
+  f.button:SetPoint("TOPLEFT", f.status, "BOTTOMLEFT", 0, -10)
+  f.button:SetScript("OnClick", function()
+    if f.kept then L:Open(f.kept) else P:KeepMail() end
+  end)
+  self.keep = f
+  return f
+end
+
+-- Beside an ordinary mail: keep it, or open the copy you kept
+function P:PaintKeep()
+  local om = rawget(_G, "OpenMailFrame")
+  local m = om and om:IsShown() and self:OpenMail()
+  if not m then
+    if self.keep then self.keep:Hide() end
+    return
+  end
+  local f = self:KeepCard()
+  if not f then return end
+  f.kept = (L:Find(m.id))
+  if f.kept then
+    f.status:SetText("Kept with your letters. It stays there after this mail is deleted.")
+    f.button:SetText("Open it")
+  elseif m.body == "" then
+    f.status:SetText("This mail has no words to keep.")
+    f.button:SetText("Keep it")
+  else
+    f.status:SetText("Keep a copy of this mail with your Kinship letters. It stays there after the mail is deleted.")
+    f.button:SetText("Keep it")
+  end
+  f.button:SetEnabled(f.kept ~= nil or m.body ~= "")
+  f:SetHeight(44 + math.ceil(f.status:GetStringHeight()) + 10 + 24 + 14)
+  f:Show()
+end
+
+---------------------------------------------------------------------------
 -- At the mailbox: a small card beside the mail window
 ---------------------------------------------------------------------------
 function P:Build()
@@ -698,10 +786,13 @@ ev:SetScript("OnEvent", function(_, event)
       if om then
         om:HookScript("OnShow", function()
           if P.card then P.card:Hide() end   -- the mail opens where the card sits
-          C_Timer.After(0, function() K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P) end)
+          C_Timer.After(0, function()
+            K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P); K.Try("post keep", P.PaintKeep, P)
+          end)
         end)
         om:HookScript("OnHide", function()
           if P.sheet then P.sheet:Hide() end
+          if P.keep then P.keep:Hide() end
           if P.card and P.open then P.card:Show(); P:Paint() end
         end)
       end
@@ -725,7 +816,9 @@ ev:SetScript("OnEvent", function(_, event)
     C_Timer.After(0, function()
       K.Try("post inbox", MarkInbox)
       local om = rawget(_G, "OpenMailFrame")
-      if om and om:IsShown() then K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P) end
+      if om and om:IsShown() then
+        K.Try("post open", CleanOpenMail); K.Try("post sheet", P.ShowSheet, P); K.Try("post keep", P.PaintKeep, P)
+      end
     end)
   elseif event == "MAIL_SEND_SUCCESS" then
     if P.sending then P:Sent() end
@@ -756,4 +849,7 @@ function P:Failed(why)
   self.lastError = nil
 end
 
-K:On("LETTERS", function() P:Paint() end)
+K:On("LETTERS", function()
+  P:Paint()
+  if P.keep and P.keep:IsShown() then K.Try("post keep", P.PaintKeep, P) end
+end)

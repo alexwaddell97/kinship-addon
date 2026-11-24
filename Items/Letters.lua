@@ -415,6 +415,13 @@ function L:Deliver(letter)
   })
 end
 
+-- Ordinary game mail kept with your letters (Post.lua): no toast or Chronicle
+-- entry, as you've just read it.
+function L:Keep(letter)
+  Store(letter)
+  return letter
+end
+
 -- Who's let through (Settings > Letters: only from my Kin)
 function L.Allowed(sender)
   if K.db.settings.lettersFrom ~= "kin" then return true end
