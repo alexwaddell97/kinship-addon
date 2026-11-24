@@ -1,6 +1,9 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.13
+
+Dark paper for letters, and game mail you can keep with them. No files were
+added, so a /reload is enough.
 
 ### New
 - Dark paper for letters. Choose Light or Dark paper under The paper when
