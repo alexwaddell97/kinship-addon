@@ -82,13 +82,38 @@ L.CONDITIONS = {
   { key = "aged", label = "Aged" },
   { key = "singed", label = "Singed" },
 }
-local HAND, COND = {}, {}
+-- The paper itself: light, or dark with pale ink (the writer's choice, so it
+-- arrives as they wrote it). ink: nil is the usual dark-on-cream (UI.Ink).
+L.PAPERS = {
+  { key = "light", label = "Light paper", paper = { 0.955, 0.925, 0.850 }, edge = { 0.30, 0.20, 0.08, 0.40 },
+    rule = { 0.45, 0.32, 0.15, 0.16 }, ring = { 0.30, 0.20, 0.08 } },
+  { key = "dark", label = "Dark paper", paper = { 0.115, 0.100, 0.085 }, edge = { 0.94, 0.82, 0.54, 0.35 },
+    rule = { 0.94, 0.82, 0.54, 0.16 }, ring = { 0.94, 0.82, 0.54 },
+    ink = { ink = { 0.90, 0.86, 0.78 }, inkSubtle = { 0.68, 0.62, 0.52 }, inkHeading = { 0.96, 0.84, 0.56 },
+            inkAccent = { 0.50, 0.82, 0.80 }, field = { 1, 1, 1, 0.06 }, edge = { 0.94, 0.82, 0.54, 0.35 },
+            track = { 0.94, 0.82, 0.54, 0.12 }, thumb = { 0.94, 0.82, 0.54, 0.50 }, divider = { 0.94, 0.82, 0.54, 0.30 } } },
+}
+local HAND, COND, PAPER = {}, {}, {}
 for _, h in ipairs(L.HANDS) do HAND[h.key] = h end
 for _, c in ipairs(L.CONDITIONS) do COND[c.key] = c end
+for _, p in ipairs(L.PAPERS) do PAPER[p.key] = p end
 function L.ValidHand(k) return HAND[k] and k or "plain" end
 function L.ValidCond(k) return COND[k] and k or "pristine" end
 function L.HandLabel(k) return (HAND[k] or HAND.plain).label end
 function L.CondLabel(k) return (COND[k] or COND.pristine).label end
+-- Light paper is kept as nil, as letters always were
+function L.ValidPaper(k) return (PAPER[k] and k ~= "light") and k or nil end
+function L.Paper(k) return PAPER[k] or PAPER.light end
+
+-- Colour a sheet (with .bg, .edge and .ruleEdge) and everything inked on it.
+-- Call it after setting a hand's font, which brings the hand's own ink with it.
+function L.PaintPaper(sheet, key)
+  local p = L.Paper(key)
+  sheet.bg:SetColorTexture(p.paper[1], p.paper[2], p.paper[3], 1)
+  if sheet.edge then sheet.edge:SetColor(unpack(p.edge)) end
+  if sheet.ruleEdge then sheet.ruleEdge:SetColor(unpack(p.rule)) end
+  UI.Ink(sheet, p.ink)
+end
 
 -- The hand as a font, in ink (the game's own book, plain and scrawled faces)
 local fonts = {}
@@ -324,7 +349,7 @@ end
 L.ReturnEnclosed = ReturnEnclosed
 
 -- Returns the letter, or nil and a reason.
--- opts: { hand = "fine", cond = "aged", key = "a key word" for a cipher,
+-- opts: { hand = "fine", cond = "aged", paper = "dark", key = "a key word" for a cipher,
 --         enclosed = { { id = item id, n = count }, ... } Kinship items to enclose }
 function L:Send(to, title, body, sign, seal, crest, opts)
   opts = opts or {}
@@ -353,7 +378,7 @@ function L:Send(to, title, body, sign, seal, crest, opts)
     from = me, to = to, title = Str(strtrim(title or ""), L.MAX_TITLE), body = Str(body, L.MAX_BODY),
     sign = Str(strtrim(sign or ""), L.MAX_SIGN), seal = ValidSeal(seal), crest = ValidCrest(crest),
     place = K:CurrentPlace(), t = now, read = true, state = "outbox",
-    hand = L.ValidHand(opts.hand), cond = L.ValidCond(opts.cond),
+    hand = L.ValidHand(opts.hand), cond = L.ValidCond(opts.cond), paper = L.ValidPaper(opts.paper),
   }
   local key = L.CleanKey(opts.key)
   if key ~= "" then letter.key, letter.cipher = key, L.CipherCheck(letter.body) end

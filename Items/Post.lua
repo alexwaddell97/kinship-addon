@@ -9,7 +9,8 @@
 --   body     the words, the signature on the last part, and a postmark that
 --            reads naturally to anyone without Kinship:
 --            ~ Sealed in teal wax · house crest · fine hand · singed · Kinship letter 6ad3e835064c ~
---            (a plain hand, pristine paper and no cipher are left out; a cipher adds "in cipher 4f2a")
+--            (a plain hand, light pristine paper and no cipher are left out; a cipher
+--            adds "in cipher 4f2a", dark paper "dark paper")
 -- The crest itself isn't sent: "house crest" is looked up from the sender's
 -- profile, "Kinship seal" is the monogram. Game mail holds less than a
 -- Kinship letter, so longer letters go in parts, joined back when they arrive.
@@ -52,6 +53,7 @@ local function Marks(letter)
   elseif letter.crest then out[#out + 1] = "house crest" end
   if (letter.hand or "plain") ~= "plain" then out[#out + 1] = L.HandLabel(letter.hand):lower() end
   if (letter.cond or "pristine") ~= "pristine" then out[#out + 1] = L.CondLabel(letter.cond):lower() end
+  if L.ValidPaper(letter.paper) then out[#out + 1] = L.Paper(letter.paper).label:lower() end
   if letter.cipher then out[#out + 1] = "in cipher " .. letter.cipher end
   return out
 end
@@ -66,6 +68,7 @@ local function ReadMarks(text)
     elseif word ~= "" then
       for _, h in ipairs(L.HANDS) do if h.label:lower() == word then m.hand = h.key end end
       for _, c in ipairs(L.CONDITIONS) do if c.label:lower() == word then m.cond = c.key end end
+      for _, p in ipairs(L.PAPERS) do if p.label:lower() == word then m.paper = p.key end end
     end
   end
   return m
@@ -188,7 +191,7 @@ function P.Read(subject, body)
   -- The items' details, alone in this part or after its words
   local data = text:match(DATA_LINE)
   if data then text = strtrim((text:gsub(DATA_LINE, ""))) end
-  return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, cipher = m.cipher,
+  return { wax = wax, crest = m.crest, hand = m.hand, cond = m.cond, paper = m.paper, cipher = m.cipher,
            i = tonumber(i) or 1, n = tonumber(n) or 1, mid = mid, text = text, data = data, title = title }
 end
 
@@ -369,7 +372,7 @@ function P:Take(sender, part)
   e.got[part.i] = part.text
   if part.data then e.data[part.i] = part.data end
   e.title = e.title or (part.title ~= "" and part.title or nil)
-  e.wax, e.crest, e.hand, e.cond, e.cipher = part.wax, part.crest, part.hand, part.cond, part.cipher
+  e.wax, e.crest, e.hand, e.cond, e.paper, e.cipher = part.wax, part.crest, part.hand, part.cond, part.paper, part.cipher
   if (part.money or 0) > 0 then e.purse = (e.purse or 0) + part.money end
   if (part.parcels or 0) > 0 then e.parcels = (e.parcels or 0) + part.parcels end
   for i = 1, e.n do if not e.got[i] then return end end
@@ -382,7 +385,7 @@ function P:Take(sender, part)
     id = id, dir = "in", from = sender, to = K:MyName(),
     title = L.Str(e.title or "", L.MAX_TITLE), body = L.Str(text, L.MAX_BODY), sign = L.Str(sign, L.MAX_SIGN),
     seal = L.ValidSeal(e.wax), crest = e.crest == "house" and HouseCrestOf(sender) or e.crest,
-    hand = L.ValidHand(e.hand), cond = L.ValidCond(e.cond), cipher = e.cipher,
+    hand = L.ValidHand(e.hand), cond = L.ValidCond(e.cond), paper = L.ValidPaper(e.paper), cipher = e.cipher,
     enclosed = #data > 0 and P.Unpack(table.concat(data)) or nil,
     purse = e.purse, goods = e.parcels,
     t = time(), read = false, state = "received", post = true,
@@ -540,7 +543,6 @@ end
 
 -- A Kinship letter opened in the mailbox: a sheet of Kinship paper over the
 -- mail's own text, sealed until you break the seal, then the letter itself.
-local PAPER, PAPER_EDGE, PAPER_RULE = { 0.955, 0.925, 0.850 }, { 0.30, 0.20, 0.08, 0.40 }, { 0.45, 0.32, 0.15, 0.16 }
 
 function P:Sheet()
   if self.sheet then return self.sheet end
@@ -555,14 +557,15 @@ function P:Sheet()
   s:SetPoint("TOPLEFT", area, "TOPLEFT", -4, 4)   -- over its scroll bar too
   s:SetFrameLevel((area.GetFrameLevel and area:GetFrameLevel() or om:GetFrameLevel()) + 10)
   s:EnableMouse(true)
+  local light = L.Paper()
   s.bg = s:CreateTexture(nil, "BACKGROUND")
   s.bg:SetAllPoints()
-  s.bg:SetColorTexture(PAPER[1], PAPER[2], PAPER[3], 1)
-  UI.Border(s, PAPER_EDGE)
+  s.bg:SetColorTexture(light.paper[1], light.paper[2], light.paper[3], 1)
+  s.edge = UI.Border(s, light.edge)
   local rule = CreateFrame("Frame", nil, s)
   rule:SetPoint("TOPLEFT", 7, -7)
   rule:SetPoint("BOTTOMRIGHT", -7, 7)
-  UI.Border(rule, PAPER_RULE)
+  s.ruleEdge = UI.Border(rule, light.rule)
   local IW = w - 36
 
   -- Sealed
@@ -653,7 +656,6 @@ function P:ShowSheet()
     s.open.body.text:SetFontObject(L.HandFont(l.hand))
     s.open.body:SetText(UI.Escape(l.body))
     s.open.sign:SetFontObject(L.HandFont(l.hand))
-    s.open.sign:SetTextColor(unpack(UI.INK.inkAccent))
     s.open.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
     s.open.decipher:SetShown((l.cipher and not l.solved) and true or false)
     local line = L.EnclosedLine(l)
@@ -661,6 +663,7 @@ function P:ShowSheet()
     s.open.take:SetShown((l.enclosed and not l.taken) and true or false)
     s.open.seal:SetSeal(l.seal, crest)
   end
+  L.PaintPaper(s, l.paper)   -- after the hand's font, which brings its own ink
   s:Show()
 end
 

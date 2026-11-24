@@ -125,6 +125,25 @@ UI.INK = {
 local INK_FIELD, INK_EDGE = { 1, 1, 1, 0.38 }, { 0.40, 0.28, 0.12, 0.50 }
 local INK_THUMB, INK_TRACK = { 0.40, 0.28, 0.12, 0.50 }, { 0.40, 0.28, 0.12, 0.12 }
 
+-- Everything drawn in ink (text, fields, scroll bars, dividers) is noted, so
+-- a sheet of paper can be re-inked for a different paper: UI.Ink(sheet, ink).
+-- ink: the colours above under the same names, plus field, edge, track, thumb
+-- and divider; nil puts back the usual dark-on-cream.
+UI.INK_DEFAULT = {
+  ink = UI.INK.ink, inkSubtle = UI.INK.inkSubtle, inkHeading = UI.INK.inkHeading, inkAccent = UI.INK.inkAccent,
+  field = INK_FIELD, edge = INK_EDGE, track = INK_TRACK, thumb = INK_THUMB, divider = { 0.40, 0.28, 0.12, 0.35 },
+}
+local inked = setmetatable({}, { __mode = "k" })   -- [object] = function(ink) repaints it
+
+function UI.Ink(sheet, ink)
+  ink = ink or UI.INK_DEFAULT
+  for obj, paint in pairs(inked) do
+    local p = obj
+    while p and p ~= sheet do p = p:GetParent() end
+    if p then paint(ink) end
+  end
+end
+
 -- Semantic colours (status, consent, stance, outcomes) are bright: right on
 -- the dark chrome, unreadable as text on Classic's cream cards. OnCard inks
 -- them down to a readable shade when the cards are light.
@@ -521,6 +540,7 @@ function UI.Text(parent, text, font, role, width)
   if width then fs:SetWidth(width) end
   if UI.INK[role] then
     fs:SetTextColor(unpack(UI.INK[role]))
+    inked[fs] = function(ink) fs:SetTextColor(unpack(ink[role])) end
   elseif role == "fixed" or role == "plain" then  -- plain: like fixed, without the shadow
     fs:SetTextColor(1, 1, 1)
   else
@@ -544,7 +564,9 @@ end
 function UI.Divider(parent, width, ink)
   local d = UI.Line(parent, false, "ARTWORK")
   d:SetWidth(width)
-  if ink then d:SetVertexColor(0.40, 0.28, 0.12, 0.35)
+  if ink then
+    d:SetVertexColor(unpack(UI.INK_DEFAULT.divider))
+    inked[d] = function(i) d:SetVertexColor(unpack(i.divider)) end
   else UI:OnTheme(function(t) d:SetVertexColor(unpack(t.panelEdge)) end) end
   return d
 end
@@ -1254,7 +1276,8 @@ function UI.ScrollBar(sf, ink, step)
     if ink == "desk" then
       local u = K:Theme().ui
       tc, kc = { u[1], u[2], u[3], 0.12 }, { u[1], u[2], u[3], 0.55 }
-    elseif ink then tc, kc = INK_TRACK, INK_THUMB else local t = K:Theme(); tc, kc = t.track, t.thumb end
+    elseif ink then local i = bar.ink or UI.INK_DEFAULT; tc, kc = i.track, i.thumb
+    else local t = K:Theme(); tc, kc = t.track, t.thumb end
     bar.track:SetVertexColor(unpack(tc))
     local r, g, b, a = unpack(kc)
     thumb.tex:SetVertexColor(r, g, b, math.min(1, a + 0.3 * p))
@@ -1262,7 +1285,12 @@ function UI.ScrollBar(sf, ink, step)
   end
   thumb:SetScript("OnEnter", function(self) UI.Tween(self, 1, 0.12, paint) end)
   thumb:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint) end)
-  if ink and ink ~= "desk" then paint(0) else UI:OnTheme(function() paint(UI.Progress(thumb)) end) end
+  if ink and ink ~= "desk" then
+    paint(0)
+    inked[bar] = function(i) bar.ink = i; paint(UI.Progress(thumb)) end
+  else
+    UI:OnTheme(function() paint(UI.Progress(thumb)) end)
+  end
 
   sf:HookScript("OnVerticalScroll", Update)
   sf:HookScript("OnScrollRangeChanged", Update)
@@ -1277,8 +1305,11 @@ end
 -- Inputs
 ---------------------------------------------------------------------------
 -- style: nil (on a card), "desk" (straight on the window), "ink" (fixed dark-on-cream)
-local function FieldColors(style, t)
-  if style == "ink" then return INK_FIELD, INK_EDGE, UI.INK.ink, UI.INK.inkAccent end
+local function FieldColors(style, t, ink)
+  if style == "ink" then
+    ink = ink or UI.INK_DEFAULT
+    return ink.field, ink.edge, ink.ink, ink.inkAccent
+  end
   if style == "desk" then return t.deskField, t.deskFieldEdge, t.deskText, t.ui end
   return t.field, t.fieldEdge, t.text, t.accent
 end
@@ -1290,7 +1321,7 @@ local function StyleInput(box, edit, style)
   box.bg:SetTexture(WHITE)
   box.edge = UI.Border(box)
   local function paint()
-    local bg, edge, text, focus = FieldColors(style, K:Theme())
+    local bg, edge, text, focus = FieldColors(style, K:Theme(), box.ink)
     box.bg:SetVertexColor(unpack(bg))
     if edit:HasFocus() then box.edge:SetColor(focus[1], focus[2], focus[3], 0.85)
     else box.edge:SetColor(unpack(edge)) end
@@ -1298,7 +1329,12 @@ local function StyleInput(box, edit, style)
   end
   edit:HookScript("OnEditFocusGained", paint)
   edit:HookScript("OnEditFocusLost", paint)
-  if style == "ink" then paint() else UI:OnTheme(paint) end
+  if style == "ink" then
+    paint()
+    inked[box] = function(ink) box.ink = ink; paint() end
+  else
+    UI:OnTheme(paint)
+  end
 end
 
 function UI.Edit(parent, w, h, style, maxLetters)

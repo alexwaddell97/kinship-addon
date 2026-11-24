@@ -10,8 +10,7 @@ local L = K.Letters
 local CW, CH, TOP = 696, 466, 34
 local LIST_W = 276
 local PAPER_W, PAPER_H = CW - LIST_W - 12, CH - TOP
--- Letters are paper in either look.
-local PAPER, PAPER_EDGE, PAPER_RULE = { 0.955, 0.925, 0.850 }, { 0.30, 0.20, 0.08, 0.40 }, { 0.45, 0.32, 0.15, 0.16 }
+-- Letters are paper in either look: light, or dark if the writer chose it (L.PAPERS).
 local STATES = {
   outbox      = { label = "To post",     color = { 0.95, 0.76, 0.36 } },
   posted      = { label = "Posted",      color = { 0.42, 0.82, 0.50 } },
@@ -56,14 +55,15 @@ local function Paper(parent, w, h)
   shadow:SetColorTexture(0, 0, 0, 0.35)
   shadow:SetPoint("TOPLEFT", p, "TOPLEFT", 3, -3)
   shadow:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", 3, -3)
+  local light = L.Paper()
   p.bg = p:CreateTexture(nil, "BACKGROUND")
   p.bg:SetAllPoints()
-  p.bg:SetColorTexture(PAPER[1], PAPER[2], PAPER[3], 1)
-  p.edge = UI.Border(p, PAPER_EDGE)
+  p.bg:SetColorTexture(light.paper[1], light.paper[2], light.paper[3], 1)
+  p.edge = UI.Border(p, light.edge)
   local rule = CreateFrame("Frame", nil, p)
   rule:SetPoint("TOPLEFT", 9, -9)
   rule:SetPoint("BOTTOMRIGHT", -9, 9)
-  UI.Border(rule, PAPER_RULE)
+  p.ruleEdge = UI.Border(rule, light.rule)
   return p
 end
 
@@ -255,8 +255,18 @@ K:RegisterPage({
         end)
       end
     end)
-    w.cond = Option(144, "The paper", "The state your letter arrives in.", function(root)
+    w.cond = Option(144, "The paper", "Light or dark paper, and the state your letter arrives in. "
+      .. "They see it the same way.", function(root)
       root:CreateTitle("The paper")
+      for _, p in ipairs(L.PAPERS) do
+        root:CreateRadio(p.label, function() return L.Paper(c.paperKey).key == p.key end, function()
+          c.paperKey = L.ValidPaper(p.key)
+          K.db.settings.letterPaper = p.key   -- remembered for your next letter
+          c:PaintOptions()
+          c:PaintSeal()
+        end)
+      end
+      root:CreateDivider()
       for _, cd in ipairs(L.CONDITIONS) do
         root:CreateRadio(cd.label, function() return c.cond == cd.key end, function() c.cond = cd.key; c:PaintOptions() end)
       end
@@ -380,7 +390,7 @@ K:RegisterPage({
     w.cancel:SetScript("OnClick", function() c.mode = "read"; K.Journal:RefreshCurrent() end)
     w.send:SetScript("OnClick", function()
       local letter, err = L:Send(w.to.edit:GetText(), w.title.edit:GetText(), w.body.edit:GetText(),
-        w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, key = c.key, enclosed = c.enclosed })
+        w.sign.edit:GetText(), c.seal, c.crest, { hand = c.hand, cond = c.cond, paper = c.paperKey, key = c.key, enclosed = c.enclosed })
       if not letter then K:Print(err) return end
       RememberSign(w.sign.edit:GetText())
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
@@ -394,9 +404,10 @@ K:RegisterPage({
 
     function c:PaintSeal()
       self.write.seal:SetSeal(self.seal, L.CrestTexture(self.crest))
+      local ring = L.Paper(self.paperKey).ring
       for _, b in ipairs(self.write.swatches) do
         local on = b.key == self.seal
-        b.ring:SetVertexColor(0.30, 0.20, 0.08, on and 0.9 or 0)
+        b.ring:SetVertexColor(ring[1], ring[2], ring[3], on and 0.9 or 0)
         b.dot:SetSize(on and 12 or 14, on and 12 or 14)   -- the chosen wax sits inside a visible ring
       end
     end
@@ -411,16 +422,20 @@ K:RegisterPage({
 
     function c:PaintOptions()
       w.hand:SetText(L.HandLabel(self.hand))
-      w.cond:SetText(L.CondLabel(self.cond))
+      local cond = L.CondLabel(self.cond)
+      w.cond:SetText(self.paperKey and ("%s, %s"):format(L.Paper(self.paperKey).label:match("^%S+"), cond:lower()) or cond)
       w.cipher:SetText(self.key and "In cipher" or "No cipher")
       w.body.edit:SetFontObject(L.HandFont(self.hand))
       L.Stain(self.paper, self.cond, "draft")
+      L.PaintPaper(self.paper, self.paperKey)   -- after the hand's font, which brings its own ink
     end
 
     function c:Compose(to, title)
       self.mode = "write"
       self.hand = L.ValidHand(K.db.settings.letterHand)
       self.cond, self.key = "pristine", nil
+      -- The paper you last chose; until you've chosen, dark with the Blizzard look
+      self.paperKey = L.ValidPaper(K.db.settings.letterPaper or (UI.Skinned() and "dark" or "light"))
       self.enclosed = {}
       self:PaintEnclosed()
       self.seal = self.seal or "crimson"
@@ -501,6 +516,8 @@ K:RegisterPage({
     -- The paper's condition, for the letter on show (or the one being written)
     if writing then L.Stain(c.paper, c.cond, "draft")
     else L.Stain(c.paper, l and l.cond, l and l.id) end
+    -- No letter open: a blank sheet, dark with the Blizzard look
+    L.PaintPaper(c.paper, writing and c.paperKey or (l and l.paper) or (not l and UI.Skinned() and "dark" or nil))
     if writing or not l then return end
 
     if c.shown ~= l then c.shown = l; UI.FadeIn(c.paper, 0.2) end
@@ -519,8 +536,8 @@ K:RegisterPage({
     r.body.text:SetFontObject(L.HandFont(l.hand))
     r.body:SetText(UI.Escape(l.body))
     r.sign:SetFontObject(L.HandFont(l.hand))
-    r.sign:SetTextColor(unpack(UI.INK.inkAccent))
     r.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
+    L.PaintPaper(c.paper, l.paper)   -- again: the hand's font brought its own ink
     -- What's enclosed: Kinship items (to take), and real gold or items (from the mail)
     local enclosed = l.enclosed or {}
     local real = (l.purse or 0) > 0 or (type(l.goods) == "table" and #l.goods > 0) or (type(l.goods) == "number" and l.goods > 0)

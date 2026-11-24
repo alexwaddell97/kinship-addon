@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### New
+- Dark paper for letters. Choose Light or Dark paper under The paper when
+  you write one. The person you send it to sees it on the same paper, if
+  they have this version of Kinship. With the Blizzard look, letters start
+  on dark paper until you choose.
+
 ### Fixed
 - The window that asks about Total RP 3 no longer runs its list into the
   "Or move to Kinship" note below it.
