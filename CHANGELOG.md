@@ -1,5 +1,11 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Fixed
+- The window that asks about Total RP 3 no longer runs its list into the
+  "Or move to Kinship" note below it.
+
 ## 1.4.12
 
 Total RP 3: Extended campaigns now play in Kinship. There are new files, so

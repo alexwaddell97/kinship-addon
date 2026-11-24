@@ -312,7 +312,7 @@ function T:Build()
   f.gains:SetSpacing(4)
   f.alone = UI.Text(card, "Or move to Kinship: it brings your Total RP 3 profiles across, switches Total RP 3 and its add-ons "
     .. "(Extended too) off, and reloads. Their saved data stays untouched, so you can always go back.", "Small", "subtle", W - 76)
-  f.alone:SetPoint("BOTTOMLEFT", 16, 14)
+  f.alone:SetPoint("TOPLEFT", f.gains, "BOTTOMLEFT", 0, -14)
   f.alone:SetSpacing(2)
 
   -- With Extended loaded too: whose items, documents and effects
@@ -384,10 +384,6 @@ function T:Show()
   -- The Extended question, when it's loaded
   local ext = K:ExtendedLoaded()
   f.ext:SetShown(ext)
-  f:SetHeight(ext and (H + EXT_H) or H)
-  f.card:ClearAllPoints()
-  f.card:SetPoint("TOPLEFT", 18, -132)
-  f.card:SetPoint("BOTTOMRIGHT", -18, ext and (60 + EXT_H) or 60)
   if ext then
     f.extWho = K.db.settings.trp3Ext or "kinship"
     if f.extSwitchOff == nil then f.extSwitchOff = true end
@@ -398,6 +394,15 @@ function T:Show()
   local lines = {}
   for _, g in ipairs(T.GAINS) do lines[#lines + 1] = bullet .. "|cff" .. gold .. g[1] .. "|r  " .. g[2] end
   f.gains:SetText(table.concat(lines, "\n"))
+  -- The card and window grow to fit their text, which is taller in some
+  -- styles' fonts, so nothing runs into what's below it.
+  local top = math.max(132, math.ceil(56 + f.title:GetStringHeight() + 6 + f.sub:GetStringHeight() + 14))
+  local cardH = math.max(H - 132 - 60, math.ceil(40 + f.intro:GetStringHeight() + 10 + f.gains:GetStringHeight()
+    + 14 + f.alone:GetStringHeight() + 16))
+  f:SetHeight(top + cardH + 60 + (ext and EXT_H or 0))
+  f.card:ClearAllPoints()
+  f.card:SetPoint("TOPLEFT", 18, -top)
+  f.card:SetPoint("BOTTOMRIGHT", -18, ext and (60 + EXT_H) or 60)
   f:Show()
   f:Raise()
 end
