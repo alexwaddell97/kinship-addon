@@ -5,6 +5,9 @@
 ### Fixed
 - The window that asks about Total RP 3 no longer runs its list into the
   "Or move to Kinship" note below it.
+- Settings > General no longer leaves empty space for the Total RP 3 buttons
+  when Kinship is your only roleplay addon, and searching no longer lights
+  up a button that isn't there.
 
 ## 1.4.12
 

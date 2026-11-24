@@ -250,6 +250,7 @@ local function NewCard(parent, def)
     for _, it in ipairs(self.items) do
       local t = it.text
       if type(t) == "function" then local ok2, v = K.Try("settings", t); t = ok2 and v or "" end
+      if not it.widget:IsShown() then t = "" end   -- not there right now: nothing to find
       it.words = Words(t)
       it.hit = 0
     end
@@ -730,12 +731,20 @@ K:RegisterSettings({ id = "general", title = "General", order = 90, keywords = "
     set = function(v) K:SetMinimapButton(v) end,
   })
   card:EndRow()
-  local note = card:Note("", 28)
-  local move = card:Button("Move to Kinship", function() K.Import:Show(true) end, 160)
-  local adds = card:Button("What Kinship adds", function() if K.TRP3 then K.TRP3:Show() end end, 170)
-  card:Button("Support Kinship on Ko-fi", function() if K.Support then K.Support:Show() end end, 200)
   local keys = card:Button("Key bindings", OpenKeyBindings, 130)
   UI.Tooltip(keys, "Key bindings", "Set keys for the journal, Parley wheel, dice, satchel, status and target profile. They're under AddOns > Kinship RP.")
+  local kofi = UI.Button(card, "Support Kinship on Ko-fi", 200, 26)
+  kofi:SetPoint("LEFT", keys, "RIGHT", 8, 0)
+  kofi:SetScript("OnClick", function() if K.Support then K.Support:Show() end end)
+  card.items[#card.items + 1] = { widget = kofi, text = function() return kofi:GetText() end, button = true }
+  if K.Backup then K.Backup:AddSettings(card) end
+
+  -- Other roleplay addons, last: their buttons only show while one is running
+  local note = card:Note("", 28)
+  local move = card:Button("Move to Kinship", function() K.Import:Show(true) end, 160)
+  local adds = UI.Button(card, "What Kinship adds", 170, 26)
+  adds:SetScript("OnClick", function() if K.TRP3 then K.TRP3:Show() end end)
+  card.items[#card.items + 1] = { widget = adds, text = function() return adds:GetText() end, button = true }
   card:OnRefresh(function()
     local other = K.Comm:OtherRPAddon()
     if K:Compat() then
@@ -747,6 +756,11 @@ K:RegisterSettings({ id = "general", title = "General", order = 90, keywords = "
     end
     move:SetShown(other ~= nil)
     adds:SetShown(K:Compat())
+    adds:ClearAllPoints()
+    if move:IsShown() then adds:SetPoint("LEFT", move, "RIGHT", 8, 0)
+    else adds:SetPoint("TOPLEFT", move, "TOPLEFT") end
+    -- Without either button, the card ends at the line above them
+    card.fullH = card.fullH or card:GetHeight()
+    card:SetHeight(card.fullH - ((move:IsShown() or adds:IsShown()) and 0 or (26 + 12)))
   end)
-  if K.Backup then K.Backup:AddSettings(card) end
 end })
