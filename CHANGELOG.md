@@ -1,6 +1,6 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.15
 
 Kinship can now be translated. New files were added, so restart the game
 rather than /reload.
