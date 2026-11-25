@@ -10,7 +10,7 @@ local Safe = K.Safe
 local C = {}
 K.Comm = C
 
-K.VERSION = "1.4.15"
+K.VERSION = "1.4.16"
 
 -- Fields to fetch when viewing someone's full profile.
 local FULL_FIELDS = { "TT", "DE", "HI", "AG", "AH", "HH", "MO", "PN", "KP", "KG", "KC", "KM", "KH", "KW", "RI", "RD", "RO", "RM", "RR",

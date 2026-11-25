@@ -1,5 +1,29 @@
 # Kinship RP changelog
 
+## 1.4.16
+
+Name colours that follow the game, a choice about the character name, and a
+window you can resize. No files were added, so a /reload is enough.
+
+### New
+- Settings > Names. "Character name after roleplay names" turns off the grey
+  (Character Name) after roleplay names in chat, on unit frames, on the
+  target bar and in the character window. Tooltips still show it, and
+  nameplates keep their own setting.
+- Resize the Kinship window. Drag the grip in its bottom-right corner to make
+  it bigger or smaller. Right-click the grip to go back to the normal size.
+  The size is kept for all your characters.
+
+### Changed
+- "Players' own name colours" has moved from Nameplates to the new Names
+  card, as it also covers chat, tooltips and unit frames.
+
+### Fixed
+- Roleplay names no longer turn gold when a player hasn't picked a name
+  colour, or when players' own colours are off. They keep the game's colour
+  instead: class colour in chat, and the usual colour on tooltips,
+  nameplates and unit frames.
+
 ## 1.4.15
 
 Kinship can now be translated. New files were added, so restart the game
