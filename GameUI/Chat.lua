@@ -1,6 +1,7 @@
 -- Kinship RP: roleplay chat.
 --   * Roleplay names in chat, for anyone whose profile has arrived: in
---     roleplay gold, with the character's name after it in grey. The name
+--     their player's colour (else their class colour), with the character's
+--     name after it in grey. The name
 --     stays a link to the character, so clicking it still whispers them.
 --   * In emotes, "quoted speech" in the say colour
 --   * In say, yell, party and the rest, *actions* and <actions> in the emote colour
@@ -105,7 +106,7 @@ end
 -- A name as plain text: colours, links, textures and other UI codes are
 -- removed whole (dropping only the "|" used to leave "cffff0000Name" behind).
 -- The profile's own name colour is put back afterwards (K.NameHexOf: the
--- colour its player chose, or roleplay gold).
+-- colour its player chose), or the sender's class colour as chat gives it.
 local function CleanName(n)
   n = tostring(n or "")
   n = n:gsub("||", "")                               -- literal pipes
@@ -115,6 +116,13 @@ local function CleanName(n)
   n = strtrim(n)
   if #n > 48 then n = n:sub(1, 48):gsub("[\192-\255][\128-\191]*$", "") end -- never half a letter
   return n
+end
+
+-- The sender's class colour as hex, or nil when the game doesn't say.
+local function ClassHex(guid)
+  if not (Safe(guid) and type(guid) == "string" and guid ~= "" and GetPlayerInfoByGUID) then return nil end
+  local ok, _, c = pcall(GetPlayerInfoByGUID, guid)
+  if ok and Safe(c) and c then return UI.Hex({ UI.ClassColor(c) }) end
 end
 
 -- Returns the text to show for the sender, or nil for the game's default.
@@ -142,19 +150,17 @@ local function NameFilter(event, _, _, sender, _, _, _, _, _, _, _, _, lineID, g
     end
     if type(rp) == "string" and rp ~= "" then
       rp = CleanName(rp)
-      if rp ~= "" then name = K.BothNames(rp, Ambiguate and Ambiguate(sender, "none") or sender, K.NameHexOf(p)) end
+      if rp ~= "" then
+        name = K.BothNames(rp, Ambiguate and Ambiguate(sender, "none") or sender, K.NameHexOf(p) or ClassHex(guid))
+      end
     end
   end
   if name then return name .. (tail or "") end
   if not tail then return nil end
   name = Ambiguate and Ambiguate(sender, "short") or sender
 
-  local class
-  if Safe(guid) and type(guid) == "string" and guid ~= "" and GetPlayerInfoByGUID then
-    local ok, _, c = pcall(GetPlayerInfoByGUID, guid)
-    if ok and Safe(c) then class = c end
-  end
-  if class then name = "|cff" .. UI.Hex({ UI.ClassColor(class) }) .. name .. "|r" end
+  local hex = ClassHex(guid)
+  if hex then name = "|cff" .. hex .. name .. "|r" end
   return name .. (tail or "")
 end
 

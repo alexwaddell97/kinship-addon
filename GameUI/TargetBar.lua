@@ -309,7 +309,7 @@ function B:Update()
   end
   f.name:SetText(text)
   local r, g, b
-  if P and p then r, g, b = P.NameColor(p) end
+  if p then r, g, b = K.NameColorOf(p) end
   if not r then
     local _, class = UnitClass("target")
     if Safe(class) and class then r, g, b = UI.ClassColor(class) else r, g, b = 0.95, 0.90, 0.80 end

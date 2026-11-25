@@ -2,7 +2,7 @@
 -- (IC / LFRP / OOC), an optional epithet line and your relationship's colour.
 --
 -- The roleplay name sits just above the plate's own name, in the colour its
--- player chose (roleplay gold if none), and the character's name stays where the plate draws it: you can always
+-- player chose (the plate's own name colour if none), and the character's name stays where the plate draws it: you can always
 -- see who to whisper or invite. That's the same on the game's own plates and
 -- on EllesmereUI Nameplates (whose text is never touched). Other
 -- plate addons that draw friendly plates themselves (Plater's friendly module,
@@ -287,6 +287,16 @@ local function RingColor(def)
   return 0, 0, 0, 0.65
 end
 
+-- The colour the plate gives its own name (class or reaction), for a
+-- roleplay name with no colour of its own.
+local function PlateColor(anchor)
+  local ok, r, g, b = pcall(anchor.GetTextColor, anchor)
+  if ok and Safe(r) and Safe(g) and Safe(b) and type(r) == "number" and type(g) == "number" and type(b) == "number" then
+    return r, g, b
+  end
+  return 1, 1, 1
+end
+
 -- Draw a friendly plate's overlay over the plate's own name (anchor).
 -- d = { text, epithet, status, ring = {r,g,b,a}, color = {r,g,b}|nil,
 -- kin = colour|nil, rival = colour|nil }. rec remembers which name we faded. Also used by the
@@ -296,8 +306,11 @@ local function Draw(o, anchor, d, rec)
   MatchFont(o.name, anchor, 0)
   MatchFont(o.title, anchor, -2)
   SetClamped(o.name, d.text)
-  local c = d.color or K.RP_NAME_COLOR
-  o.name:SetTextColor(c[1], c[2], c[3], 1)
+  if d.color then o.name:SetTextColor(d.color[1], d.color[2], d.color[3], 1)
+  else
+    local r, g, b = PlateColor(anchor)
+    o.name:SetTextColor(r, g, b, 1)
+  end
   o.ring:SetVertexColor(unpack(d.ring))
   local st = K.STATUS[d.status] or K.STATUS.ooc
   o.dot:SetVertexColor(st.color[1], st.color[2], st.color[3], 1)
@@ -390,7 +403,7 @@ local function DrawFoe(o, anchor, rival, rec)
   end
 end
 
--- What a plate's gold name says, and whether it already holds the
+-- What a plate's roleplay name says, and whether it already holds the
 -- character's name (so it takes the plate name's place). rp = the roleplay
 -- name (may be empty), prefix = a title like "Lord".
 local function NameFor(anchor, name, rp, prefix)
@@ -424,12 +437,13 @@ local function Paint(unit, rec)
   if not anchor then return Restore(rec) end
   -- No roleplay name? Plenty of people play under their character's name
   -- (Forever's already have two). Then it's that name, with any title like
-  -- "Lord" before it, in roleplay gold where the plate's name was.
+  -- "Lord" before it, where the plate's name was.
   local text, same = NameFor(anchor, name, DisplayName(p), Plain(p.prefix))
   local kin, rival = Marks(name)
+  local r, g, b = K.NameColorOf(p)
   Draw(Overlay(plate), anchor, {
     text = text, epithet = K.Epithet(p, Plain(p.epithet)), status = p.status, sameName = same,
-    color = { K.NameColorOf(p) },
+    color = r and { r, g, b } or nil,
     ring = { RingColor(K.RelationOf and K:RelationOf(name)) }, kin = kin, rival = rival,
   }, rec)
 end
@@ -500,7 +514,7 @@ function P:PaintPreview()
   local samples = {
     { char = K:MyName() or "Vax Orus", text = myName ~= "" and myName or "Lord John Dynamo",
       epithet = myName ~= "" and Plain(me.epithet) or "the Deviant", status = me.status or "ic",
-      color = myName ~= "" and { K.NameColorOf(me) } or nil,
+      color = myName ~= "" and K.NameColorOf(me) and { K.NameColorOf(me) } or nil,
       kin = rel("friend", { 0.42, 0.82, 0.46 }), relKey = "friend" },
     { char = "Mirabel Thorn", text = "Mira Ashveil", epithet = "", status = "lfrp",
       kin = rel("family", { 0.96, 0.70, 0.26 }), rival = grudge("rival"), relKey = "family" },
@@ -722,7 +736,7 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = Loc["Nameplates"]
     }
   end
   card:Toggle(Loc["Roleplay nameplates"], Loc["Shows roleplay names on nameplates, with a dot for IC, LFRP or OOC and the options below. When off, nameplates look as normal."], opt("plates"))
-  card:Toggle(Loc["Players' own name colours"], "Shows each roleplay name in the colour its player picked, on nameplates, unit frames and in chat. Very dark colours are lightened. When off, all roleplay names are gold.", {
+  card:Toggle(Loc["Players' own name colours"], "Shows each roleplay name in the colour its player picked, on nameplates, unit frames and in chat. Very dark colours are lightened. When off, names keep the game's colours.", {
     get = function() return S().ownNameColors ~= false end,
     set = function(v)
       S().ownNameColors = v; P:RefreshAll()

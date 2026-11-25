@@ -478,11 +478,9 @@ function K:ShownName(p, char)
 end
 
 -- Out in the world (tooltips, nameplates, unit frames, chat) a roleplay name
--- is in the colour its player chose for it, or roleplay gold when they didn't,
--- and always has the character's own name beside it in grey: the name
--- whispers, invites, /who and the friends list go by.
-K.RP_NAME_COLOR = { 1.00, 0.86, 0.56 }
-K.RP_NAME_HEX = "ffdb8f"
+-- is in the colour its player chose for it, or in the colour the game would
+-- give the name when they didn't, and always has the character's own name
+-- beside it in grey: the name whispers, invites, /who and the friends list go by.
 K.CHAR_NAME_COLOR = { 0.62, 0.62, 0.62 }
 K.CHAR_NAME_HEX = "9d9d9d"
 
@@ -494,14 +492,14 @@ function K:CharacterName(name)
   return Ambiguate and Ambiguate(name, "none") or name
 end
 
--- "Aldric Vane (Leeroy Jenkins)": the roleplay name in colour hex (roleplay
--- gold if none) and the character's name after it in grey. Just the
+-- "Aldric Vane (Leeroy Jenkins)": the roleplay name in colour hex (left as
+-- the surrounding text when nil) and the character's name after it in grey. Just the
 -- character name when there's no roleplay name, and no repeat when they're
 -- the same.
 function K.BothNames(rp, char, hex)
   rp, char = rp or "", char or ""
   if rp == "" then return char end
-  local out = "|cff" .. (hex or K.RP_NAME_HEX) .. rp .. "|r"
+  local out = hex and ("|cff" .. hex .. rp .. "|r") or rp
   -- No copy beside it when the roleplay name already holds the character's
   -- ("Gorwan Ironwill, Son of Smith" for Gorwan Ironwill).
   if char ~= "" and not rp:lower():find(char:lower(), 1, true) then out = out .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r" end
@@ -510,13 +508,14 @@ end
 
 -- The colour a profile's name is shown in: the one its player chose (in
 -- Kinship or another roleplay addon), lifted towards white if it's too dark
--- to read on a tooltip or over the world; roleplay gold when they chose none
--- or you'd rather see every name in gold.
+-- to read on a tooltip or over the world. Nil when they chose none or you
+-- switched players' colours off: the name then keeps the colour the game
+-- gives it there (class colour in chat, the tooltip's or plate's own colour).
 function K.NameColorOf(p)
   local r, g, b
   local s = K.db and K.db.settings
   if K.Persona and p and not (s and s.ownNameColors == false) then r, g, b = K.Persona.NameColor(p) end
-  if not r then return K.RP_NAME_COLOR[1], K.RP_NAME_COLOR[2], K.RP_NAME_COLOR[3] end
+  if not r then return nil end
   local lum = 0.299 * r + 0.587 * g + 0.114 * b
   if lum < 0.5 then
     local t = (0.5 - lum) / (1 - lum)
@@ -527,6 +526,7 @@ end
 
 function K.NameHexOf(p)
   local r, g, b = K.NameColorOf(p)
+  if not r then return nil end
   return ("%02x%02x%02x"):format(math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
 end
 

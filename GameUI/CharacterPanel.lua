@@ -580,9 +580,7 @@ local function MyTitle()
   local p = K:Profile()
   local shown, own = K:ShownName(p)
   if not shown then return nil end
-  local P = K.Persona
-  local r, g, b
-  if P then r, g, b = P.NameColor(p) end
+  local r, g, b = K.NameColorOf(p)
   local name = UI.Escape(shown)
   local char = K:CharacterName()
   local tail = not own and char:lower() ~= name:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
@@ -600,9 +598,7 @@ local function TheirTitle()
   local shown, own = K:ShownName(p, char)
   if not shown then return nil end
   local text = UI.Escape(shown)
-  local P = K.Persona
-  local r, g, b
-  if P then r, g, b = P.NameColor(p) end
+  local r, g, b = K.NameColorOf(p)
   local tail = not own and char:lower() ~= text:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
   return (r and Coloured(text, r, g, b) or text) .. tail
 end

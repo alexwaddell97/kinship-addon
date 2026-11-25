@@ -10,14 +10,15 @@ local Safe = K.Safe
 -- Tooltips
 ---------------------------------------------------------------------------
 -- The roleplay name (with its short title) on the tooltip's first line, in
--- its player's colour or roleplay gold, and the character's own name on the
--- right of it in grey.
+-- its player's colour or the colour the game gave the line, and the
+-- character's own name on the right of it in grey.
 local function SetNameLine(tooltip, text, char, p)
   local base = tooltip.GetName and tooltip:GetName() or ""
   local fs = _G[base .. "TextLeft1"]
   if not (fs and text and text ~= "") then return end
   fs:SetText(text)
-  fs:SetTextColor(K.NameColorOf(p))
+  local r, g, b = K.NameColorOf(p)
+  if r then fs:SetTextColor(r, g, b) end
   if not char or char == "" or char:lower() == text:lower() then return end
   local right = _G[base .. "TextRight1"]
   if right then

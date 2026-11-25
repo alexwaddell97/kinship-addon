@@ -112,7 +112,9 @@ local function Swap(text, unit)
     local i, j = text:find(g, 1, true)
     if i then
       -- Their own name under a title needs no copy of itself beside it.
-      local seg = own and ("|cff" .. K.NameHexOf(p) .. rp .. "|r") or K.BothNames(rp, g, K.NameHexOf(p))
+      -- No colour of their own: the name keeps the frame's.
+      local hex = K.NameHexOf(p)
+      local seg = own and (hex and ("|cff" .. hex .. rp .. "|r") or rp) or K.BothNames(rp, g, hex)
       return text:sub(1, i - 1) .. seg .. text:sub(j + 1), seg, g
     end
   end
