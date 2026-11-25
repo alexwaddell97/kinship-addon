@@ -49,6 +49,7 @@
 -- ticks it themselves and the writer gets a notice.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -63,24 +64,24 @@ local RED = { 0.90, 0.36, 0.30 }
 A.ORDER = { "place", "zone", "watch", "talk", "emote", "item", "gather", "wear", "stash",
   "dice", "riddle", "pass", "duel", "kill", "bounty", "effect", "read", "time" }
 A.KINDS = {
-  place  = { label = "Reach a place",          icon = "Interface\\Icons\\INV_Misc_Map_01" },
-  zone   = { label = "Find a named place",     icon = "Interface\\Icons\\INV_Misc_Map02" },
-  watch  = { label = "Keep watch",             icon = "Interface\\Icons\\Ability_Hunter_EagleEye" },
-  talk   = { label = "Speak to someone",       icon = "Interface\\Icons\\INV_Misc_Note_01" },
-  emote  = { label = "Do an emote",            icon = "Interface\\Icons\\Spell_Holy_PrayerOfSpirit" },
-  item   = { label = "Carry a Kinship item",   icon = "Interface\\Icons\\INV_Misc_Bag_08" },
-  gather = { label = "Gather game items",      icon = "Interface\\Icons\\INV_Misc_Bag_10" },
-  wear   = { label = "Wear something",         icon = "Interface\\Icons\\INV_Chest_Cloth_17" },
-  stash  = { label = "Find a stash",           icon = "Interface\\Icons\\INV_Box_01" },
-  dice   = { label = "Pass a dice check",      icon = "Interface\\Icons\\INV_Misc_Dice_01" },
-  riddle = { label = "Answer a riddle",        icon = "Interface\\Icons\\INV_Misc_QuestionMark" },
-  pass   = { label = "Give the password",      icon = "Interface\\Icons\\INV_Misc_Key_03" },
-  duel   = { label = "Win a duel",             icon = "Interface\\Icons\\INV_Sword_04" },
-  kill   = { label = "Defeat enemies",         icon = "Interface\\Icons\\Ability_Rogue_Eviscerate" },
-  bounty = { label = "Claim a bounty",         icon = "Interface\\Icons\\INV_Misc_Bone_HumanSkull_01" },
-  effect = { label = "Take on an effect",      icon = "Interface\\Icons\\Spell_Holy_MagicalSentry" },
-  read   = { label = "Read a document",        icon = "Interface\\Icons\\INV_Misc_Book_09" },
-  time   = { label = "Be there at the hour",   icon = "Interface\\Icons\\INV_Misc_PocketWatch_01" },
+  place  = { label = Loc["Reach a place"],          icon = "Interface\\Icons\\INV_Misc_Map_01" },
+  zone   = { label = Loc["Find a named place"],     icon = "Interface\\Icons\\INV_Misc_Map02" },
+  watch  = { label = Loc["Keep watch"],             icon = "Interface\\Icons\\Ability_Hunter_EagleEye" },
+  talk   = { label = Loc["Speak to someone"],       icon = "Interface\\Icons\\INV_Misc_Note_01" },
+  emote  = { label = Loc["Do an emote"],            icon = "Interface\\Icons\\Spell_Holy_PrayerOfSpirit" },
+  item   = { label = Loc["Carry a Kinship item"],   icon = "Interface\\Icons\\INV_Misc_Bag_08" },
+  gather = { label = Loc["Gather game items"],      icon = "Interface\\Icons\\INV_Misc_Bag_10" },
+  wear   = { label = Loc["Wear something"],         icon = "Interface\\Icons\\INV_Chest_Cloth_17" },
+  stash  = { label = Loc["Find a stash"],           icon = "Interface\\Icons\\INV_Box_01" },
+  dice   = { label = Loc["Pass a dice check"],      icon = "Interface\\Icons\\INV_Misc_Dice_01" },
+  riddle = { label = Loc["Answer a riddle"],        icon = "Interface\\Icons\\INV_Misc_QuestionMark" },
+  pass   = { label = Loc["Give the password"],      icon = "Interface\\Icons\\INV_Misc_Key_03" },
+  duel   = { label = Loc["Win a duel"],             icon = "Interface\\Icons\\INV_Sword_04" },
+  kill   = { label = Loc["Defeat enemies"],         icon = "Interface\\Icons\\Ability_Rogue_Eviscerate" },
+  bounty = { label = Loc["Claim a bounty"],         icon = "Interface\\Icons\\INV_Misc_Bone_HumanSkull_01" },
+  effect = { label = Loc["Take on an effect"],      icon = "Interface\\Icons\\Spell_Holy_MagicalSentry" },
+  read   = { label = Loc["Read a document"],        icon = "Interface\\Icons\\INV_Misc_Book_09" },
+  time   = { label = Loc["Be there at the hour"],   icon = "Interface\\Icons\\INV_Misc_PocketWatch_01" },
 }
 -- Rules that hold (and can be held for a while) and rules that happen (and can be done several times).
 A.HOLDS = { place = true, zone = true, talk = true, item = true, gather = true, wear = true, effect = true, time = true }
@@ -89,14 +90,14 @@ A.COUNTS = { emote = true, stash = true, dice = true, duel = true, kill = true, 
 local OWN_COUNT = { kill = true, bounty = true }
 A.EMOTES = { "BOW", "SALUTE", "WAVE", "GREET", "KNEEL", "PRAY", "CHEER", "THANK", "HUG", "DANCE", "CURTSEY", "NOD",
   "POINT", "BEG", "PLEAD", "SURRENDER", "ROAR", "TAUNT", "APOLOGIZE", "CRY", "LAUGH", "CLAP", "FLEX", "KISS", "SIT" }
-A.FAILS = { tries = "Out of tries", die = "Failed: you died", out = "Failed: you left the area", time = "Failed: out of time" }
+A.FAILS = { tries = Loc["Out of tries"], die = Loc["Failed: you died"], out = Loc["Failed: you left the area"], time = Loc["Failed: out of time"] }
 -- What a failure does, for the editor.
 A.OUTCOMES = {
-  { id = "carry", label = "Carry on (it counts, marked failed)" },
-  { id = "open",  label = "Open a backup objective" },
-  { id = "quest", label = "Fail the whole quest" },
+  { id = "carry", label = Loc["Carry on (it counts, marked failed)"] },
+  { id = "open",  label = Loc["Open a backup objective"] },
+  { id = "quest", label = Loc["Fail the whole quest"] },
 }
-local HOLD_LABEL = "Hold up the quest"
+local HOLD_LABEL = Loc["Hold up the quest"]
 
 local function Q() return K.Quests end
 local Short = K.Short
@@ -265,16 +266,16 @@ local function ItemId(s)
   if type(s) ~= "string" then return nil end
   return tonumber(s:match("item:(%d+)") or s:match("(%d+)"))
 end
-local function Tries(n) return n > 0 and (", " .. n .. (n == 1 and " try" or " tries")) or "" end
+local function Tries(n) return n > 0 and (", " .. n .. (n == 1 and Loc[" try"] or Loc[" tries"])) or "" end
 local function Secs(s)
   s = math.floor(s)
-  if s >= 60 and s % 60 == 0 then return (s / 60) .. " min" end
-  if s >= 60 then return ("%d min %d s"):format(math.floor(s / 60), s % 60) end
-  return s .. " s"
+  if s >= 60 and s % 60 == 0 then return (s / 60) .. Loc[" min"] end
+  if s >= 60 then return (Loc["%d min %d s"]):format(math.floor(s / 60), s % 60) end
+  return s .. Loc[" s"]
 end
 local function KinItemName(id, fallback)
   local def = K.Items and K.Items:Get(id)
-  return def and def.name or Named(fallback) or "a Kinship item"
+  return def and def.name or Named(fallback) or Loc["a Kinship item"]
 end
 
 -- "Reach the pin (Elwynn Forest)", "Speak to Guard Thomas", "/bow at Marshal Dughan"...
@@ -282,57 +283,57 @@ local function Main(auto, o)
   local k = auto.k
   if k == "place" then
     local QM = K.QuestMarkers
-    return o and o.marker and ("Reach the pin  (" .. ((QM and QM.Label(o.marker)) or "?") .. ")") or "Reach the pin  (no pin set yet)"
-  elseif k == "zone" then return ("Find %s"):format(UI.Escape(auto.n))
+    return o and o.marker and (Loc["Reach the pin  ("] .. ((QM and QM.Label(o.marker)) or "?") .. ")") or Loc["Reach the pin  (no pin set yet)"]
+  elseif k == "zone" then return (Loc["Find %s"]):format(UI.Escape(auto.n))
   elseif k == "watch" then
     local QM = K.QuestMarkers
     local where = o and o.marker and QM and QM.Label(o.marker)
-    return ("Keep watch for %d %s%s"):format(auto.m, auto.m == 1 and "minute" or "minutes",
-      where and ("  (" .. where .. ")") or "  (no pin set yet)")
-  elseif k == "talk" then return ("Speak to %s%s"):format(UI.Escape(auto.n), auto.near and ", up close" or "")
-  elseif k == "emote" then return ("/%s%s"):format(auto.e:lower(), auto.n and (" at " .. UI.Escape(auto.n)) or "")
+    return (Loc["Keep watch for %d %s%s"]):format(auto.m, auto.m == 1 and Loc["minute"] or Loc["minutes"],
+      where and ("  (" .. where .. ")") or Loc["  (no pin set yet)"])
+  elseif k == "talk" then return (Loc["Speak to %s%s"]):format(UI.Escape(auto.n), auto.near and Loc[", up close"] or "")
+  elseif k == "emote" then return ("/%s%s"):format(auto.e:lower(), auto.n and (Loc[" at "] .. UI.Escape(auto.n)) or "")
   elseif k == "item" then
-    return ("Carry %s%s%s"):format(auto.c > 1 and (auto.c .. " x ") or "", UI.Escape(KinItemName(auto.d, auto.nm)),
-      auto.take and ", handed over at the end" or "")
+    return (Loc["Carry %s%s%s"]):format(auto.c > 1 and (auto.c .. " x ") or "", UI.Escape(KinItemName(auto.d, auto.nm)),
+      auto.take and Loc[", handed over at the end"] or "")
   elseif k == "gather" then
-    local name = GameItemName(auto.i) or Named(auto.nm) or ("item " .. auto.i)
-    return ("Gather %d %s"):format(auto.c, UI.Escape(name))
+    local name = GameItemName(auto.i) or Named(auto.nm) or (Loc["item "] .. auto.i)
+    return (Loc["Gather %d %s"]):format(auto.c, UI.Escape(name))
   elseif k == "wear" then
-    return ("Wear %s"):format(UI.Escape(GameItemName(auto.i) or Named(auto.nm) or ("item " .. auto.i)))
-  elseif k == "stash" then return ("Find the stash \"%s\""):format(UI.Escape(auto.n))
+    return (Loc["Wear %s"]):format(UI.Escape(GameItemName(auto.i) or Named(auto.nm) or (Loc["item "] .. auto.i)))
+  elseif k == "stash" then return (Loc["Find the stash \"%s\""]):format(UI.Escape(auto.n))
   elseif k == "dice" then
-    return ("Roll %s: %d or more%s"):format(auto.x, auto.at, Tries(auto.tries))
-  elseif k == "riddle" then return ("Answer the riddle: \"%s\"%s"):format(UI.Escape(auto.q), Tries(auto.tries))
-  elseif k == "pass" then return "Give the password" .. Tries(auto.tries)
-  elseif k == "duel" then return auto.n and ("Win a duel against " .. UI.Escape(auto.n)) or "Win a duel"
+    return (Loc["Roll %s: %d or more%s"]):format(auto.x, auto.at, Tries(auto.tries))
+  elseif k == "riddle" then return (Loc["Answer the riddle: \"%s\"%s"]):format(UI.Escape(auto.q), Tries(auto.tries))
+  elseif k == "pass" then return Loc["Give the password"] .. Tries(auto.tries)
+  elseif k == "duel" then return auto.n and (Loc["Win a duel against "] .. UI.Escape(auto.n)) or Loc["Win a duel"]
   elseif k == "kill" then
-    return ("%s %d %s"):format(auto.loot and "Defeat and loot" or "Defeat", auto.times or 1, UI.Escape(auto.n))
+    return ("%s %d %s"):format(auto.loot and Loc["Defeat and loot"] or Loc["Defeat"], auto.times or 1, UI.Escape(auto.n))
   elseif k == "bounty" then
     local n = auto.times or 1
     if auto.n then
-      return ("Defeat %s in honourable combat%s"):format(UI.Escape(auto.n), n > 1 and (", " .. n .. " times") or "")
+      return (Loc["Defeat %s in honourable combat%s"]):format(UI.Escape(auto.n), n > 1 and (", " .. n .. Loc[" times"]) or "")
     end
-    return ("Defeat %d %s in honourable combat"):format(n, n == 1 and "enemy" or "enemies")
-  elseif k == "effect" then return ("%s %s"):format(auto.lose and "Shake off" or "Take on", UI.Escape(Named(auto.nm) or auto.a))
-  elseif k == "read" then return ("Read \"%s\""):format(UI.Escape(Named(auto.nm) or "a document"))
+    return (Loc["Defeat %d %s in honourable combat"]):format(n, n == 1 and Loc["enemy"] or Loc["enemies"])
+  elseif k == "effect" then return ("%s %s"):format(auto.lose and Loc["Shake off"] or Loc["Take on"], UI.Escape(Named(auto.nm) or auto.a))
+  elseif k == "read" then return (Loc["Read \"%s\""]):format(UI.Escape(Named(auto.nm) or Loc["a document"]))
   elseif k == "time" then
-    return ("Between %02d:00 and %02d:00, server time%s"):format(auto.h1, auto.h2, o and o.marker and ", at the pin" or "")
+    return (Loc["Between %02d:00 and %02d:00, server time%s"]):format(auto.h1, auto.h2, o and o.marker and Loc[", at the pin"] or "")
   end
 end
 
 -- "at the pin, in character, carrying the Signet, for 2 min"
 function A.DescribeAlso(auto)
   local p, w = {}, auto.w or {}
-  if w.pin then p[#p + 1] = "at the pin" end
-  if w.h1 then p[#p + 1] = ("between %02d:00 and %02d:00"):format(w.h1, w.h2) end
-  if w.ic then p[#p + 1] = "in character" end
-  if w.grp then p[#p + 1] = "in a group" end
-  if w.pn then p[#p + 1] = "with " .. UI.Escape(w.pn) .. " close by" end
-  if w.cd then p[#p + 1] = "carrying " .. UI.Escape(KinItemName(w.cd, w.cnm)) end
-  if w.wi then p[#p + 1] = "wearing " .. UI.Escape(GameItemName(w.wi) or Named(w.wnm) or ("item " .. w.wi)) end
-  if w.fa then p[#p + 1] = "under " .. UI.Escape(Named(w.fnm) or w.fa) end
-  if auto.hold then p[#p + 1] = "for " .. Secs(auto.hold) end
-  if auto.times and not OWN_COUNT[auto.k] then p[#p + 1] = auto.times .. " times" end
+  if w.pin then p[#p + 1] = Loc["at the pin"] end
+  if w.h1 then p[#p + 1] = (Loc["between %02d:00 and %02d:00"]):format(w.h1, w.h2) end
+  if w.ic then p[#p + 1] = Loc["in character"] end
+  if w.grp then p[#p + 1] = Loc["in a group"] end
+  if w.pn then p[#p + 1] = Loc["with "] .. UI.Escape(w.pn) .. Loc[" close by"] end
+  if w.cd then p[#p + 1] = Loc["carrying "] .. UI.Escape(KinItemName(w.cd, w.cnm)) end
+  if w.wi then p[#p + 1] = Loc["wearing "] .. UI.Escape(GameItemName(w.wi) or Named(w.wnm) or (Loc["item "] .. w.wi)) end
+  if w.fa then p[#p + 1] = Loc["under "] .. UI.Escape(Named(w.fnm) or w.fa) end
+  if auto.hold then p[#p + 1] = Loc["for "] .. Secs(auto.hold) end
+  if auto.times and not OWN_COUNT[auto.k] then p[#p + 1] = auto.times .. Loc[" times"] end
   return #p > 0 and table.concat(p, ", ") or nil
 end
 
@@ -348,28 +349,28 @@ end
 function A.DescribeOptions(o, e, i)
   if type(o) ~= "table" then return nil end
   local p = {}
-  if o.opt then p[#p + 1] = "Optional" end
-  if o.hid then p[#p + 1] = "Hidden until done" end
+  if o.opt then p[#p + 1] = Loc["Optional"] end
+  if o.hid then p[#p + 1] = Loc["Hidden until done"] end
   local from = e and i and A.BackupOf(e, i)
-  if from then p[#p + 1] = ("Backup: opens if objective %d fails"):format(from) end
+  if from then p[#p + 1] = (Loc["Backup: opens if objective %d fails"]):format(from) end
   local f = o.fl
   if f then
     local why = {}
-    if f.die then why[#why + 1] = "you die" end
-    if f.out then why[#why + 1] = "you leave the area" end
-    if f.mins then why[#why + 1] = ("%d min pass"):format(f.mins) end
-    if #why > 0 then p[#p + 1] = "Fails if " .. table.concat(why, " or ") .. (f.retry and " (you can try again)" or "")
-    elseif f.retry then p[#p + 1] = "You can try again" end
+    if f.die then why[#why + 1] = Loc["you die"] end
+    if f.out then why[#why + 1] = Loc["you leave the area"] end
+    if f.mins then why[#why + 1] = (Loc["%d min pass"]):format(f.mins) end
+    if #why > 0 then p[#p + 1] = Loc["Fails if "] .. table.concat(why, " or ") .. (f.retry and Loc[" (you can try again)"] or "")
+    elseif f.retry then p[#p + 1] = Loc["You can try again"] end
     local mine = e and Q():IsMine(e)
-    if f.th == "carry" then p[#p + 1] = "If it fails, the story carries on"
-    elseif f.th == "quest" then p[#p + 1] = "If it fails, so does the quest"
+    if f.th == "carry" then p[#p + 1] = Loc["If it fails, the story carries on"]
+    elseif f.th == "quest" then p[#p + 1] = Loc["If it fails, so does the quest"]
     elseif f.th == "open" then
       -- Players learn there's another way only when they need it.
       local alt = e and e.objectives and e.objectives[f.alt]
-      if mine or not e then p[#p + 1] = ("If it fails, objective %d opens"):format(f.alt) .. (alt and (": " .. UI.Clean(alt.text)) or "")
-      else p[#p + 1] = "If it fails, the story carries on" end
+      if mine or not e then p[#p + 1] = (Loc["If it fails, objective %d opens"]):format(f.alt) .. (alt and (": " .. UI.Clean(alt.text)) or "")
+      else p[#p + 1] = Loc["If it fails, the story carries on"] end
     end
-    if f.fx then p[#p + 1] = "Failing leaves you " .. UI.Escape(Named(f.fxn) or f.fx) end
+    if f.fx then p[#p + 1] = Loc["Failing leaves you "] .. UI.Escape(Named(f.fxn) or f.fx) end
   end
   return #p > 0 and table.concat(p, "  ·  ") or nil
 end
@@ -442,7 +443,7 @@ function A.State(e, i)
 end
 
 function A.FailText(o)
-  return o and A.FAILS[o.failWhy] or "Failed"
+  return o and A.FAILS[o.failWhy] or Loc["Failed"]
 end
 
 -- A storyteller running their quest for others: their own copy isn't played,
@@ -515,17 +516,17 @@ function A.ProgressText(e, i)
   if not o or o.done or o.failed or e.state ~= "active" then return nil end
   local a, p = o.auto, {}
   if a then
-    if a.k == "watch" and (o.watch or 0) > 0 then p[#p + 1] = ("%s/%d min"):format(Secs(o.watch), a.m) end
+    if a.k == "watch" and (o.watch or 0) > 0 then p[#p + 1] = (Loc["%s/%d min"]):format(Secs(o.watch), a.m) end
     local since = held[Key(e, i)]
-    if a.hold and since then p[#p + 1] = ("held %s/%s"):format(Secs(GetTime() - since), Secs(a.hold)) end
-    if a.k == "dice" and (o.rolls or 0) > 0 then p[#p + 1] = o.rolls .. " rolled" end
+    if a.hold and since then p[#p + 1] = (Loc["held %s/%s"]):format(Secs(GetTime() - since), Secs(a.hold)) end
+    if a.k == "dice" and (o.rolls or 0) > 0 then p[#p + 1] = o.rolls .. Loc[" rolled"] end
     if (a.k == "riddle" or a.k == "pass") and a.tries > 0 and (o.guesses or 0) > 0 then
-      p[#p + 1] = ("%d/%d tries used"):format(o.guesses, a.tries)
+      p[#p + 1] = (Loc["%d/%d tries used"]):format(o.guesses, a.tries)
     end
   end
-  if o.noticed then p[#p + 1] = "the storyteller has been told" end
+  if o.noticed then p[#p + 1] = Loc["the storyteller has been told"] end
   local left = A.TimeLeft(e, i)
-  if left then p[#p + 1] = ("%d:%02d left"):format(math.floor(left / 60), left % 60) end
+  if left then p[#p + 1] = (Loc["%d:%02d left"]):format(math.floor(left / 60), left % 60) end
   return #p > 0 and table.concat(p, ", ") or nil
 end
 
@@ -536,7 +537,7 @@ local function Open(e) return function() K.Quests:Open(e.id) end end
 
 local function Toast(e, o)
   UI.Toast({ icon = KindIcon(o.auto and o.auto.k), round = true, color = K.Quests.DONE, duration = 5,
-    title = UI.Clean(o.text), text = "Objective complete  ·  " .. UI.Clean(e.title), sound = "IG_QUEST_LIST_SELECT",
+    title = UI.Clean(o.text), text = Loc["Objective complete  ·  "] .. UI.Clean(e.title), sound = "IG_QUEST_LIST_SELECT",
     onClick = Open(e) })
 end
 
@@ -555,7 +556,7 @@ function A:Complete(e, i, extra)
     -- The storyteller ticks this one themselves: just tell them.
     o.noticed = true
     UI.Toast({ icon = KindIcon(o.auto and o.auto.k), round = true, duration = 5, title = UI.Clean(o.text),
-      text = "Done: the storyteller has been told  ·  " .. UI.Clean(e.title), onClick = Open(e) })
+      text = Loc["Done: the storyteller has been told  ·  "] .. UI.Clean(e.title), onClick = Open(e) })
     Tell(e, { id = e.id, i = i, w = extra })
     K:Fire("QUESTS")
     return
@@ -591,8 +592,8 @@ local function Consequence(e, f)
   local c = Au:ConsentOf(nil, def.kind, true)
   if c == "2" then return end
   if c == "3" then
-    UI.Toast({ icon = def.icon, round = true, duration = 10, title = "Take on " .. UI.Escape(def.name) .. "?",
-      text = "Failing left you with this. Click to take it on; your boundaries say to ask.",
+    UI.Toast({ icon = def.icon, round = true, duration = 10, title = Loc["Take on "] .. UI.Escape(def.name) .. "?",
+      text = Loc["Failing left you with this. Click to take it on; your boundaries say to ask."],
       onClick = function() Au:Apply(def, nil, from, note) end })
     return
   end
@@ -609,7 +610,7 @@ function A:Outcome(e, i, quiet)
     local alt = e.objectives[f.alt]
     if alt and not alt.done and not quiet then
       UI.Toast({ icon = KindIcon(alt.auto and alt.auto.k), round = true, duration = 6, color = K:Theme().accent,
-        title = "Another way", text = UI.Clean(alt.text) .. "  ·  " .. UI.Clean(e.title), onClick = Open(e) })
+        title = Loc["Another way"], text = UI.Clean(alt.text) .. "  ·  " .. UI.Clean(e.title), onClick = Open(e) })
     end
   end
   if f and f.th == "quest" then
@@ -625,10 +626,10 @@ function A:Fail(e, i, why, extra)
   o.failed, o.failWhy = true, why
   held[Key(e, i)], lastWatch[Key(e, i)] = nil, nil
   local f = o.fl or {}
-  local after = (f.th == "carry" or f.th == "open") and "  ·  The story carries on"
-    or (f.retry and "  ·  You can try again") or ""
+  local after = (f.th == "carry" or f.th == "open") and Loc["  ·  The story carries on"]
+    or (f.retry and Loc["  ·  You can try again"]) or ""
   UI.Toast({ icon = KindIcon(o.auto and o.auto.k), round = true, duration = 5, color = RED,
-    title = A.FAILS[why] or "Objective failed",
+    title = A.FAILS[why] or Loc["Objective failed"],
     text = UI.Clean(o.text) .. "  ·  " .. UI.Clean(e.title) .. after,
     onClick = Open(e) })
   Tell(e, { id = e.id, i = i, f = true, y = why, w = extra })
@@ -758,21 +759,21 @@ end
 local function Also(o, a)
   local w = a.w
   if not w then return true end
-  if w.pin and not AtPin(o) then return false, "at the pin" end
-  if w.h1 and not InHours(w.h1, w.h2) then return false, ("between %02d:00 and %02d:00"):format(w.h1, w.h2) end
-  if w.ic and not InCharacter() then return false, "in character" end
-  if w.grp and not (IsInGroup and IsInGroup()) then return false, "in a group" end
-  if w.pn and not WithPlayer(w.pn) then return false, "with " .. w.pn .. " close by" end
-  if w.cd and not (K.Items and K.Items:Has(w.cd) >= 1) then return false, "carrying " .. KinItemName(w.cd, w.cnm) end
-  if w.wi and not Wearing(w.wi) then return false, "wearing " .. (GameItemName(w.wi) or Named(w.wnm) or "the item") end
-  if w.fa and not HasEffect(w.fa) then return false, "under " .. (Named(w.fnm) or w.fa) end
+  if w.pin and not AtPin(o) then return false, Loc["at the pin"] end
+  if w.h1 and not InHours(w.h1, w.h2) then return false, (Loc["between %02d:00 and %02d:00"]):format(w.h1, w.h2) end
+  if w.ic and not InCharacter() then return false, Loc["in character"] end
+  if w.grp and not (IsInGroup and IsInGroup()) then return false, Loc["in a group"] end
+  if w.pn and not WithPlayer(w.pn) then return false, Loc["with "] .. w.pn .. Loc[" close by"] end
+  if w.cd and not (K.Items and K.Items:Has(w.cd) >= 1) then return false, Loc["carrying "] .. KinItemName(w.cd, w.cnm) end
+  if w.wi and not Wearing(w.wi) then return false, Loc["wearing "] .. (GameItemName(w.wi) or Named(w.wnm) or Loc["the item"]) end
+  if w.fa and not HasEffect(w.fa) then return false, Loc["under "] .. (Named(w.fnm) or w.fa) end
   return true
 end
 A.Also = Also
 
 local function Nope(why)
   UI.Toast({ icon = "Interface\\Icons\\INV_Misc_QuestionMark", round = true, duration = 4,
-    title = "Not yet", text = "This needs you " .. why .. "." })
+    title = Loc["Not yet"], text = Loc["This needs you "] .. why .. "." })
 end
 
 -- Polled checks: true when the rule is met now.
@@ -940,7 +941,7 @@ end
 function A:Roll(id, i)
   local e, o = Find(id, i)
   if not (o and o.auto and o.auto.k == "dice") or not A.Watching(e, i) then return end
-  if not K.Dice then K:Print("The dice aren't available.") return end
+  if not K.Dice then K:Print(Loc["The dice aren't available."]) return end
   local ok, why = Also(o, o.auto)
   if not ok then Nope(why) return end
   local res = K.Dice:Roll(o.auto.x)
@@ -960,7 +961,7 @@ function A:Answer(id, i, text)
   if not (o and o.auto and (o.auto.k == "riddle" or o.auto.k == "pass")) or not A.Watching(e, i) then return false end
   if A.Normal(text) == "" then return false end
   local ok, why = Also(o, o.auto)
-  if not ok then return false, "This needs you " .. why .. "." end
+  if not ok then return false, Loc["This needs you "] .. why .. "." end
   local h = A.Hash(text)
   for _, x in ipairs(o.auto.h) do
     if x == h then self:Complete(e, i) return true end
@@ -969,11 +970,11 @@ function A:Answer(id, i, text)
   local tries = o.auto.tries
   if tries > 0 and o.guesses >= tries then
     self:Fail(e, i, "tries")
-    return false, "Out of tries.", true
+    return false, Loc["Out of tries."], true
   end
   K:Fire("QUESTS")
   local left = tries > 0 and (tries - o.guesses) or nil
-  return false, left and ("Not that. %d %s left."):format(left, left == 1 and "try" or "tries") or "Not that."
+  return false, left and (Loc["Not that. %d %s left."]):format(left, left == 1 and Loc["try"] or Loc["tries"]) or Loc["Not that."]
 end
 
 -- The button an objective offers right now: label, onClick, menu text, icon (or nil).
@@ -987,20 +988,20 @@ function A.Action(e, i)
   local id = e.id
   if o.failed then
     if o.fl and o.fl.retry and not o.fl.th and not ForOthers(e) then
-      return "Try again", function() A:Retry(id, i) end, "Try again: " .. o.text, ACT_ICON.retry
+      return Loc["Try again"], function() A:Retry(id, i) end, Loc["Try again: "] .. o.text, ACT_ICON.retry
     end
     return nil
   end
   if not A.Watching(e, i) then return nil end
   local k = o.auto.k
   if k == "dice" then
-    return "Roll", function() A:Roll(id, i) end, ("Roll %s for: %s"):format(o.auto.x, o.text), ACT_ICON.dice
+    return Loc["Roll"], function() A:Roll(id, i) end, (Loc["Roll %s for: %s"]):format(o.auto.x, o.text), ACT_ICON.dice
   end
   if k == "riddle" or k == "pass" then
-    return "Answer", function() A:Ask(id, i) end, (k == "pass" and "Give the password: " or "Answer: ") .. o.text, ACT_ICON.answer
+    return Loc["Answer"], function() A:Ask(id, i) end, (k == "pass" and Loc["Give the password: "] or Loc["Answer: "]) .. o.text, ACT_ICON.answer
   end
   if k == "stash" and K.Stashes then
-    return "Search", function() K.Stashes:Search() end, "Search the area: " .. o.text, ACT_ICON.search
+    return Loc["Search"], function() K.Stashes:Search() end, Loc["Search the area: "] .. o.text, ACT_ICON.search
   end
 end
 
@@ -1016,15 +1017,15 @@ K.Net:On("qauto", function(msg, sender)
   local o = i and e.objectives[i]
   if not o then return end
   if msg.r then
-    K:Print(("%s is trying again: %s"):format(Short(sender), UI.Clean(o.text)))
+    K:Print((Loc["%s is trying again: %s"]):format(Short(sender), UI.Clean(o.text)))
     return
   end
   local roll = tonumber(msg.w)
-  local how = roll and (" (rolled " .. math.floor(roll) .. ")") or ""
+  local how = roll and (Loc[" (rolled "] .. math.floor(roll) .. ")") or ""
   if msg.f then
-    local why = ({ tries = "is out of tries", die = "died", out = "left the area", time = "ran out of time" })[msg.y] or "failed"
+    local why = ({ tries = Loc["is out of tries"], die = Loc["died"], out = Loc["left the area"], time = Loc["ran out of time"] })[msg.y] or Loc["failed"]
     local th = o.fl and o.fl.th
-    local after = ({ carry = "  ·  The story carries on", open = "  ·  The backup objective opens", quest = "  ·  The quest fails" })[th] or ""
+    local after = ({ carry = Loc["  ·  The story carries on"], open = Loc["  ·  The backup objective opens"], quest = Loc["  ·  The quest fails"] })[th] or ""
     UI.Toast({ icon = KindIcon(o.auto and o.auto.k), round = true, color = RED, duration = 6,
       title = Short(sender) .. " " .. why .. how, text = UI.Clean(o.text) .. (e.au ~= false and after or ""), onClick = Open(e) })
     -- A failure that moves the story on is shared, like progress (unless you tick objectives yourself).
@@ -1036,7 +1037,7 @@ K.Net:On("qauto", function(msg, sender)
   end
   if not o.auto then return end
   UI.Toast({ icon = KindIcon(o.auto.k), round = true, color = QQ.DONE, duration = 6,
-    title = Short(sender) .. " completed an objective" .. how, text = UI.Clean(o.text) .. "  ·  " .. UI.Clean(e.title),
+    title = Short(sender) .. Loc[" completed an objective"] .. how, text = UI.Clean(o.text) .. "  ·  " .. UI.Clean(e.title),
     onClick = Open(e) })
   if e.st and e.au ~= false and not o.done then QQ:SetObjective(e.id, i, true) end
 end)
@@ -1269,7 +1270,7 @@ local function BuildAsker()
   A.asker = m
   m:SetFrameStrata("DIALOG")
   local card = m.card
-  m.head = UI.Section(card, "Your answer")
+  m.head = UI.Section(card, Loc["Your answer"])
   m.head:SetPoint("TOPLEFT", 21, -15)
   m.q = UI.Text(card, "", "Body", "text", 340)
   m.q:SetPoint("TOPLEFT", 20, -42)
@@ -1278,7 +1279,7 @@ local function BuildAsker()
   m.edit:SetPoint("BOTTOMLEFT", 20, 56)
   m.msg = UI.Text(card, "", "Small", "subtle", 230)
   m.msg:SetPoint("BOTTOMLEFT", 20, 22)
-  m.ok = UI.Button(card, "Answer", 96, 26)
+  m.ok = UI.Button(card, Loc["Answer"], 96, 26)
   m.ok:SetPoint("BOTTOMRIGHT", -16, 14)
   local function Go()
     local done, msg, out = A:Answer(m.id, m.i, m.edit:GetText())
@@ -1299,8 +1300,8 @@ function A:Ask(id, i)
   local m = self.asker or BuildAsker()
   m.id, m.i = id, i
   local pass = o.auto.k == "pass"
-  m.head:SetText(pass and "The password" or "Your answer")
-  m.ok:SetText(pass and "Speak it" or "Answer")
+  m.head:SetText(pass and Loc["The password"] or Loc["Your answer"])
+  m.ok:SetText(pass and Loc["Speak it"] or Loc["Answer"])
   m.q:SetText(pass and UI.Clean(o.text) or ("\"" .. UI.Escape(o.auto.q) .. "\""))
   m.msg:SetText(UI.Clean(e.title))
   m.edit:SetText("")
@@ -1322,14 +1323,14 @@ local function BuildEditor(parent)
   A.editor = m
   m.draft, m.opts = {}, {}   -- the widgets read these as they're built
   local card = m.card
-  m.head = UI.Section(card, "Completes when...")
+  m.head = UI.Section(card, Loc["Completes when..."])
   m.head:SetPoint("TOPLEFT", 21, -15)
   m.obj = UI.Text(card, "", "Small", "subtle", EIW - 30)
   m.obj:SetPoint("TOPLEFT", 20, -40)
   m.obj:SetWordWrap(false)
 
   m.tabs = UI.Segments(card, {
-    { key = "rule", label = "The rule" }, { key = "also", label = "And also" }, { key = "opts", label = "Options" },
+    { key = "rule", label = Loc["The rule"] }, { key = "also", label = Loc["And also"] }, { key = "opts", label = Loc["Options"] },
   }, 110, function(key) m.tab = key; m:Paint() end)
   m.tabs:SetPoint("TOPLEFT", 20, -60)
 
@@ -1387,7 +1388,7 @@ local function BuildEditor(parent)
         root:CreateTitle(label)
         if none then root:CreateButton(none, function() Put(keyId, nil); if keyName then Put(keyName, nil) end; m:Paint() end) end
         local items = list()
-        if #items == 0 then root:CreateTitle("Nothing to choose yet") end
+        if #items == 0 then root:CreateTitle(Loc["Nothing to choose yet"]) end
         for _, it in ipairs(items) do
           root:CreateButton(it.label, function() Put(keyId, it.id); if keyName then Put(keyName, it.label) end; m:Paint() end)
         end
@@ -1415,8 +1416,8 @@ local function BuildEditor(parent)
   m.kind:SetPoint("TOPLEFT", 20, -96)
   m.kind:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("How it completes")
-      root:CreateRadio("Ticked by hand", function() return m.draft.k == nil end, function() m:SetKind(nil) end)
+      root:CreateTitle(Loc["How it completes"])
+      root:CreateRadio(Loc["Ticked by hand"], function() return m.draft.k == nil end, function() m:SetKind(nil) end)
       for _, k in ipairs(A.ORDER) do
         root:CreateRadio(A.KINDS[k].label, function() return m.draft.k == k end, function() m:SetKind(k) end)
       end
@@ -1445,78 +1446,78 @@ local function BuildEditor(parent)
   local p = Panel("place")
   m.placeNote = Note(p, "", 0)
   p = Panel("zone")
-  Field(p, "The place's name (a zone or subzone)", 0, 0, EIW - 132, 60, "n")
-  local here = UI.Button(p, "Where I am", 120, 24)
+  Field(p, Loc["The place's name (a zone or subzone)"], 0, 0, EIW - 132, 60, "n")
+  local here = UI.Button(p, Loc["Where I am"], 120, 24)
   here:SetPoint("TOPLEFT", EIW - 120, -14)
   here:SetScript("OnClick", function()
     local z = GetSubZoneText and GetSubZoneText() or ""
     if not Safe(z) or z == "" then z = GetZoneText and GetZoneText() or "" end
     if Safe(z) and z ~= "" then m.draft.n = z; m:Paint() end
   end)
-  Note(p, "Completes when the name on their minimap (or the zone's) matches. Exact names work best: \"Lion's Pride Inn\".", -50)
+  Note(p, Loc["Completes when the name on their minimap (or the zone's) matches. Exact names work best: \"Lion's Pride Inn\"."], -50)
   p = Panel("watch")
-  Field(p, "Minutes at the pin", 0, 0, 140, 3, "m", true)
-  Toggle(p, "Leaving starts the clock again", "strict", 0, -50)
+  Field(p, Loc["Minutes at the pin"], 0, 0, 140, 3, "m", true)
+  Toggle(p, Loc["Leaving starts the clock again"], "strict", 0, -50)
   m.watchNote = Note(p, "", -84)
   p = Panel("talk")
-  Field(p, "Their name (an NPC or a player)", 0, 0, EIW, 60, "n")
-  Toggle(p, "Only when they're close by", "near", 0, -50)
-  Note(p, "Completes when they target someone with that name.", -84)
+  Field(p, Loc["Their name (an NPC or a player)"], 0, 0, EIW, 60, "n")
+  Toggle(p, Loc["Only when they're close by"], "near", 0, -50)
+  Note(p, Loc["Completes when they target someone with that name."], -84)
   p = Panel("emote")
-  Picker(p, "The emote", 0, 0, EIW, function()
+  Picker(p, Loc["The emote"], 0, 0, EIW, function()
     local out = {}
     for _, e in ipairs(A.EMOTES) do out[#out + 1] = { id = e, label = "/" .. e:lower() } end
     return out
   end, "e")
-  Field(p, "At (optional: a name to target)", 0, -48, EIW, 60, "n")
+  Field(p, Loc["At (optional: a name to target)"], 0, -48, EIW, 60, "n")
   p = Panel("item")
-  Picker(p, "Which Kinship item", 0, 0, EIW, KinItems, "d", "nm")
-  Field(p, "How many", 0, -48, 80, 2, "c", true)
-  Toggle(p, "Handed over when the quest is done", "take", 0, -96)
-  Note(p, "Design items in Inventory > Workshop, and give them out before the quest.", -128)
+  Picker(p, Loc["Which Kinship item"], 0, 0, EIW, KinItems, "d", "nm")
+  Field(p, Loc["How many"], 0, -48, 80, 2, "c", true)
+  Toggle(p, Loc["Handed over when the quest is done"], "take", 0, -96)
+  Note(p, Loc["Design items in Inventory > Workshop, and give them out before the quest."], -128)
   p = Panel("gather")
-  Field(p, "Game item: its ID number (from a database site, or an item link)", 0, 0, EIW, 140, "i")
-  Field(p, "How many", 0, -48, 80, 3, "c", true)
+  Field(p, Loc["Game item: its ID number (from a database site, or an item link)"], 0, 0, EIW, 140, "i")
+  Field(p, Loc["How many"], 0, -48, 80, 3, "c", true)
   m.gatherName = Note(p, "", -96)
   p = Panel("wear")
-  Field(p, "Game item: its ID number (or an item link)", 0, 0, EIW, 140, "i")
+  Field(p, Loc["Game item: its ID number (or an item link)"], 0, 0, EIW, 140, "i")
   m.wearName = Note(p, "", -50)
   p = Panel("stash")
-  Field(p, "The stash's name (or part of it)", 0, 0, EIW, 40, "n")
-  Note(p, "Completes when they search the area and turn up a stash with that name. To need several, set how many on And also.", -50)
+  Field(p, Loc["The stash's name (or part of it)"], 0, 0, EIW, 40, "n")
+  Note(p, Loc["Completes when they search the area and turn up a stash with that name. To need several, set how many on And also."], -50)
   p = Panel("dice")
-  Field(p, "Dice", 0, 0, 140, 24, "x")
-  Field(p, "At least", 156, 0, 90, 4, "at", true)
-  Field(p, "Tries (0 for any)", 262, 0, 120, 2, "tries", true)
-  Note(p, "They get a Roll button on the objective. Rolls are shared as usual.", -50)
+  Field(p, Loc["Dice"], 0, 0, 140, 24, "x")
+  Field(p, Loc["At least"], 156, 0, 90, 4, "at", true)
+  Field(p, Loc["Tries (0 for any)"], 262, 0, 120, 2, "tries", true)
+  Note(p, Loc["They get a Roll button on the objective. Rolls are shared as usual."], -50)
   p = Panel("riddle")
-  Field(p, "The riddle, as they'll see it", 0, 0, EIW, 200, "q")
-  Field(p, "The answer (more than one? separate them with /)", 0, -48, EIW - 136, 120, "ans")
-  Field(p, "Tries (0 for any)", EIW - 120, -48, 120, 2, "tries", true)
+  Field(p, Loc["The riddle, as they'll see it"], 0, 0, EIW, 200, "q")
+  Field(p, Loc["The answer (more than one? separate them with /)"], 0, -48, EIW - 136, 120, "ans")
+  Field(p, Loc["Tries (0 for any)"], EIW - 120, -48, 120, 2, "tries", true)
   m.riddleNote = Note(p, "", -98)
   p = Panel("pass")
-  Field(p, "The password (more than one? separate them with /)", 0, 0, EIW - 136, 120, "ans")
-  Field(p, "Tries (0 for any)", EIW - 120, 0, 120, 2, "tries", true)
+  Field(p, Loc["The password (more than one? separate them with /)"], 0, 0, EIW - 136, 120, "ans")
+  Field(p, Loc["Tries (0 for any)"], EIW - 120, 0, 120, 2, "tries", true)
   m.passNote = Note(p, "", -50)
   p = Panel("duel")
-  Field(p, "Against (a name; leave it blank for anyone)", 0, 0, EIW, 60, "n")
-  Note(p, "Completes when they win a duel, by knockout or when the other side flees. To need several wins, set how many on And also.", -50)
+  Field(p, Loc["Against (a name; leave it blank for anyone)"], 0, 0, EIW, 60, "n")
+  Note(p, Loc["Completes when they win a duel, by knockout or when the other side flees. To need several wins, set how many on And also."], -50)
   p = Panel("kill")
-  Field(p, "Their name, or part of it (\"Defias\" counts every Defias)", 0, 0, EIW - 106, 60, "n")
-  Field(p, "How many", EIW - 90, 0, 90, 2, "times", true)
-  Toggle(p, "Only ones they loot", "loot", 0, -50)
+  Field(p, Loc["Their name, or part of it (\"Defias\" counts every Defias)"], 0, 0, EIW - 106, 60, "n")
+  Field(p, Loc["How many"], EIW - 90, 0, 90, 2, "times", true)
+  Toggle(p, Loc["Only ones they loot"], "loot", 0, -50)
   Note(p, "Counts from the game's \"dies, you gain experience\" line, kills in a group included. Enemies that give no experience "
     .. "count when they're the target and die in a fight with them. \"Only ones they loot\" counts each corpse once, at any level.", -84)
   p = Panel("bounty")
-  Field(p, "Who (a player's name; leave it blank for anyone)", 0, 0, EIW - 106, 60, "n")
-  Field(p, "How many", EIW - 90, 0, 90, 2, "times", true)
+  Field(p, Loc["Who (a player's name; leave it blank for anyone)"], 0, 0, EIW - 106, 60, "n")
+  Field(p, Loc["How many"], EIW - 90, 0, 90, 2, "times", true)
   Note(p, "Counts honourable kills, from the game's \"dies (Honorable Kill)\" line. Kills that give no honour (an enemy far below "
     .. "their level, or killed too often) don't count. Add \"At the pin\" on And also for a battle in one place.", -50)
   p = Panel("effect")
-  Picker(p, "Which effect", 0, 0, EIW, Effects, "a", "nm")
-  Toggle(p, "When they shake it off (not when they take it on)", "lose", 0, -48)
+  Picker(p, Loc["Which effect"], 0, 0, EIW, Effects, "a", "nm")
+  Toggle(p, Loc["When they shake it off (not when they take it on)"], "lose", 0, -48)
   p = Panel("read")
-  Picker(p, "Which document", 0, 0, EIW, function()
+  Picker(p, Loc["Which document"], 0, 0, EIW, function()
     local out = {}
     local D = K.Documents
     for _, doc in ipairs(D and D:List() or {}) do
@@ -1524,11 +1525,11 @@ local function BuildEditor(parent)
     end
     return out
   end, "d", "nm")
-  Note(p, "Attach the document to a Kinship item so they can open it.", -48)
+  Note(p, Loc["Attach the document to a Kinship item so they can open it."], -48)
   p = Panel("time")
-  Field(p, "From hour (0-23)", 0, 0, 130, 2, "h1", true)
-  Field(p, "Until hour (0-23)", 146, 0, 130, 2, "h2", true)
-  Note(p, "Server time, as the clock on your minimap shows it. Give the objective a map pin and they must be there too.", -50)
+  Field(p, Loc["From hour (0-23)"], 0, 0, 130, 2, "h1", true)
+  Field(p, Loc["Until hour (0-23)"], 146, 0, 130, 2, "h2", true)
+  Note(p, Loc["Server time, as the clock on your minimap shows it. Give the objective a map pin and they must be there too."], -50)
 
   m.none = Note(area, "Ticked by hand: by the storyteller, or by the player on quests without storyteller mode. "
     .. "The Options tab still works: optional, hidden, and how it can fail.", 0)
@@ -1541,39 +1542,39 @@ local function BuildEditor(parent)
   local body = CreateFrame("Frame", nil, also)
   body:SetAllPoints()
   m.alsoBody = body
-  Toggle(body, "At the pin", "w.pin", 0, 0, 136)
-  Toggle(body, "In character", "w.ic", 150, 0, 136)
-  Toggle(body, "In a group", "w.grp", 300, 0, EIW - 300)
-  Field(body, "From hour", 0, -34, 100, 2, "w.h1", true)
-  Field(body, "Until hour", 112, -34, 100, 2, "w.h2", true)
-  Field(body, "With someone close by (their name)", HW + 12, -34, HW, 60, "w.pn")
-  Picker(body, "Carrying a Kinship item", 0, -84, HW, KinItems, "w.cd", "w.cnm", "Nothing in particular")
-  Picker(body, "Under an effect", HW + 12, -84, HW, Effects, "w.fa", "w.fnm", "No effect needed")
-  Field(body, "Wearing a game item (its ID or a link)", 0, -134, HW, 140, "w.wi")
-  m.holdField = Field(body, "Keep it up for (seconds)", HW + 12, -134, HW, 4, "hold", true)
-  m.timesField = Field(body, "How many times", HW + 12, -134, HW, 2, "times", true)
+  Toggle(body, Loc["At the pin"], "w.pin", 0, 0, 136)
+  Toggle(body, Loc["In character"], "w.ic", 150, 0, 136)
+  Toggle(body, Loc["In a group"], "w.grp", 300, 0, EIW - 300)
+  Field(body, Loc["From hour"], 0, -34, 100, 2, "w.h1", true)
+  Field(body, Loc["Until hour"], 112, -34, 100, 2, "w.h2", true)
+  Field(body, Loc["With someone close by (their name)"], HW + 12, -34, HW, 60, "w.pn")
+  Picker(body, Loc["Carrying a Kinship item"], 0, -84, HW, KinItems, "w.cd", "w.cnm", Loc["Nothing in particular"])
+  Picker(body, Loc["Under an effect"], HW + 12, -84, HW, Effects, "w.fa", "w.fnm", Loc["No effect needed"])
+  Field(body, Loc["Wearing a game item (its ID or a link)"], 0, -134, HW, 140, "w.wi")
+  m.holdField = Field(body, Loc["Keep it up for (seconds)"], HW + 12, -134, HW, 4, "hold", true)
+  m.timesField = Field(body, Loc["How many times"], HW + 12, -134, HW, 2, "times", true)
   m.alsoNote = Note(body, "", -184)
-  m.alsoNone = Note(also, "Choose a rule first (on The rule tab). These add to it: \"/kneel, at the shrine, after dark\".", 0)
+  m.alsoNone = Note(also, Loc["Choose a rule first (on The rule tab). These add to it: \"/kneel, at the shrine, after dark\"."], 0)
 
   -- The options tab ------------------------------------------------------
   local opts = CreateFrame("Frame", nil, card)
   opts:SetPoint("TOPLEFT", 20, -98)
   opts:SetSize(EIW, EH - 98 - 50)
   m.optsPanel = opts
-  Toggle(opts, "Optional: a bonus, not needed to finish the quest", "o.opt", 0, 0)
-  Toggle(opts, "Hidden: players see it only once it's done", "o.hid", 0, -28)
-  local fails = UI.Text(opts, "Fails if...", "Label", "subtle")
+  Toggle(opts, Loc["Optional: a bonus, not needed to finish the quest"], "o.opt", 0, 0)
+  Toggle(opts, Loc["Hidden: players see it only once it's done"], "o.hid", 0, -28)
+  local fails = UI.Text(opts, Loc["Fails if..."], "Label", "subtle")
   fails:SetPoint("TOPLEFT", 1, -62)
-  Toggle(opts, "They die", "f.die", 0, -80, HW)
-  Toggle(opts, "They leave the pin's area", "f.out", HW + 12, -80, HW)
-  Field(opts, "Time limit (minutes; blank for none)", 0, -108, HW, 4, "f.mins", true)
+  Toggle(opts, Loc["They die"], "f.die", 0, -80, HW)
+  Toggle(opts, Loc["They leave the pin's area"], "f.out", HW + 12, -80, HW)
+  Field(opts, Loc["Time limit (minutes; blank for none)"], 0, -108, HW, 4, "f.mins", true)
   local function OutcomeLabel(id)
     for _, it in ipairs(A.OUTCOMES) do if it.id == id then return it.label end end
     return HOLD_LABEL
   end
-  Picker(opts, "When it fails", 0, -158, HW, function() return A.OUTCOMES end, "f.th", nil, HOLD_LABEL, OutcomeLabel)
-  m.retryToggle = Toggle(opts, "They can try again", "f.retry", HW + 12, -172, HW)
-  m.altPicker = Picker(opts, "Which objective opens", HW + 12, -158, HW, function()
+  Picker(opts, Loc["When it fails"], 0, -158, HW, function() return A.OUTCOMES end, "f.th", nil, HOLD_LABEL, OutcomeLabel)
+  m.retryToggle = Toggle(opts, Loc["They can try again"], "f.retry", HW + 12, -172, HW)
+  m.altPicker = Picker(opts, Loc["Which objective opens"], HW + 12, -158, HW, function()
     local out = {}
     for _, it in ipairs(m.objective and m.objective.others and m.objective.others() or {}) do
       if it.index > (m.objective.index or 0) then out[#out + 1] = { id = it.index, label = ("%d: %s"):format(it.index, it.text) } end
@@ -1583,14 +1584,14 @@ local function BuildEditor(parent)
     for _, it in ipairs(m.objective and m.objective.others and m.objective.others() or {}) do
       if it.index == id then return ("%d: %s"):format(it.index, it.text) end
     end
-    return "Objective " .. tostring(id)
+    return Loc["Objective "] .. tostring(id)
   end)
-  Picker(opts, "And it leaves them with", 0, -204, HW, Effects, "f.fx", "f.fxn", "Nothing lasting")
+  Picker(opts, Loc["And it leaves them with"], 0, -204, HW, Effects, "f.fx", "f.fxn", Loc["Nothing lasting"])
   m.optsNote = Note(opts, "", -252)
 
-  m.save = UI.Button(card, "Save", 96, 26)
+  m.save = UI.Button(card, Loc["Save"], 96, 26)
   m.save:SetPoint("BOTTOMRIGHT", -16, 14)
-  m.cancel = UI.Button(card, "Cancel", 80, 26)
+  m.cancel = UI.Button(card, Loc["Cancel"], 80, 26)
   m.cancel:SetPoint("RIGHT", m.save, "LEFT", -8, 0)
   m.cancel:SetScript("OnClick", function() m:Hide() end)
   m.err = UI.Text(card, "", "Small", "subtle", 270)
@@ -1601,8 +1602,8 @@ local function BuildEditor(parent)
   m.save:SetScript("OnClick", function()
     local opt, hid, fl = A.Options(m.opts)
     local options = { opt = opt, hid = hid, fl = fl }
-    if fl and fl.out and not HasPin() then Err("\"They leave the pin's area\" needs a map pin on this objective.") return end
-    if m.opts.fl and m.opts.fl.th == "open" and not (fl and fl.alt) then Err("Choose which objective opens (a later one).") return end
+    if fl and fl.out and not HasPin() then Err(Loc["\"They leave the pin's area\" needs a map pin on this objective."]) return end
+    if m.opts.fl and m.opts.fl.th == "open" and not (fl and fl.alt) then Err(Loc["Choose which objective opens (a later one)."]) return end
     local d = m.draft
     if not d.k then m.set(nil, options); m:Hide() return end
     if d.k == "gather" or d.k == "wear" then d.i = ItemId(d.i) end
@@ -1610,14 +1611,14 @@ local function BuildEditor(parent)
     if d.w then
       d.w.wi = ItemId(d.w.wi)
       if d.w.wi then d.w.wnm = GameItemName(d.w.wi) or d.w.wnm end
-      if (d.w.h1 ~= nil) ~= (d.w.h2 ~= nil) then Err("Give both hours, or neither.") return end
-      if d.w.pin and not HasPin() then Err("\"At the pin\" needs a map pin on this objective.") return end
+      if (d.w.h1 ~= nil) ~= (d.w.h2 ~= nil) then Err(Loc["Give both hours, or neither."]) return end
+      if d.w.pin and not HasPin() then Err(Loc["\"At the pin\" needs a map pin on this objective."]) return end
     end
-    if (d.k == "watch" or d.k == "place") and not HasPin() then Err("This rule needs a map pin on this objective.") return end
+    if (d.k == "watch" or d.k == "place") and not HasPin() then Err(Loc["This rule needs a map pin on this objective."]) return end
     if (d.k == "riddle" or d.k == "pass") and d.ans and A.Normal(d.ans) ~= "" then d.h = A.HashList(d.ans) end
-    if (d.k == "riddle" or d.k == "pass") and not d.h then Err("Give the answer.") return end
+    if (d.k == "riddle" or d.k == "pass") and not d.h then Err(Loc["Give the answer."]) return end
     local clean = A.Sanitize(d)
-    if not clean then Err("Something's missing or not quite right.") return end
+    if not clean then Err(Loc["Something's missing or not quite right."]) return end
     m.set(clean, options)
     m:Hide()
   end)
@@ -1631,7 +1632,7 @@ local function BuildEditor(parent)
     for _, b in ipairs(panel.pickers or {}) do
       local id = Get(b.keyId)
       b:SetText(id and ((b.keyName and Get(b.keyName)) or (b.labelFor and b.labelFor(id))
-        or (b.keyId == "e" and ("/" .. id:lower())) or tostring(id)) or b.none or "Choose...")
+        or (b.keyId == "e" and ("/" .. id:lower())) or tostring(id)) or b.none or Loc["Choose..."])
     end
   end
 
@@ -1644,7 +1645,7 @@ local function BuildEditor(parent)
     self.area:SetShown(tab == "rule")
     self.alsoPanel:SetShown(tab == "also")
     self.optsPanel:SetShown(tab == "opts")
-    self.kind:SetText(k and A.KINDS[k].label or "Ticked by hand")
+    self.kind:SetText(k and A.KINDS[k].label or Loc["Ticked by hand"])
     self.none:SetShown(k == nil)
     for kk, panel in pairs(self.panels) do
       panel:SetShown(kk == k)
@@ -1653,21 +1654,21 @@ local function BuildEditor(parent)
     if k == "place" or k == "watch" then
       local note = k == "place" and self.placeNote or self.watchNote
       note:SetText(HasPin()
-        and ((k == "place" and "Completes when they reach this objective's pin: " or "Time spent at this objective's pin adds up: ")
-          .. (K.QuestMarkers.Label(self.objective.marker) or "") .. ". The pin's area counts; an exact spot allows " .. HERE .. " yards.")
-        or "|cffc0473aGive this objective a map pin first|r (the pin button beside it).")
+        and ((k == "place" and Loc["Completes when they reach this objective's pin: "] or Loc["Time spent at this objective's pin adds up: "])
+          .. (K.QuestMarkers.Label(self.objective.marker) or "") .. Loc[". The pin's area counts; an exact spot allows "] .. HERE .. Loc[" yards."])
+        or Loc["|cffc0473aGive this objective a map pin first|r (the pin button beside it)."])
     elseif k == "gather" or k == "wear" then
       local id = ItemId(self.draft.i)
       local name = id and GameItemName(id)
       local note = k == "gather" and self.gatherName or self.wearName
-      note:SetText(id and (name and ("That's: " .. name) or "That ID isn't known to your game yet.") or "")
+      note:SetText(id and (name and (Loc["That's: "] .. name) or Loc["That ID isn't known to your game yet."]) or "")
     elseif k == "riddle" or k == "pass" then
       local saved = self.draft.h ~= nil
       local note = k == "riddle" and self.riddleNote or self.passNote
       note:SetText(
-        (saved and "An answer is saved. Leave it blank to keep it, or type a new one. " or "")
-        .. "It's stored scrambled, so it isn't in the quest's text. Capitals, punctuation and a leading \"the\" don't matter."
-        .. (k == "pass" and " Tell them the password in roleplay; they type it into the objective." or ""))
+        (saved and Loc["An answer is saved. Leave it blank to keep it, or type a new one. "] or "")
+        .. Loc["It's stored scrambled, so it isn't in the quest's text. Capitals, punctuation and a leading \"the\" don't matter."]
+        .. (k == "pass" and Loc[" Tell them the password in roleplay; they type it into the objective."] or ""))
     end
 
     if tab == "also" then
@@ -1678,11 +1679,11 @@ local function BuildEditor(parent)
         self.holdField:SetShown(A.HOLDS[k] and true or false)
         self.timesField:SetShown(A.COUNTS[k] and not OWN_COUNT[k] and true or false)
         local w = self.draft.w or {}
-        self.alsoNote:SetText((w.pin and not HasPin()) and "|cffc0473a\"At the pin\" needs a map pin on this objective.|r"
-          or ("Everything set here must also be true when the rule is met."
-            .. (A.HOLDS[k] and " Keep it up: it must stay true that long." or "")
-            .. (A.COUNTS[k] and not OWN_COUNT[k] and " How many times: each one counts." or "")
-            .. (k == "watch" and " Keeping watch already takes time; the conditions must hold while the clock runs." or "")))
+        self.alsoNote:SetText((w.pin and not HasPin()) and Loc["|cffc0473a\"At the pin\" needs a map pin on this objective.|r"]
+          or (Loc["Everything set here must also be true when the rule is met."]
+            .. (A.HOLDS[k] and Loc[" Keep it up: it must stay true that long."] or "")
+            .. (A.COUNTS[k] and not OWN_COUNT[k] and Loc[" How many times: each one counts."] or "")
+            .. (k == "watch" and Loc[" Keeping watch already takes time; the conditions must hold while the clock runs."] or "")))
       end
     elseif tab == "opts" then
       Fill(self.optsPanel)
@@ -1691,12 +1692,12 @@ local function BuildEditor(parent)
       self.altPicker:SetShown(th == "open")
       self.altPicker.caption:SetShown(th == "open")
       local what = ({
-        carry = "The objective is marked failed but counts as dealt with, and the quest goes on.",
-        open = "The objective you choose waits unseen, and opens only if this one fails. Players never learn of it otherwise.",
-        quest = "The whole quest ends as failed, in their journal and chronicle.",
-      })[th] or "It holds up the quest until they try again, or you tick it yourself."
-      self.optsNote:SetText("Dice and riddles with limited tries fail when the tries run out. " .. what
-        .. " Time runs from when the objective opens, and keeps running while they're away.")
+        carry = Loc["The objective is marked failed but counts as dealt with, and the quest goes on."],
+        open = Loc["The objective you choose waits unseen, and opens only if this one fails. Players never learn of it otherwise."],
+        quest = Loc["The whole quest ends as failed, in their journal and chronicle."],
+      })[th] or Loc["It holds up the quest until they try again, or you tick it yourself."]
+      self.optsNote:SetText(Loc["Dice and riddles with limited tries fail when the tries run out. "] .. what
+        .. Loc[" Time runs from when the objective opens, and keeps running while they're away."])
     end
   end
   return m

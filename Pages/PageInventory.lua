@@ -10,6 +10,7 @@
 -- opens Trade.lua's give window.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -98,7 +99,7 @@ local function BuildBags(tab, c)
   local grid = UI.Panel(tab)
   grid:SetPoint("TOPLEFT")
   grid:SetSize(GRID_W, BODY_H)
-  local pill = UI.Section(grid, "Your bags")
+  local pill = UI.Section(grid, Loc["Your bags"])
   pill:SetPoint("TOPLEFT", 21, -15)
   tab.free = UI.Chip(grid)
   tab.free:SetPoint("TOPRIGHT", -16, -12)
@@ -164,19 +165,19 @@ local function BuildBags(tab, c)
   end
   if K.Worn then K.Worn:BagCells(tab.cells) end
 
-  local hint = UI.Text(grid, "Drag to move, or onto a worn slot to wear it. Right-click to use. Shift-click to split a stack.", "Small", "subtle", GRID_W - 34)
+  local hint = UI.Text(grid, Loc["Drag to move, or onto a worn slot to wear it. Right-click to use. Shift-click to split a stack."], "Small", "subtle", GRID_W - 34)
   hint:SetPoint("TOPLEFT", 17, -348)
   hint:SetSpacing(2)
 
   local bw = math.floor((GRID_W - 32 - 8) / 2)
-  tab.search = UI.Button(grid, "Search the area", bw, 26)
+  tab.search = UI.Button(grid, Loc["Search the area"], bw, 26)
   tab.search:SetPoint("BOTTOMLEFT", 16, 14)
   tab.search:SetScript("OnClick", function() if K.Stashes then K.Stashes:OpenPanel(c, "near") end end)
-  UI.Tooltip(tab.search, "Search the area", "Look for stashes other players have left near where you stand.")
-  tab.stashes = UI.Button(grid, "Your stashes", bw, 26)
+  UI.Tooltip(tab.search, Loc["Search the area"], Loc["Look for stashes other players have left near where you stand."])
+  tab.stashes = UI.Button(grid, Loc["Your stashes"], bw, 26)
   tab.stashes:SetPoint("LEFT", tab.search, "RIGHT", 8, 0)
   tab.stashes:SetScript("OnClick", function() if K.Stashes then K.Stashes:OpenPanel(c, "mine") end end)
-  UI.Tooltip(tab.stashes, "Your stashes", "Everything you've left out in the world, and where.")
+  UI.Tooltip(tab.stashes, Loc["Your stashes"], Loc["Everything you've left out in the world, and where."])
 
   -- The chosen item ---------------------------------------------------------
   local card = UI.Panel(tab)
@@ -187,7 +188,7 @@ local function BuildBags(tab, c)
   local d = CreateFrame("Frame", nil, card)
   d:SetAllPoints()
   tab.detail = d
-  local dp = UI.Section(d, "Selected item")
+  local dp = UI.Section(d, Loc["Selected item"])
   dp:SetPoint("TOPLEFT", 21, -15)
   d.slot = I.NewSlot(d, CELL)
   d.slot:SetPoint("TOPLEFT", 16, -42)
@@ -202,10 +203,10 @@ local function BuildBags(tab, c)
   d.body:SetPoint("TOPLEFT", 16, -108)
 
   local w3 = math.floor((DIW - 12) / 3)
-  d.use = UI.Button(d, "Use", w3, 26)
+  d.use = UI.Button(d, Loc["Use"], w3, 26)
   d.use:SetPoint("BOTTOMLEFT", 16, 46)
   d.use:SetScript("OnClick", function() if tab.sel then I:Use(tab.sel) end end)
-  d.give = UI.Button(d, "Give", w3, 26)
+  d.give = UI.Button(d, Loc["Give"], w3, 26)
   d.give:SetPoint("LEFT", d.use, "RIGHT", 6, 0)
   d.give:SetScript("OnClick", function()
     if not (tab.sel and K.Trade) then return end
@@ -216,20 +217,20 @@ local function BuildBags(tab, c)
     end
     K.Trade:OpenGive(to, tab.sel)
   end)
-  UI.Tooltip(d.give, "Give", "Offer it to another Kinship player. It leaves your bags once they accept.")
-  d.stash = UI.Button(d, "Stash it", w3, 26)
+  UI.Tooltip(d.give, Loc["Give"], Loc["Offer it to another Kinship player. It leaves your bags once they accept."])
+  d.stash = UI.Button(d, Loc["Stash it"], w3, 26)
   d.stash:SetPoint("LEFT", d.give, "RIGHT", 6, 0)
   d.stash:SetScript("OnClick", function() if tab.sel and K.Stashes then K.Stashes:OpenDrop(c, tab.sel) end end)
-  UI.Tooltip(d.stash, "Stash it", "Leave it here in the world, in plain sight or hidden, for others to find.")
+  UI.Tooltip(d.stash, Loc["Stash it"], Loc["Leave it here in the world, in plain sight or hidden, for others to find."])
 
-  d.wear = UI.Button(d, "Wear", DIW, 24)
+  d.wear = UI.Button(d, Loc["Wear"], DIW, 24)
   d.wear:SetPoint("BOTTOMLEFT", 16, 78)
   d.wear:SetScript("OnClick", function()
     if tab.sel and K.Worn and K.Worn:Wear(tab.sel) then tab.sel = I:Slot(tab.sel) and tab.sel or nil; Refresh() end
   end)
-  UI.Tooltip(d.wear, "Wear it", "Put it on. It shows around your character on your profile, and goes back in your bags when you take it off.")
+  UI.Tooltip(d.wear, Loc["Wear it"], Loc["Put it on. It shows around your character on your profile, and goes back in your bags when you take it off."])
 
-  d.split = UI.Button(d, "Split", w3, 26)
+  d.split = UI.Button(d, Loc["Split"], w3, 26)
   d.split:SetPoint("BOTTOMLEFT", 16, 14)
   d.split:SetScript("OnClick", function()
     local slot = tab.sel and I:Slot(tab.sel)
@@ -237,8 +238,8 @@ local function BuildBags(tab, c)
     local to = I:Split(tab.sel, math.floor(slot.count / 2))
     if to then tab.sel = to; Refresh(); tab.cells[to]:Pop() end
   end)
-  UI.Tooltip(d.split, "Split the stack", "Moves half of it into an empty slot.")
-  d.edit = UI.Button(d, "Edit design", w3, 26)
+  UI.Tooltip(d.split, Loc["Split the stack"], Loc["Moves half of it into an empty slot."])
+  d.edit = UI.Button(d, Loc["Edit design"], w3, 26)
   d.edit:SetPoint("LEFT", d.split, "RIGHT", 6, 0)
   d.edit:SetScript("OnClick", function()
     local slot = tab.sel and I:Slot(tab.sel)
@@ -247,14 +248,14 @@ local function BuildBags(tab, c)
     c.frames[2].selected = slot.def
     Refresh()
   end)
-  d.destroy = UI.Button(d, "Destroy", w3, 26)
+  d.destroy = UI.Button(d, Loc["Destroy"], w3, 26)
   d.destroy:SetPoint("LEFT", d.edit, "RIGHT", 6, 0)
-  Confirming(d.destroy, "Destroy", "Sure?", function()
+  Confirming(d.destroy, Loc["Destroy"], Loc["Sure?"], function()
     if tab.sel then I:Destroy(tab.sel); tab.sel = nil end
   end)
-  UI.Tooltip(d.destroy, "Destroy", "Throw away the whole stack. Your design stays in the Workshop.")
+  UI.Tooltip(d.destroy, Loc["Destroy"], Loc["Throw away the whole stack. Your design stays in the Workshop."])
 
-  tab.none = EmptyState(card, "IconNote", "", DIW - 20, "Open the Workshop")
+  tab.none = EmptyState(card, "IconNote", "", DIW - 20, Loc["Open the Workshop"])
   tab.none.button:SetScript("OnClick", function() c.tab = 2; Refresh() end)
 end
 
@@ -262,12 +263,12 @@ local function DetailText(def)
   local out = {}
   if def.description ~= "" then out[#out + 1] = UI.Clean(def.description) end
   if def.useText ~= "" then
-    out[#out + 1] = ("|cff%sUse:|r %s%s"):format(Hex({ 0.12, 1, 0 }), UI.Escape(def.useText), def.consume and " (used up)" or "")
+    out[#out + 1] = ("|cff%sUse:|r %s%s"):format(Hex({ 0.12, 1, 0 }), UI.Escape(def.useText), def.consume and Loc[" (used up)"] or "")
   end
   if def.documentId then
     local doc = K.Documents and K.Documents:Get(def.documentId)
     out[#out + 1] = ("|cff%s%s|r"):format(Hex({ 0.55, 0.80, 1 }),
-      doc and ("Read: " .. UI.Escape(K.Documents.Title(doc))) or "Its writing never reached you.")
+      doc and (Loc["Read: "] .. UI.Escape(K.Documents.Title(doc))) or Loc["Its writing never reached you."])
   end
   if def.flavor ~= "" then out[#out + 1] = ("|cff%s\"%s\"|r"):format(Hex(GOLD), UI.Clean(def.flavor)) end
   local held = I:Reserved(def.id)
@@ -294,7 +295,7 @@ local function RefreshBags(tab)
     cell:SetSelected(tab.sel == i and s ~= nil)
   end
   local free = I.SLOTS - used
-  tab.free:Set(free == 0 and "Bags full" or (free == 1 and "1 slot free" or (free .. " slots free")),
+  tab.free:Set(free == 0 and Loc["Bags full"] or (free == 1 and Loc["1 slot free"] or (free .. Loc[" slots free"])),
     free == 0 and { 0.80, 0.25, 0.20 } or nil)
   tab.stashes:SetEnabled(K.Stashes ~= nil)
   tab.search:SetEnabled(K.Stashes ~= nil)
@@ -305,8 +306,8 @@ local function RefreshBags(tab)
   d:SetShown(s ~= nil)
   tab.none:SetShown(s == nil)
   if not s then
-    tab.none.text:SetText(used > 0 and "Choose something from your bags to look at it closely."
-      or "Your bags are empty. Design an item in the Workshop, or accept one someone offers you.")
+    tab.none.text:SetText(used > 0 and Loc["Choose something from your bags to look at it closely."]
+      or Loc["Your bags are empty. Design an item in the Workshop, or accept one someone offers you."])
     tab.none.button:SetShown(used == 0)
     return
   end
@@ -319,18 +320,18 @@ local function RefreshBags(tab)
   if def then
     d.name:SetText(UI.Escape(def.name))
     d.name:SetTextColor(unpack(I.QualityColor(def.quality, true)))
-    local kind = I.Quality(def.quality).label .. " item"
+    local kind = I.Quality(def.quality).label .. Loc[" item"]
     if def.stack > 1 then kind = kind .. ("  ·  %d of %d"):format(s.count, def.stack) end
     d.kind:SetText(kind)
     d.body:SetText(DetailText(def, s))
   else
-    d.name:SetText("Unknown item")
+    d.name:SetText(Loc["Unknown item"])
     d.name:SetTextColor(unpack(K:Theme().subtle))
-    d.kind:SetText(s.count > 1 and (s.count .. " of them") or "")
-    d.body:SetText("Its description never reached you.")
+    d.kind:SetText(s.count > 1 and (s.count .. Loc[" of them"]) or "")
+    d.body:SetText(Loc["Its description never reached you."])
   end
   local avail = def and I:Available(def.id) or 0
-  d.use:SetText(def and def.useText == "" and def.documentId and "Read" or "Use")
+  d.use:SetText(def and def.useText == "" and def.documentId and Loc["Read"] or Loc["Use"])
   d.use:SetEnabled(def ~= nil and (def.useText ~= "" or def.documentId ~= nil))
   d.give:SetEnabled(def ~= nil and avail >= 1 and K.Trade ~= nil)
   d.stash:SetEnabled(def ~= nil and avail >= 1 and K.Stashes ~= nil)
@@ -340,7 +341,7 @@ local function RefreshBags(tab)
   d.wear:SetShown(wearable)
   if wearable then
     local on = K.Worn:In(def.wear)
-    d.wear:SetText(on and ("Wear instead of " .. UI.Escape(on.name)) or ("Wear (" .. I.WEAR_LABEL[def.wear]:lower() .. ")"))
+    d.wear:SetText(on and (Loc["Wear instead of "] .. UI.Escape(on.name)) or ("Wear (" .. I.WEAR_LABEL[def.wear]:lower() .. ")"))
     d.wear:SetEnabled(avail >= 1)
   end
 end
@@ -370,9 +371,9 @@ end
 
 local function DocMenu(owner, tab)
   UI.Menu(owner, function(root)
-    root:CreateTitle("Writing it carries")
+    root:CreateTitle(Loc["Writing it carries"])
     local def = tab.selected and K.db.itemDefs[tab.selected]
-    root:CreateRadio("None", function() return def and def.documentId == nil end, function() SaveField(tab, "documentId", nil) end)
+    root:CreateRadio(Loc["None"], function() return def and def.documentId == nil end, function() SaveField(tab, "documentId", nil) end)
     local D = K.Documents
     if D then
       for _, doc in ipairs(D:List()) do
@@ -383,7 +384,7 @@ local function DocMenu(owner, tab)
       end
     end
     root:CreateDivider()
-    root:CreateButton("Write a new document...", function()
+    root:CreateButton(Loc["Write a new document..."], function()
       local c = tab.page
       if not D then return end
       local doc = D:New()
@@ -399,17 +400,17 @@ local function BuildWorkshop(tab, c)
   tab.page = c
   tab.make = 1
 
-  local new = UI.Button(tab, "New design", LIST_W, 26)
+  local new = UI.Button(tab, Loc["New design"], LIST_W, 26)
   new:SetPoint("TOPLEFT", 0, 0)
   new:SetScript("OnClick", function()
-    if NewDesign(tab, { name = "New item", icon = NEW_ICON, quality = 1, stack = 1 }) then
+    if NewDesign(tab, { name = Loc["New item"], icon = NEW_ICON, quality = 1, stack = 1 }) then
       tab.ed.name.edit:SetFocus()
       tab.ed.name.edit:HighlightText()
     end
   end)
 
   tab.list = UI.List(tab, LIST_W, BODY_H - 34, 50,
-    "No designs yet. Make a keepsake, a potion, a writ or a trinket, then carry it, give it or leave it somewhere.",
+    Loc["No designs yet. Make a keepsake, a potion, a writ or a trinket, then carry it, give it or leave it somewhere."],
     function(row)
       row.icon = row:CreateTexture(nil, "ARTWORK")
       row.icon:SetSize(34, 34)
@@ -440,14 +441,14 @@ local function BuildWorkshop(tab, c)
   local ed = CreateFrame("Frame", nil, card)
   ed:SetAllPoints()
   tab.ed = ed
-  local pill = UI.Section(ed, "Item design")
+  local pill = UI.Section(ed, Loc["Item design"])
   pill:SetPoint("TOPLEFT", 21, -15)
   ed.del = UI.Button(ed, "Delete", 70, 22)
   ed.del:SetPoint("TOPRIGHT", -16, -10)
-  Confirming(ed.del, "Delete", "Sure?", function()
+  Confirming(ed.del, "Delete", Loc["Sure?"], function()
     if tab.selected then I:DeleteDesign(tab.selected); tab.selected = nil; Refresh() end
   end)
-  UI.Tooltip(ed.del, "Delete design", "Copies already made, by you or anyone you gave them to, are kept.")
+  UI.Tooltip(ed.del, Loc["Delete design"], Loc["Copies already made, by you or anyone you gave them to, are kept."])
 
   ed.icon = I.NewSlot(ed, CELL)
   ed.icon:SetPoint("TOPLEFT", 16, -42)
@@ -457,11 +458,11 @@ local function BuildWorkshop(tab, c)
     I:ChooseIcon(self, def.icon, function(icon) SaveField(tab, "icon", icon) end)
   end)
   ed.icon:HookScript("OnEnter", function()
-    GameTooltip:AddLine("Click to choose its icon.", 0.55, 0.80, 1)
+    GameTooltip:AddLine(Loc["Click to choose its icon."], 0.55, 0.80, 1)
     GameTooltip:Show()
   end)
 
-  ed.name = UI.Field(ed, "Name", IW - 64, I.MAX.name, function(text)
+  ed.name = UI.Field(ed, Loc["Name"], IW - 64, I.MAX.name, function(text)
     if strtrim(text) ~= "" then SaveField(tab, "name", text) end
   end)
   ed.name:SetPoint("TOPLEFT", 80, -42)
@@ -469,7 +470,7 @@ local function BuildWorkshop(tab, c)
   ed.by:SetPoint("TOPLEFT", 81, -86)
   ed.by:SetWordWrap(false)
 
-  local ql = UI.Text(ed, "Quality", "Label", "subtle")
+  local ql = UI.Text(ed, Loc["Quality"], "Label", "subtle")
   ql:SetPoint("TOPLEFT", 17, -104)
   local qitems = {}
   for q = 0, 5 do
@@ -479,39 +480,39 @@ local function BuildWorkshop(tab, c)
   ed.quality = UI.Segments(ed, qitems, math.floor(IW / 6), function(q) SaveField(tab, "quality", q) end)
   ed.quality:SetPoint("TOPLEFT", 16, -118)
 
-  local dl = UI.Text(ed, "Description", "Label", "subtle")
+  local dl = UI.Text(ed, Loc["Description"], "Label", "subtle")
   dl:SetPoint("TOPLEFT", 17, -152)
   ed.desc = UI.TextArea(ed, IW, 70, I.MAX.description, function(text) SaveField(tab, "description", text) end)
   ed.desc:SetPoint("TOPLEFT", 16, -166)
 
-  ed.flavor = UI.Field(ed, "Flavour text  (shown in gold, in quotes)", IW, I.MAX.flavor,
+  ed.flavor = UI.Field(ed, Loc["Flavour text  (shown in gold, in quotes)"], IW, I.MAX.flavor,
     function(text) SaveField(tab, "flavor", text) end)
   ed.flavor:SetPoint("TOPLEFT", 16, -244)
 
-  ed.use = UI.Field(ed, "When used, you emote  (e.g. \"uncorks a vial and drinks.\")", IW - 150, I.MAX.useText,
+  ed.use = UI.Field(ed, Loc["When used, you emote  (e.g. \"uncorks a vial and drinks.\")"], IW - 150, I.MAX.useText,
     function(text) SaveField(tab, "useText", text) end)
   ed.use:SetPoint("TOPLEFT", 16, -290)
-  ed.consume = UI.Toggle(ed, "Used up", nil,
+  ed.consume = UI.Toggle(ed, Loc["Used up"], nil,
     function() local def = tab.selected and K.db.itemDefs[tab.selected]; return def and def.consume or false end,
     function(v) SaveField(tab, "consume", v or nil) end, 130, true)
   ed.consume:SetPoint("TOPLEFT", IW - 114, -306)
-  UI.Tooltip(ed.consume, "Used up", "Each use takes one from the stack. Only matters when it has an emote.")
+  UI.Tooltip(ed.consume, Loc["Used up"], Loc["Each use takes one from the stack. Only matters when it has an emote."])
 
-  ed.stack = UI.Field(ed, "Stacks to", 90, 2, function(text)
+  ed.stack = UI.Field(ed, Loc["Stacks to"], 90, 2, function(text)
     local n = tonumber(text)
     if n and n >= 1 then SaveField(tab, "stack", math.min(I.MAX_STACK, math.floor(n))) end
   end)
   ed.stack:SetPoint("TOPLEFT", 16, -336)
   ed.stack.edit:SetNumeric(true)
-  local wo = UI.Text(ed, "Worn on", "Label", "subtle")
+  local wo = UI.Text(ed, Loc["Worn on"], "Label", "subtle")
   wo:SetPoint("TOPLEFT", 117, -336)
   ed.wear = UI.Button(ed, "", 120, 23)
   ed.wear:SetPoint("TOPLEFT", 116, -350)
   ed.wear:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Worn on")
+      root:CreateTitle(Loc["Worn on"])
       local def = tab.selected and K.db.itemDefs[tab.selected]
-      root:CreateRadio("Not worn", function() return def and def.wear == nil end, function() SaveField(tab, "wear", nil) end)
+      root:CreateRadio(Loc["Not worn"], function() return def and def.wear == nil end, function() SaveField(tab, "wear", nil) end)
       local side
       for _, w in ipairs(I.WEAR) do
         if w.side ~= side then root:CreateDivider(); side = w.side end
@@ -519,18 +520,18 @@ local function BuildWorkshop(tab, c)
       end
     end)
   end)
-  UI.Tooltip(ed.wear, "Worn on", "Make it something your character wears: a hat, a cloak, a ring, a blade at the hip. "
+  UI.Tooltip(ed.wear, Loc["Worn on"], "Make it something your character wears: a hat, a cloak, a ring, a blade at the hip. "
     .. "Worn items show around your character on your profile, for other Kinship users to see.")
-  local wl = UI.Text(ed, "Writing it carries", "Label", "subtle")
+  local wl = UI.Text(ed, Loc["Writing it carries"], "Label", "subtle")
   wl:SetPoint("TOPLEFT", 247, -336)
   ed.doc = UI.Button(ed, "", IW - 230, 23)
   ed.doc:SetPoint("TOPLEFT", 246, -350)
   ed.doc:SetScript("OnClick", function(self) DocMenu(self, tab) end)
-  UI.Tooltip(ed.doc, "Writing", "Attach one of your documents. Whoever holds the item can read it, and it travels with the item.")
+  UI.Tooltip(ed.doc, Loc["Writing"], Loc["Attach one of your documents. Whoever holds the item can read it, and it travels with the item."])
 
   ed.have = UI.Text(ed, "", "Small", "subtle", 180)
   ed.have:SetPoint("BOTTOMLEFT", 17, 20)
-  ed.go = UI.Button(ed, "Put in bags", 110, 26)
+  ed.go = UI.Button(ed, Loc["Put in bags"], 110, 26)
   ed.go:SetPoint("BOTTOMRIGHT", -16, 12)
   ed.go:SetScript("OnClick", function()
     local def = tab.selected and K.db.itemDefs[tab.selected]
@@ -538,11 +539,11 @@ local function BuildWorkshop(tab, c)
     local n = tab.make or 1
     local left = I:Add(def.id, n)
     local made = n - (left or 0)
-    if made <= 0 then I.Error("There's no room in your bags.") return end
-    if left and left > 0 then I.Error(("Only room for %d."):format(made)) end
+    if made <= 0 then I.Error(Loc["There's no room in your bags."]) return end
+    if left and left > 0 then I.Error((Loc["Only room for %d."]):format(made)) end
     if SOUNDKIT and SOUNDKIT.IG_BACKPACK_OPEN then PlaySound(SOUNDKIT.IG_BACKPACK_OPEN) end
     UI.Toast({ icon = I.IconTexture(def.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-      title = I:Label(def, made), text = "Into your bags.", color = I.Quality(def.quality).color, duration = 3 })
+      title = I:Label(def, made), text = Loc["Into your bags."], color = I.Quality(def.quality).color, duration = 3 })
   end)
   ed.plus = UI.Button(ed, "+", 24, 24)
   ed.plus:SetPoint("RIGHT", ed.go, "LEFT", -10, 0)
@@ -557,13 +558,13 @@ local function BuildWorkshop(tab, c)
   end
   ed.plus:SetScript("OnClick", function() step(1) end)
   ed.minus:SetScript("OnClick", function() step(-1) end)
-  UI.Tooltip(ed.plus, "More", "Shift-click for ten more.")
-  local ml = UI.Text(ed, "Make", "Label", "subtle")
+  UI.Tooltip(ed.plus, Loc["More"], Loc["Shift-click for ten more."])
+  local ml = UI.Text(ed, Loc["Make"], "Label", "subtle")
   ml:SetPoint("RIGHT", ed.minus, "LEFT", -10, 0)
 
   tab.blank = EmptyState(card, "IconNote",
     "Design the things your character carries: keepsakes, potions, writs, trinkets. Make as many as you like, "
-    .. "then give them away or leave them somewhere to be found.", IW - 60, "Design an item")
+    .. "then give them away or leave them somewhere to be found.", IW - 60, Loc["Design an item"])
   tab.blank.button:SetScript("OnClick", function() new:Click() end)
 end
 
@@ -575,9 +576,9 @@ local function RefreshWorkshop(tab)
     row.name:SetTextColor(unpack(I.QualityColor(def.quality, true)))
     local n = I:CountOf(def.id)
     local sub = I.Quality(def.quality).label
-    if def.documentId then sub = sub .. "  ·  writing" end
+    if def.documentId then sub = sub .. Loc["  ·  writing"] end
     if def.wear and I.WEAR_LABEL[def.wear] then sub = sub .. "  ·  " .. I.WEAR_LABEL[def.wear]:lower() end
-    if n > 0 then sub = sub .. ("  ·  %d carried"):format(n) end
+    if n > 0 then sub = sub .. (Loc["  ·  %d carried"]):format(n) end
     row.sub:SetText(sub)
     row.sel:SetShown(def.id == tab.selected)
   end)
@@ -601,12 +602,12 @@ local function RefreshWorkshop(tab)
   if not ed.desc.edit:HasFocus() then ed.desc.edit:SetText(def.description or ""); ed.desc.edit:SetCursorPosition(0) end
   ed.quality:Select(def.quality)
   ed.consume:Refresh()
-  local edited = def.edited and ("  ·  edited " .. UI.Ago(def.edited)) or ""
-  ed.by:SetText("Your design" .. edited)
+  local edited = def.edited and (Loc["  ·  edited "] .. UI.Ago(def.edited)) or ""
+  ed.by:SetText(Loc["Your design"] .. edited)
 
   local doc = def.documentId and K.Documents and K.Documents:Get(def.documentId)
-  ed.doc:SetText(doc and UI.Escape(K.Documents.Title(doc)) or (def.documentId and "A missing document" or "None"))
-  ed.wear:SetText(def.wear and I.WEAR_LABEL[def.wear] or "Not worn")
+  ed.doc:SetText(doc and UI.Escape(K.Documents.Title(doc)) or (def.documentId and Loc["A missing document"] or Loc["None"]))
+  ed.wear:SetText(def.wear and I.WEAR_LABEL[def.wear] or Loc["Not worn"])
   ed.doc:SetEnabled(K.Documents ~= nil)
 
   tab.make = math.max(1, math.min(MAKE_MAX, tab.make or 1))
@@ -614,7 +615,7 @@ local function RefreshWorkshop(tab)
   ed.minus:SetEnabled(tab.make > 1)
   ed.plus:SetEnabled(tab.make < MAKE_MAX)
   local n, free = I:CountOf(def.id), I:FreeSlots()
-  ed.have:SetText((n > 0 and ("You carry %d."):format(n) or "You carry none.") .. (free == 0 and "  Bags full." or ""))
+  ed.have:SetText((n > 0 and (Loc["You carry %d."]):format(n) or Loc["You carry none."]) .. (free == 0 and Loc["  Bags full."] or ""))
 end
 
 ---------------------------------------------------------------------------
@@ -624,8 +625,8 @@ end
 ---------------------------------------------------------------------------
 
 StaticPopupDialogs["KINSHIPRP_OUTFIT_DELETE"] = {
-  text = "Delete the outfit \"%s\"? Its items stay where they are.",
-  button1 = DELETE or "Delete", button2 = CANCEL or "Cancel",
+  text = Loc["Delete the outfit \"%s\"? Its items stay where they are."],
+  button1 = DELETE or "Delete", button2 = CANCEL or Loc["Cancel"],
   OnAccept = function(_, o) K.Worn:DeleteOutfit(o) end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
@@ -649,7 +650,7 @@ local function BuildNamer()
   m.sub:SetSpacing(2)
 
   local function Check() m:Check() end
-  m.field = UI.Field(card, "Name", ND_W - 40, W.OUTFIT_NAME, Check)
+  m.field = UI.Field(card, Loc["Name"], ND_W - 40, W.OUTFIT_NAME, Check)
   m.field:SetPoint("TOPLEFT", 20, -70)
   m.warn = UI.Text(card, "", "Small", "fixed", ND_W - 40)
   m.warn:SetPoint("TOPLEFT", m.field, "BOTTOMLEFT", 1, -4)
@@ -659,9 +660,9 @@ local function BuildNamer()
   m.tie = UI.Toggle(card, "", nil, function() return m.tied end, function(v) m.tied = v end, ND_W - 40, true)
   m.tie:SetPoint("TOPLEFT", 20, -150)
 
-  m.save = UI.Button(card, SAVE or "Save", 110, 26)
+  m.save = UI.Button(card, SAVE or Loc["Save"], 110, 26)
   m.save:SetPoint("BOTTOMRIGHT", -20, 16)
-  local cancel = UI.Button(card, CANCEL or "Cancel", 90, 26)
+  local cancel = UI.Button(card, CANCEL or Loc["Cancel"], 90, 26)
   cancel:SetPoint("RIGHT", m.save, "LEFT", -8, 0)
   cancel:SetScript("OnClick", function() m:Hide() end)
 
@@ -675,17 +676,17 @@ local function BuildNamer()
       self.warn:SetText("")
       self.save:SetEnabled(false)
     elseif other and self.outfit then
-      self.warn:SetText(("You already have an outfit called %s. Choose another name."):format(UI.Escape(other.name)))
+      self.warn:SetText((Loc["You already have an outfit called %s. Choose another name."]):format(UI.Escape(other.name)))
       self.save:SetEnabled(false)
     elseif other then
       self.replacing = other
-      self.warn:SetText(("You already have an outfit called %s. Saving replaces it with what you have on now."):format(UI.Escape(other.name)))
+      self.warn:SetText((Loc["You already have an outfit called %s. Saving replaces it with what you have on now."]):format(UI.Escape(other.name)))
       self.save:SetEnabled(true)
     else
       self.warn:SetText("")
       self.save:SetEnabled(true)
     end
-    self.save:SetText(self.replacing and "Replace" or (SAVE or "Save"))
+    self.save:SetText(self.replacing and Loc["Replace"] or (SAVE or Loc["Save"]))
     if self.save.Paint then self.save:Paint() end
   end
 
@@ -705,7 +706,7 @@ local function BuildNamer()
     if self.tied then W:LinkOutfit(o, profile)
     elseif o.profile == profile then W:LinkOutfit(o, nil) end
     if not self.outfit then
-      K:Print(("Saved what you're wearing as %s."):format(UI.Escape(o.name)))
+      K:Print((Loc["Saved what you're wearing as %s."]):format(UI.Escape(o.name)))
     end
     self:Hide()
   end
@@ -722,20 +723,20 @@ local function AskOutfitName(o)
   local W, m = K.Worn, namer
   local profile = K:MyProfiles().active
   m.outfit = o
-  m.title:SetText(o and "Rename outfit" or "Save an outfit")
-  m.sub:SetText(o and ("Give %s a new name."):format(UI.Escape(o.name))
-    or "Keep what you have on now under a name, to change back into with one click.")
+  m.title:SetText(o and Loc["Rename outfit"] or Loc["Save an outfit"])
+  m.sub:SetText(o and (Loc["Give %s a new name."]):format(UI.Escape(o.name))
+    or Loc["Keep what you have on now under a name, to change back into with one click."])
   m.field.edit:SetText(o and o.name or "")
   -- The switch: put it on when you switch to the profile you're using now
   local holder = W:OutfitFor(profile)
   m.tied = (o and o.profile == profile) or false
-  m.tie.label:SetText(("Put it on when I switch to my %s profile"):format(UI.Escape(profile or "")))
+  m.tie.label:SetText((Loc["Put it on when I switch to my %s profile"]):format(UI.Escape(profile or "")))
   if holder and holder ~= o then
     if not m.tie.desc then
       m.tie.desc = UI.Text(m.tie, "", "Small", "subtle", ND_W - 88)
       m.tie.desc:SetPoint("TOPLEFT", m.tie.label, "BOTTOMLEFT", 0, -3)
     end
-    m.tie.desc:SetText(("Instead of %s, which goes on now."):format(UI.Escape(holder.name)))
+    m.tie.desc:SetText((Loc["Instead of %s, which goes on now."]):format(UI.Escape(holder.name)))
     m.tie.desc:Show()
   elseif m.tie.desc then
     m.tie.desc:SetText("")
@@ -752,15 +753,15 @@ local function OutfitMenu(owner, o)
   local W = K.Worn
   UI.Menu(owner, function(root)
     root:CreateTitle(UI.Escape(o.name))
-    root:CreateButton("Change into it", function() W:ChangeInto(o) end)
-    root:CreateButton("Save what I'm wearing over it", function()
+    root:CreateButton(Loc["Change into it"], function() W:ChangeInto(o) end)
+    root:CreateButton(Loc["Save what I'm wearing over it"], function()
       W:SaveOutfit(o.name)
-      K:Print(("Saved what you're wearing as %s."):format(UI.Escape(o.name)))
+      K:Print((Loc["Saved what you're wearing as %s."]):format(UI.Escape(o.name)))
     end)
-    root:CreateButton("Rename...", function() AskOutfitName(o) end)
+    root:CreateButton(Loc["Rename..."], function() AskOutfitName(o) end)
     -- Tied to a profile: switching to it changes you into this outfit
-    local tie = root:CreateButton("Wear with a profile")
-    tie:CreateRadio("No profile", function() return o.profile == nil end, function() W:LinkOutfit(o, nil) end)
+    local tie = root:CreateButton(Loc["Wear with a profile"])
+    tie:CreateRadio(Loc["No profile"], function() return o.profile == nil end, function() W:LinkOutfit(o, nil) end)
     for _, name in ipairs(K:ProfileNames()) do
       local other = W:OutfitFor(name)
       local label = UI.Escape(name) .. ((other and other ~= o) and ("  |cff9a9a9a(now " .. UI.Escape(other.name) .. ")|r") or "")
@@ -819,7 +820,7 @@ local function BuildWorn(tab, c)
   tab.model = model
   -- A model lets go of the character while hidden: load it again on each show.
   tab:HookScript("OnShow", function() model:SetUnit("player"); model:SetFacing(model.facing or 0) end)
-  local note = UI.Text(stage, "Drag onto a slot to wear it. Right-click to take it off.", "Small", "fixed", STAGE_W - 40)
+  local note = UI.Text(stage, Loc["Drag onto a slot to wear it. Right-click to take it off."], "Small", "fixed", STAGE_W - 40)
   note:SetTextColor(0.95, 0.9, 0.8)
   note:SetPoint("BOTTOM", 0, 12)
   note:SetJustifyH("CENTER")
@@ -852,7 +853,7 @@ local function BuildWorn(tab, c)
   card:SetSize(FIT_W, BODY_H)
   -- Two views: what's in your bags to wear, and your saved outfits
   tab.view = "wear"
-  tab.views = UI.Segments(card, { { key = "wear", label = "To wear" }, { key = "outfits", label = "Outfits" } },
+  tab.views = UI.Segments(card, { { key = "wear", label = Loc["To wear"] }, { key = "outfits", label = Loc["Outfits"] } },
     math.floor((FIT_W - 28) / 2), function(key) tab.view = key; Refresh() end)
   tab.views:SetPoint("TOPLEFT", 14, -12)
   tab.views:Select("wear")
@@ -886,7 +887,7 @@ local function BuildWorn(tab, c)
     row.onEnter = function(self)
       if not self.item then return end
       I:ShowTooltip(self, self.item.def, self.item.count, "ANCHOR_LEFT")
-      GameTooltip:AddLine("Click to wear it, or drag it onto its slot.", 0.55, 0.80, 1)
+      GameTooltip:AddLine(Loc["Click to wear it, or drag it onto its slot."], 0.55, 0.80, 1)
       GameTooltip:Show()
     end
   end, { emptyIcon = K.Art("IconNote") })
@@ -926,35 +927,35 @@ local function BuildWorn(tab, c)
           any = true
           local has = (worn[w.key] and worn[w.key].def == id) or I:Available(id) > 0
           local col = has and I.QualityColor(def.quality) or { 0.5, 0.5, 0.5 }
-          GameTooltip:AddDoubleLine(w.label, UI.Escape(def.name) .. (has and "" or "  (not in your bags)"),
+          GameTooltip:AddDoubleLine(w.label, UI.Escape(def.name) .. (has and "" or Loc["  (not in your bags)"]),
             0.62, 0.62, 0.62, col[1], col[2], col[3])
         end
       end
-      if not any then GameTooltip:AddLine("Nothing worn: changing into it takes everything off.", 1, 1, 1, true) end
+      if not any then GameTooltip:AddLine(Loc["Nothing worn: changing into it takes everything off."], 1, 1, 1, true) end
       if o.profile then
-        GameTooltip:AddLine(("You change into it when you switch to your %s profile."):format(UI.Escape(o.profile)),
+        GameTooltip:AddLine((Loc["You change into it when you switch to your %s profile."]):format(UI.Escape(o.profile)),
           1, 0.82, 0, true)
       end
-      GameTooltip:AddLine("Click to change into it. Right-click to update, rename, delete or tie it to a profile.", 0.55, 0.80, 1, true)
+      GameTooltip:AddLine(Loc["Click to change into it. Right-click to update, rename, delete or tie it to a profile."], 0.55, 0.80, 1, true)
       GameTooltip:Show()
     end
   end, { emptyIcon = K.Art("IconNote") })
   tab.outfits:SetPoint("TOPLEFT", 14, -44)
 
-  local work = UI.Button(card, "Open the Workshop", FIT_W - 40, 24)
+  local work = UI.Button(card, Loc["Open the Workshop"], FIT_W - 40, 24)
   work:SetPoint("BOTTOMLEFT", 20, 14)
   tab.work = work
-  tab.save = UI.Button(card, "Save what I'm wearing", FIT_W - 40, 24)
+  tab.save = UI.Button(card, Loc["Save what I'm wearing"], FIT_W - 40, 24)
   tab.save:SetPoint("BOTTOMLEFT", 20, 14)
   tab.save:SetScript("OnClick", function() AskOutfitName(nil) end)
-  UI.Tooltip(tab.save, "Save an outfit", "Keep what you have on now under a name, to change back into with one click. "
+  UI.Tooltip(tab.save, Loc["Save an outfit"], "Keep what you have on now under a name, to change back into with one click. "
     .. "Use a name you already have to save over it.")
   -- The note sits just above the button, under the list
   tab.fitNote = UI.Text(card, "", "Small", "subtle", FIT_W - 40)
   tab.fitNote:SetPoint("BOTTOMLEFT", work, "TOPLEFT", 0, 10)
   tab.fitNote:SetSpacing(2)
   work:SetScript("OnClick", function() c.tab = 2; Refresh() end)
-  UI.Tooltip(work, "The Workshop", "Choose Worn on for a design to make it something your character can wear.")
+  UI.Tooltip(work, Loc["The Workshop"], Loc["Choose Worn on for a design to make it something your character can wear."])
 end
 
 local function RefreshWorn(tab)
@@ -969,13 +970,13 @@ local function RefreshWorn(tab)
     local def = s and I:Get(s.def)
     if def and def.wear and I.WEAR_LABEL[def.wear] then items[#items + 1] = { index = i, def = def, count = s.count } end
   end
-  tab.fit.empty:SetText("Nothing in your bags can be worn yet.")
+  tab.fit.empty:SetText(Loc["Nothing in your bags can be worn yet."])
   tab.fit:SetItems(items, function(row, it)
     row.icon:SetTexture(I.IconTexture(it.def.icon))
     row.name:SetText(UI.Escape(it.def.name))
     row.name:SetTextColor(unpack(I.QualityColor(it.def.quality, true)))
     local on = W:In(it.def.wear)
-    row.sub:SetText(I.WEAR_LABEL[it.def.wear] .. (on and ("  ·  instead of " .. UI.Escape(on.name)) or ""))
+    row.sub:SetText(I.WEAR_LABEL[it.def.wear] .. (on and (Loc["  ·  instead of "] .. UI.Escape(on.name)) or ""))
   end)
   local outfits = tab.view == "outfits"
   tab.fit:SetShown(not outfits)
@@ -983,7 +984,7 @@ local function RefreshWorn(tab)
   tab.outfits:SetShown(outfits)
   tab.save:SetShown(outfits)
   if outfits then
-    tab.outfits.empty:SetText("No outfits yet. Put on what you like, then save it here.")
+    tab.outfits.empty:SetText(Loc["No outfits yet. Put on what you like, then save it here."])
     local list = {}
     for _, o in ipairs(W:Outfits()) do list[#list + 1] = o end
     tab.outfits:SetItems(list, function(row, o)
@@ -991,13 +992,13 @@ local function RefreshWorn(tab)
       local pieces, have, exact = W:OutfitState(o)
       local t = K:Theme()
       if exact then
-        row.state:SetText("Wearing")
+        row.state:SetText(Loc["Wearing"])
         row.state:SetTextColor(unpack(t.accent))
       elseif have < pieces then
-        row.state:SetText(("%d missing"):format(pieces - have))
+        row.state:SetText((Loc["%d missing"]):format(pieces - have))
         row.state:SetTextColor(unpack(t.subtle))
       else
-        row.state:SetText(pieces == 1 and "1 piece" or ("%d pieces"):format(pieces))
+        row.state:SetText(pieces == 1 and Loc["1 piece"] or (Loc["%d pieces"]):format(pieces))
         row.state:SetTextColor(unpack(t.subtle))
       end
       local n = 0
@@ -1028,7 +1029,7 @@ end
 -- The page
 ---------------------------------------------------------------------------
 -- Worn is fifth in the list but shows second, after Bags (bar.order).
-local TAB_NAMES = { "Bags", "Workshop", "Documents", "Database", "Worn" }
+local TAB_NAMES = { Loc["Bags"], Loc["Workshop"], Loc["Documents"], Loc["Database"], Loc["Worn"] }
 local WORN = 5
 
 -- Is this tab's feature switched on (and loaded)?
@@ -1060,8 +1061,8 @@ local function EnsureTab(c, i)
 end
 
 K:RegisterPage({
-  id = "inventory", title = "Inventory", heading = "Inventory",
-  subtitle = "What your character carries, makes and writes.",
+  id = "inventory", title = Loc["Inventory"], heading = Loc["Inventory"],
+  subtitle = Loc["What your character carries, makes and writes."],
   group = "World", icon = { "Interface\\Icons\\INV_Misc_Bag_08", round = true },
   enabled = function() return K:ExtOn() end,
 

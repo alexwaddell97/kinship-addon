@@ -14,6 +14,7 @@
 -- someone who was offline. On a quest of your own, the items are made for you.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local R = { MAX = 4 }
@@ -91,7 +92,7 @@ end
 
 function R.Label(it)
   local def = I() and I():Get(it.d)
-  return I() and I():Label(def, it.n) or "an item"
+  return I() and I():Label(def, it.n) or Loc["an item"]
 end
 
 ---------------------------------------------------------------------------
@@ -128,7 +129,7 @@ function R:Mint(e)
   if #list == 0 then e.rewarded = true; K:Fire("QUESTS") return end
   if not Items:Fits(check) then
     UI.Toast({ icon = "Interface\\Icons\\INV_Misc_Bag_08", round = true, duration = 6, color = { 0.90, 0.36, 0.30 },
-      title = "No room for your reward", text = "Make space in your Kinship bags, then take it from the quest." })
+      title = Loc["No room for your reward"], text = Loc["Make space in your Kinship bags, then take it from the quest."] })
     return
   end
   for _, it in ipairs(list) do Items:Add(it.d, it.n) end
@@ -142,7 +143,7 @@ function R:Toast(e, list)
   local def = first and I() and I():Get(first.d)
   UI.Toast({
     icon = def and I().IconTexture(def.icon) or e.icon, iconCoords = { 0.08, 0.92, 0.08, 0.92 }, duration = 6,
-    title = "Reward: " .. (first and R.Label(first) or "") .. (#list > 1 and (" and %d more"):format(#list - 1) or ""),
+    title = Loc["Reward: "] .. (first and R.Label(first) or "") .. (#list > 1 and (Loc[" and %d more"]):format(#list - 1) or ""),
     text = UI.Clean(e.title), color = def and I().Quality(def.quality).color or Gold(), sound = "IG_BACKPACK_OPEN",
     onClick = function() if K.Journal then K.Journal:Open("inventory") end end,
   })
@@ -194,7 +195,7 @@ end
 function R:Received(e, r)
   if r.state ~= "accepted" then
     UI.Toast({ icon = e.icon, round = true, duration = 8, color = { 0.90, 0.36, 0.30 },
-      title = "Your reward is waiting", text = "Make room in your Kinship bags; " .. Short(e.author) .. " will send it again." })
+      title = Loc["Your reward is waiting"], text = Loc["Make room in your Kinship bags; "] .. Short(e.author) .. Loc[" will send it again."] })
     return
   end
   e.rewarded = true
@@ -219,7 +220,7 @@ function R:Deliver(e, key)
   end
   if #entries == 0 then
     rw.st = "gone"
-    K:Print(("The reward for %s is no longer among your designs, so %s can't be sent it."):format(UI.Clean(e.title), Short(p.name)))
+    K:Print((Loc["The reward for %s is no longer among your designs, so %s can't be sent it."]):format(UI.Clean(e.title), Short(p.name)))
     return
   end
   rw.t = time()
@@ -249,7 +250,7 @@ K.Net:On("qclaim", function(msg, sender)
   if not p.rw.told then
     p.rw.told = true
     UI.Toast({ icon = e.icon, round = true, duration = 5, color = Gold(),
-      title = Short(sender) .. " earned a reward", text = UI.Clean(e.title) .. "  ·  Kinship sends it for you",
+      title = Short(sender) .. Loc[" earned a reward"], text = UI.Clean(e.title) .. Loc["  ·  Kinship sends it for you"],
       onClick = function() QQ:Open(e.id) end })
   end
   R:Deliver(e, key)
@@ -268,7 +269,7 @@ K:On("TRADE", function(o)
           if o.state == "done" and rw.st == "owed" then
             rw.st, rw.at = "paid", time()
             UI.Toast({ icon = e.icon, round = true, duration = 5, color = QQ.DONE,
-              title = "Reward delivered to " .. Short(p.name), text = UI.Clean(e.title) })
+              title = Loc["Reward delivered to "] .. Short(p.name), text = UI.Clean(e.title) })
             K:Fire("QUESTS")
           end
           return
@@ -325,7 +326,7 @@ local function BuildChooser()
   R.chooser = m
   m:SetFrameStrata("DIALOG")
   local card = m.card
-  m.head = UI.Section(card, "Choose your reward")
+  m.head = UI.Section(card, Loc["Choose your reward"])
   m.head:SetPoint("TOPLEFT", 21, -15)
   m.quest = UI.Text(card, "", "Small", "subtle", 340)
   m.quest:SetPoint("TOPLEFT", 20, -40)
@@ -345,15 +346,15 @@ local function BuildChooser()
     s:SetScript("OnClick", function() m.pk = j; m:Paint() end)
     m.slots[j] = s
   end
-  m.ok = UI.Button(card, "Take it", 110, 26)
+  m.ok = UI.Button(card, Loc["Take it"], 110, 26)
   m.ok:SetPoint("BOTTOMRIGHT", -16, 14)
   m.ok:SetScript("OnClick", function()
     if m.e and m.pk then R:Choose(m.e.id, m.pk); m:Hide() end
   end)
-  m.later = UI.Button(card, "Later", 80, 26)
+  m.later = UI.Button(card, Loc["Later"], 80, 26)
   m.later:SetPoint("RIGHT", m.ok, "LEFT", -8, 0)
   m.later:SetScript("OnClick", function() m:Hide() end)
-  m.note = UI.Text(card, "You can choose later from the quest.", "Small", "subtle", 190)
+  m.note = UI.Text(card, Loc["You can choose later from the quest."], "Small", "subtle", 190)
   m.note:SetPoint("BOTTOMLEFT", 20, 22)
   function m:Paint()
     local items = self.e and self.e.items or {}
@@ -417,7 +418,7 @@ function R:PaintSheet(s, q, y)
   box:Show()
   local state = q.id and Q():Log()[q.id] == q and R.State(q) or nil
   local mine = Q():IsMine(q)
-  box.label:SetText(q.pick and "Choose one of these Kinship items:" or "Kinship items:")
+  box.label:SetText(q.pick and Loc["Choose one of these Kinship items:"] or Loc["Kinship items:"])
   local x = 2
   local chosen = q.claim and q.claim.pk
   for j, sl in ipairs(box.slots) do
@@ -435,23 +436,23 @@ function R:PaintSheet(s, q, y)
   -- Where it stands
   local text, act, fn = "", nil, nil
   if state == "choose" then
-    text, act, fn = "Choose your reward.", "Choose", function() R:OpenChooser(q.id) end
+    text, act, fn = Loc["Choose your reward."], Loc["Choose"], function() R:OpenChooser(q.id) end
   elseif state == "take" then
-    text, act, fn = "Ready for you.", "Take your reward", function() R:Mint(q) end
+    text, act, fn = Loc["Ready for you."], Loc["Take your reward"], function() R:Mint(q) end
   elseif state == "coming" then
-    text, act, fn = "On its way: it arrives when you and " .. Short(q.author) .. " are both online.", "Ask again", function() R:Claim(q) end
+    text, act, fn = Loc["On its way: it arrives when you and "] .. Short(q.author) .. Loc[" are both online."], Loc["Ask again"], function() R:Claim(q) end
   elseif state == "got" then
-    text = "Received."
+    text = Loc["Received."]
   elseif mine and q.players and q.id and Q():Log()[q.id] == q then
     local paid, owed = R.Owed(q)
     if paid + owed > 0 then
-      text = ("Sent to %d %s"):format(paid, paid == 1 and "player" or "players")
-        .. (owed > 0 and (", %d still to send (Kinship keeps trying)"):format(owed) or "") .. "."
+      text = (Loc["Sent to %d %s"]):format(paid, paid == 1 and Loc["player"] or Loc["players"])
+        .. (owed > 0 and (Loc[", %d still to send (Kinship keeps trying)"]):format(owed) or "") .. "."
     else
-      text = "Kinship sends these for you when players finish."
+      text = Loc["Kinship sends these for you when players finish."]
     end
   elseif not q.id or not Q():Log()[q.id] then
-    text = mine and "Made from your designs and sent for you when players finish." or ""
+    text = mine and Loc["Made from your designs and sent for you when players finish."] or ""
   end
   box.status:SetText(text)
   box.status:ClearAllPoints()

@@ -3,6 +3,7 @@
 -- and the pet or mount names it's bound to (whose tooltips then tell it).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Comp = K.Companions
@@ -37,14 +38,14 @@ end
 -- The list of companions (left)
 ---------------------------------------------------------------------------
 local function BuildList(c)
-  c.newBtn = UI.Button(c, "+  New companion", LEFT_W, 28)
+  c.newBtn = UI.Button(c, Loc["+  New companion"], LEFT_W, 28)
   c.newBtn:SetPoint("TOPLEFT")
   c.newBtn:SetScript("OnClick", function()
     local rec = Comp:New("pet")
     if rec then c.selectedId = rec.id; c.focusName = true; K.Journal:RefreshCurrent() end
   end)
 
-  c.list = UI.List(c, LEFT_W, CH - 38, ROW_H, "No companions yet.\nEvery hound, horse and imp has a story.",
+  c.list = UI.List(c, LEFT_W, CH - 38, ROW_H, Loc["No companions yet.\nEvery hound, horse and imp has a story."],
     function(row)
       -- Each row is a small card with a gap below it. The fill lives on the row
       -- (under the list's hover and selection layers), the hairline edge on a
@@ -114,14 +115,14 @@ local function FillRow(c)
     local sel = rec.id == c.selectedId
     row.icon:SetTexture(Comp.IconOf(rec))
     local name = strtrim(rec.name or "")
-    row.name:SetText(name ~= "" and name or "Unnamed companion")
+    row.name:SetText(name ~= "" and name or Loc["Unnamed companion"])
     row.name:SetAlpha(name ~= "" and 1 or 0.6)
     local title = strtrim(rec.title or "")
-    row.title:SetText(title ~= "" and title or "No title yet")
+    row.title:SetText(title ~= "" and title or Loc["No title yet"])
     row.title:SetAlpha(title ~= "" and 1 or 0.6)
     local kind = (Comp.KINDS[rec.kind] or Comp.KINDS.pet).label
     local binds = rec.bindings or {}
-    row.meta:SetText(#binds > 0 and (kind .. "  ·  " .. table.concat(binds, ", ")) or (kind .. "  ·  not bound yet"))
+    row.meta:SetText(#binds > 0 and (kind .. "  ·  " .. table.concat(binds, ", ")) or (kind .. Loc["  ·  not bound yet"]))
     row.sel:SetShown(sel)
     if sel then row.edge:SetColor(t.accent[1], t.accent[2], t.accent[3], 0.85) else row.edge:SetColor(unpack(t.panelEdge)) end
     row.ring:SetVertexColor(t.accent[1], t.accent[2], t.accent[3], sel and 1 or 0.35)
@@ -151,7 +152,7 @@ local function NewChip(parent, onRemove)
   b.x:SetScript("OnClick", function() onRemove(b.value) end)
   b.x:HookScript("OnEnter", function()
     GameTooltip:SetOwner(b, "ANCHOR_TOP")
-    GameTooltip:SetText("Unbind " .. (b.value or ""), 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Unbind "] .. (b.value or ""), 1, 0.82, 0)
     GameTooltip:Show()
   end)
   b.x:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -187,7 +188,7 @@ local function BindName(c, name)
   local rec = Ref(c)
   if not rec then return end
   local ok, err = Comp:Bind(rec, name)
-  if ok then Feedback(c, "Bound to " .. strtrim(name) .. ". Its tooltip now tells this story.", true)
+  if ok then Feedback(c, Loc["Bound to "] .. strtrim(name) .. Loc[". Its tooltip now tells this story."], true)
   else Feedback(c, err) end
   return ok
 end
@@ -197,11 +198,11 @@ local function BindCurrent(c, button)
   if not rec then return end
   if rec.kind == "mount" then
     local list = Comp:MountCandidates()
-    if not list then return Feedback(c, "Mount up first, then bind your mount.") end
-    if #list == 0 then return Feedback(c, "Couldn't tell which aura is your mount. Type its name instead.") end
+    if not list then return Feedback(c, Loc["Mount up first, then bind your mount."]) end
+    if #list == 0 then return Feedback(c, Loc["Couldn't tell which aura is your mount. Type its name instead."]) end
     if #list == 1 or not (MenuUtil and MenuUtil.CreateContextMenu) then return BindName(c, list[1].name) end
     UI.Menu(button, function(root)
-      root:CreateTitle("Which one is your mount?")
+      root:CreateTitle(Loc["Which one is your mount?"])
       for _, a in ipairs(list) do
         root:CreateButton(a.name, function() BindName(c, a.name) end)
       end
@@ -209,7 +210,7 @@ local function BindCurrent(c, button)
   else
     -- A companion pet you've targeted, or your hunter or warlock pet.
     local pet = Comp:TargetCompanionPet() or Comp:CurrentPetName()
-    if not pet then return Feedback(c, "Summon your pet, or target your companion pet, then try again.") end
+    if not pet then return Feedback(c, Loc["Summon your pet, or target your companion pet, then try again."]) end
     BindName(c, pet)
   end
 end
@@ -258,8 +259,8 @@ local function BuildEditor(c)
   ib:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.12, paintIcon)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Choose an icon", 1, 0.82, 0)
-    GameTooltip:AddLine(K.IconPicker and "Click to browse icons." or "Type an icon name in the Icon field, such as Ability_Hunter_Pet_Cat.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Choose an icon"], 1, 0.82, 0)
+    GameTooltip:AddLine(K.IconPicker and Loc["Click to browse icons."] or Loc["Type an icon name in the Icon field, such as Ability_Hunter_Pet_Cat."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   ib:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.15, paintIcon); GameTooltip:Hide() end)
@@ -275,12 +276,12 @@ local function BuildEditor(c)
   end
   local L = Comp.LIMITS
 
-  ed.nameField = UI.Field(ed, "Name", 200, L.name, Set("name"))
+  ed.nameField = UI.Field(ed, Loc["Name"], 200, L.name, Set("name"))
   ed.nameField:SetPoint("TOPLEFT", 92, -14)
 
   local kinds = {}
   for _, k in ipairs(Comp.KIND_ORDER) do kinds[#kinds + 1] = { key = k, label = Comp.KINDS[k].label } end
-  local kl = UI.Text(ed, "Kind", "Label", "subtle")
+  local kl = UI.Text(ed, Loc["Kind"], "Label", "subtle")
   kl:SetPoint("TOPLEFT", ED_W - 16 - 116 + 1, -14)
   ed.kind = UI.Segments(ed, kinds, 58, function(key)
     local rec = Ref(c)
@@ -292,41 +293,41 @@ local function BuildEditor(c)
   end)
   ed.kind:SetPoint("TOPRIGHT", -16, -28)
 
-  ed.titleField = UI.Field(ed, "Title", 200, L.title, Set("title"))
+  ed.titleField = UI.Field(ed, Loc["Title"], 200, L.title, Set("title"))
   ed.titleField:SetPoint("TOPLEFT", 92, -58)
-  ed.iconField = UI.Field(ed, "Icon", 116, 120, function(text)
+  ed.iconField = UI.Field(ed, Loc["Icon"], 116, 120, function(text)
     local rec = Ref(c)
     local icon = ParseIcon(text)
     if rec and icon then rec.icon = icon; ed.iconBtn.icon:SetTexture(icon); Comp:Changed() end
   end)
   ed.iconField:SetPoint("TOPRIGHT", -16, -58)
 
-  ed.glanceField = UI.Field(ed, "At a glance  (one line, shown on the tooltip)", IN, L.glance, Set("glance"))
+  ed.glanceField = UI.Field(ed, Loc["At a glance  (one line, shown on the tooltip)"], IN, L.glance, Set("glance"))
   ed.glanceField:SetPoint("TOPLEFT", 16, -104)
 
-  local dl = UI.Text(ed, "Description", "Label", "subtle")
+  local dl = UI.Text(ed, Loc["Description"], "Label", "subtle")
   dl:SetPoint("TOPLEFT", 17, -152)
   local d = 466 - CH   -- a shorter description box when the tab is shorter
   ed.desc = UI.TextArea(ed, IN, 116 - d, L.desc, Set("desc"))
   ed.desc:SetPoint("TOPLEFT", 16, -166)
 
   -- Bindings
-  local bl = UI.Text(ed, "Bound to", "Label", "subtle")
+  local bl = UI.Text(ed, Loc["Bound to"], "Label", "subtle")
   bl:SetPoint("TOPLEFT", 17, -296 + d)
-  local bh = UI.Text(ed, "These pets' or mounts' tooltips tell this story", "Label", "subtle")
+  local bh = UI.Text(ed, Loc["These pets' or mounts' tooltips tell this story"], "Label", "subtle")
   bh:SetPoint("TOPRIGHT", -17, -296 + d)
   bh:SetAlpha(0.8)
   ed.chipArea = CreateFrame("Frame", nil, ed)
   ed.chipArea:SetPoint("TOPLEFT", 16, -312 + d)
   ed.chipArea:SetSize(IN, 54)
   ed.chips = {}
-  ed.noChips = UI.Text(ed.chipArea, "Not bound yet. Bind your current pet or mount, or type its name below.", "Small", "subtle", IN)
+  ed.noChips = UI.Text(ed.chipArea, Loc["Not bound yet. Bind your current pet or mount, or type its name below."], "Small", "subtle", IN)
   ed.noChips:SetPoint("TOPLEFT", 1, -4)
   ed.noChips:SetAlpha(0.85)
 
   ed.bindEdit = UI.Edit(ed, 170, 26, nil, 60)
   ed.bindEdit:SetPoint("TOPLEFT", 16, -372 + d)
-  ed.bindHint = UI.Text(ed.bindEdit, "Pet or mount name", "Small", "subtle")
+  ed.bindHint = UI.Text(ed.bindEdit, Loc["Pet or mount name"], "Small", "subtle")
   ed.bindHint:SetPoint("LEFT", 8, 0)
   ed.bindHint:SetAlpha(0.7)
   local function addTyped()
@@ -335,22 +336,22 @@ local function BuildEditor(c)
   end
   ed.bindEdit:SetScript("OnTextChanged", function(self) ed.bindHint:SetShown((self:GetText() or "") == "") end)
   ed.bindEdit:SetScript("OnEnterPressed", function(self) addTyped(); self:ClearFocus() end)
-  ed.addBtn = UI.Button(ed, "Add", 56, 26)
+  ed.addBtn = UI.Button(ed, Loc["Add"], 56, 26)
   ed.addBtn:SetPoint("LEFT", ed.bindEdit, "RIGHT", 6, 0)
   ed.addBtn:SetScript("OnClick", addTyped)
-  ed.current = UI.Button(ed, "Bind current pet", 166, 26)
+  ed.current = UI.Button(ed, Loc["Bind current pet"], 166, 26)
   ed.current:SetPoint("TOPRIGHT", -16, -372 + d)
   ed.current:SetScript("OnClick", function(self) BindCurrent(c, self) end)
   ed.current:HookScript("OnEnter", function(self)
     local rec = Ref(c)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
     if rec and rec.kind == "mount" then
-      GameTooltip:SetText("Bind current mount", 1, 0.82, 0)
-      GameTooltip:AddLine("While riding, binds the mount you're on. Others see this companion on your tooltip while you ride it.", 1, 1, 1, true)
+      GameTooltip:SetText(Loc["Bind current mount"], 1, 0.82, 0)
+      GameTooltip:AddLine(Loc["While riding, binds the mount you're on. Others see this companion on your tooltip while you ride it."], 1, 1, 1, true)
     else
       local pet = Comp:TargetCompanionPet() or Comp:CurrentPetName()
-      GameTooltip:SetText("Bind current pet", 1, 0.82, 0)
-      GameTooltip:AddLine(pet and ("Binds " .. pet .. ".") or "Summon your hunter or warlock pet, or target your companion pet.", 1, 1, 1, true)
+      GameTooltip:SetText(Loc["Bind current pet"], 1, 0.82, 0)
+      GameTooltip:AddLine(pet and (Loc["Binds "] .. pet .. ".") or Loc["Summon your hunter or warlock pet, or target your companion pet."], 1, 1, 1, true)
     end
     GameTooltip:Show()
   end)
@@ -363,7 +364,7 @@ local function BuildEditor(c)
   -- Footer
   local line = UI.Divider(ed, IN)
   line:SetPoint("BOTTOMLEFT", 16, 42)
-  local saved = UI.Text(ed, "Saved as you type, and shared with your profile.", "Label", "subtle", IN - 124)
+  local saved = UI.Text(ed, Loc["Saved as you type, and shared with your profile."], "Label", "subtle", IN - 124)
   saved:SetPoint("BOTTOMLEFT", 17, 20)
   ed.delete = UI.Button(ed, "Delete", 112, 24)
   ed.delete:SetPoint("BOTTOMRIGHT", -16, 14)
@@ -372,7 +373,7 @@ local function BuildEditor(c)
     if not rec then return end
     if not self.armed then
       self.armed = true
-      self:SetText("Really delete?")
+      self:SetText(Loc["Really delete?"])
       C_Timer.After(3, function() if self.armed then self.armed = false; self:SetText("Delete") end end)
       return
     end
@@ -399,14 +400,14 @@ local function BuildEditor(c)
   empty.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   UI.Round(empty.icon)
   UI:OnTheme(function(t) empty.ring:SetVertexColor(t.accent[1], t.accent[2], t.accent[3], 0.55) end)
-  empty.heading = UI.Text(empty, "Give your companions a story", "Title", "heading")
+  empty.heading = UI.Text(empty, Loc["Give your companions a story"], "Title", "heading")
   empty.heading:SetPoint("TOP", empty.ring, "BOTTOM", 0, -16)
   empty.text = UI.Text(empty, "A loyal wolf, a stubborn kodo, an imp with opinions. Name them, describe them, and bind "
     .. "them to your pet or mount: anyone hovering over it then meets them properly.", "Body", "subtle", 330)
   empty.text:SetPoint("TOP", empty.heading, "BOTTOM", 0, -10)
   empty.text:SetJustifyH("CENTER")
   empty.text:SetSpacing(3)
-  empty.create = UI.Button(empty, "Create a companion", 170, 28)
+  empty.create = UI.Button(empty, Loc["Create a companion"], 170, 28)
   empty.create:SetScript("OnClick", function()
     local rec = Comp:New("pet")
     if rec then c.selectedId = rec.id; c.focusName = true; K.Journal:RefreshCurrent() end
@@ -434,7 +435,7 @@ local function LayoutChips(c, rec)
     if not chip then
       chip = NewChip(ed.chipArea, function(value)
         local r = Ref(c)
-        if r and value then Comp:Unbind(r, value); Feedback(c, "Unbound " .. value .. ".") end
+        if r and value then Comp:Unbind(r, value); Feedback(c, Loc["Unbound "] .. value .. ".") end
       end)
       ed.chips[i] = chip
     end
@@ -475,7 +476,7 @@ local function ShowEditor(c, rec)
   SyncText(ed.desc.edit, rec.desc)
   ed.iconBtn.icon:SetTexture(Comp.IconOf(rec))
   ed.kind:Select(rec.kind or "pet")
-  ed.current:SetText(rec.kind == "mount" and "Bind current mount" or "Bind current pet")
+  ed.current:SetText(rec.kind == "mount" and Loc["Bind current mount"] or Loc["Bind current pet"])
   LayoutChips(c, rec)
   if c.focusName then
     c.focusName = nil
@@ -489,7 +490,7 @@ local function ShowEmpty(c)
   e.create:ClearAllPoints()
   e.fromPet:SetShown(pet ~= nil)
   if pet then
-    e.fromPet:SetText("Start from " .. pet)
+    e.fromPet:SetText(Loc["Start from "] .. pet)
     e.create:SetPoint("TOPRIGHT", e.text, "BOTTOM", -5, -18)
     e.fromPet:ClearAllPoints()
     e.fromPet:SetPoint("TOPLEFT", e.text, "BOTTOM", 5, -18)
@@ -502,9 +503,9 @@ end
 -- The page
 ---------------------------------------------------------------------------
 K:RegisterPage({
-  id = "companions", trp3 = "hide", title = "Companions", heading = "Companions",
+  id = "companions", trp3 = "hide", title = Loc["Companions"], heading = Loc["Companions"],
   host = "persona", hostTab = "companions",   -- a tab of the Persona page
-  subtitle = "Your pets and mounts, with stories of their own. Others see them on their tooltips.",
+  subtitle = Loc["Your pets and mounts, with stories of their own. Others see them on their tooltips."],
   group = "You",
   icon = { "Interface\\Icons\\Ability_Hunter_Pet_Wolf", round = true },
 

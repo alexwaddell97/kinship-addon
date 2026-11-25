@@ -1,20 +1,21 @@
 -- Kinship RP: Profile page (edit your own character).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
 StaticPopupDialogs["KINSHIPRP_NEW_PROFILE"] = {
-  text = "Name your new profile:",
-  button1 = OKAY or "OK", button2 = CANCEL or "Cancel",
+  text = Loc["Name your new profile:"],
+  button1 = OKAY or "OK", button2 = CANCEL or Loc["Cancel"],
   hasEditBox = true, maxLetters = 24,
   OnAccept = function(self, copy)
     local eb = self.editBox or self.EditBox or (self.GetEditBox and self:GetEditBox())
-    if eb and not K:NewProfile(eb:GetText(), copy) then K:Print("That name is empty or already used.") end
+    if eb and not K:NewProfile(eb:GetText(), copy) then K:Print(Loc["That name is empty or already used."]) end
   end,
   EditBoxOnEnterPressed = function(self)
     local parent = self:GetParent()
-    if not K:NewProfile(self:GetText(), parent.data) then K:Print("That name is empty or already used.") end
+    if not K:NewProfile(self:GetText(), parent.data) then K:Print(Loc["That name is empty or already used."]) end
     parent:Hide()
   end,
   EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
@@ -22,18 +23,18 @@ StaticPopupDialogs["KINSHIPRP_NEW_PROFILE"] = {
 }
 
 StaticPopupDialogs["KINSHIPRP_DELETE_PROFILE"] = {
-  text = "Delete the profile \"%s\"? This can't be undone.",
-  button1 = DELETE or "Delete", button2 = CANCEL or "Cancel",
+  text = Loc["Delete the profile \"%s\"? This can't be undone."],
+  button1 = DELETE or "Delete", button2 = CANCEL or Loc["Cancel"],
   OnAccept = function(_, name) K:DeleteProfile(name) end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
 
 local SECTIONS = {
-  { key = "identity",    label = "Identity",    hint = "Who your character is, beyond the name the game gives them." },
-  { key = "appearance",  label = "Appearance",  hint = "How others see your character: build, face, clothing, the way they carry themselves." },
-  { key = "personality", label = "Personality", hint = "Temperament, habits, what they care about, how they treat others." },
-  { key = "history",     label = "History",     hint = "Where they come from and what brought them here. Write as much or as little as you like." },
-  { key = "boundaries",  label = "Boundaries",  hint = "What your character can go through in a story with you. \"Ask\" means check with you out of character first." },
+  { key = "identity",    label = Loc["Identity"],    hint = Loc["Who your character is, beyond the name the game gives them."] },
+  { key = "appearance",  label = Loc["Appearance"],  hint = Loc["How others see your character: build, face, clothing, the way they carry themselves."] },
+  { key = "personality", label = Loc["Personality"], hint = Loc["Temperament, habits, what they care about, how they treat others."] },
+  { key = "history",     label = Loc["History"],     hint = Loc["Where they come from and what brought them here. Write as much or as little as you like."] },
+  { key = "boundaries",  label = Loc["Boundaries"],  hint = Loc["What your character can go through in a story with you. \"Ask\" means check with you out of character first."] },
 }
 
 -- Other pages open the profile at a section with K:OpenProfileSection("boundaries").
@@ -44,7 +45,7 @@ function K:OpenProfileSection(key)
 end
 
 K:RegisterPage({
-  id = "profile", trp3 = "hide", title = "Profile", heading = "Your character",
+  id = "profile", trp3 = "hide", title = Loc["Profile"], heading = Loc["Your character"],
   subtitle = "What others see when they look closer.",
 
   build = function(c)
@@ -60,11 +61,11 @@ K:RegisterPage({
 
     c.gem = UI.Gem(c, 16)
     c.status = UI.Segments(c, {
-      { key = "ic", label = "In Character" }, { key = "lfrp", label = "Looking for RP" }, { key = "ooc", label = "Out of Character" },
+      { key = "ic", label = Loc["In Character"] }, { key = "lfrp", label = Loc["Looking for RP"] }, { key = "ooc", label = Loc["Out of Character"] },
     }, 106, function(key) K:SetStatus(key) end)
     c.status:Fit(106)   -- "Out of Character" needs a little more than 106
     c.status:SetPoint("TOPRIGHT", 0, 0)
-    local statusLabel = UI.Text(c, "Status", "GameFontNormalSmall", "deskSubtle")
+    local statusLabel = UI.Text(c, Loc["Status"], "GameFontNormalSmall", "deskSubtle")
     statusLabel:SetPoint("RIGHT", c.status, "LEFT", -10, 0)
     c.gem:SetPoint("RIGHT", statusLabel, "LEFT", -5, 0)
 
@@ -72,36 +73,36 @@ K:RegisterPage({
     c.profileBtn:SetPoint("TOPRIGHT", -106, -30)
     c.profileBtn:SetScript("OnClick", function(self)
       UI.Menu(self, function(root)
-        root:CreateTitle("Profiles")
+        root:CreateTitle(Loc["Profiles"])
         local active = K:MyProfiles().active
         for _, name in ipairs(K:ProfileNames()) do
           root:CreateRadio(name, function() return name == K:MyProfiles().active end, function() K:SwitchProfile(name) end)
         end
         root:CreateDivider()
-        root:CreateButton("New blank profile...", function() StaticPopup_Show("KINSHIPRP_NEW_PROFILE", nil, nil, false) end)
-        root:CreateButton("Copy this profile...", function() StaticPopup_Show("KINSHIPRP_NEW_PROFILE", nil, nil, true) end)
-        root:CreateButton("Delete \"" .. active .. "\"", function() StaticPopup_Show("KINSHIPRP_DELETE_PROFILE", active, nil, active) end)
+        root:CreateButton(Loc["New blank profile..."], function() StaticPopup_Show("KINSHIPRP_NEW_PROFILE", nil, nil, false) end)
+        root:CreateButton(Loc["Copy this profile..."], function() StaticPopup_Show("KINSHIPRP_NEW_PROFILE", nil, nil, true) end)
+        root:CreateButton(Loc["Delete \""] .. active .. "\"", function() StaticPopup_Show("KINSHIPRP_DELETE_PROFILE", active, nil, active) end)
       end)
     end)
-    UI.Tooltip(c.profileBtn, "Profiles", "Keep separate profiles for different stories, and switch between them in one click.")
+    UI.Tooltip(c.profileBtn, Loc["Profiles"], Loc["Keep separate profiles for different stories, and switch between them in one click."])
 
     c.exp = UI.Button(c, "", 140, 24)
     c.exp:SetPoint("TOPRIGHT", -272, -30)
     c.exp:SetScript("OnClick", function(self) if K.Experience then K.Experience:Menu(self) end end)
-    UI.Tooltip(c.exp, "Roleplay experience", "How much you've roleplayed, so others know what to expect. "
+    UI.Tooltip(c.exp, Loc["Roleplay experience"], "How much you've roleplayed, so others know what to expect. "
       .. "New roleplayers and those happy to help them show it in their tooltips.")
 
-    local preview = UI.Button(c, "Preview", 100, 24)
+    local preview = UI.Button(c, Loc["Preview"], 100, 24)
     c.preview = preview
     preview:SetPoint("TOPRIGHT", 0, -30)
     preview:SetScript("OnClick", function() K.Viewer:ShowSelf() end)
-    UI.Tooltip(preview, "Preview", "See your profile the way other players will.")
+    UI.Tooltip(preview, Loc["Preview"], Loc["See your profile the way other players will."])
 
     -- Left: the details ------------------------------------------------------
     local left = UI.Panel(c)
     left:SetPoint("TOPLEFT", 0, -58)
     left:SetSize(318, 408)
-    local lh = UI.Section(left, "Details")
+    local lh = UI.Section(left, Loc["Details"])
     lh:SetPoint("TOPLEFT", 19, -13)
 
     local function add(key, label, x, y, w, max)
@@ -111,21 +112,21 @@ K:RegisterPage({
       return f
     end
     local L, R, FW, HW = 12, 162, 294, 144
-    add("epithet",   "Epithet  (e.g. \"the Wanderer\")", L, -38,  FW, 40):Info("Epithet",
+    add("epithet",   Loc["Epithet  (e.g. \"the Wanderer\")"], L, -38,  FW, 40):Info(Loc["Epithet"],
       "A short line that follows your name, like \"the Wanderer\" or \"Captain of the Watch\". "
       .. "It shows under your name on your tooltip, your profile and roleplay nameplates.")
     add("glance",    "At a glance",                      L, -80,  FW, 255):Info("At a glance",
-      "A sentence or two on what people notice first about your character. It sits near the top of your profile.")
-    add("pronouns",  "Pronouns",                         L, -122, HW, 20)
-    add("age",       "Age",                              R, -122, HW, 20)
-    add("height",    "Height",                           L, -164, HW, 20)
-    add("home",      "Home",                             R, -164, HW, 40)
-    add("house", "House (family name)",                  L, -206, FW, 30):Info("House",
+      Loc["A sentence or two on what people notice first about your character. It sits near the top of your profile."])
+    add("pronouns",  Loc["Pronouns"],                         L, -122, HW, 20)
+    add("age",       Loc["Age"],                              R, -122, HW, 20)
+    add("height",    Loc["Height"],                           L, -164, HW, 20)
+    add("home",      Loc["Home"],                             R, -164, HW, 40)
+    add("house", Loc["House (family name)"],                  L, -206, FW, 30):Info(Loc["House"],
       "Characters who share a family name can belong to the same house. "
       .. "This starts as your character's last name, but you can change it.")
-    add("motto",     "Motto",                            L, -248, FW, 90)
-    add("currently", "Currently",                        L, -290, FW, 255)
-    local hint = UI.Text(left, "\"Currently\" shows on your tooltip. Use it for what your character is doing right now.",
+    add("motto",     Loc["Motto"],                            L, -248, FW, 90)
+    add("currently", Loc["Currently"],                        L, -290, FW, 255)
+    local hint = UI.Text(left, Loc["\"Currently\" shows on your tooltip. Use it for what your character is doing right now."],
       "GameFontHighlightSmall", "subtle", 290)
     hint:SetPoint("TOPLEFT", 14, -338)
     hint:SetSpacing(2)
@@ -145,7 +146,7 @@ K:RegisterPage({
     c.count = UI.Text(right, "", "GameFontHighlightSmall", "subtle")
     c.count:SetPoint("BOTTOMRIGHT", -16, 12)
     c.area.edit:HookScript("OnTextChanged", function(self)
-      c.count:SetText(("%d letters"):format(self:GetNumLetters()))
+      c.count:SetText((Loc["%d letters"]):format(self:GetNumLetters()))
     end)
     if K.Markup then
       c.toolbar = K.Markup:Toolbar(right, c.area.edit)
@@ -164,17 +165,17 @@ K:RegisterPage({
       fields[key] = f.edit
       return f
     end
-    addId("rpName",     "Full name  (leave empty to use your character's)", 0, 0,    IW, 60):Info("Full name",
-      "The name other players see, surname and all. Leave it empty and your character's own name is used.")
-    addId("prefix",     "Title  (e.g. \"Lord\")",                            0, -42,  HW2, 30):Info("Title",
+    addId("rpName",     Loc["Full name  (leave empty to use your character's)"], 0, 0,    IW, 60):Info(Loc["Full name"],
+      Loc["The name other players see, surname and all. Leave it empty and your character's own name is used."])
+    addId("prefix",     Loc["Title  (e.g. \"Lord\")"],                            0, -42,  HW2, 30):Info(Loc["Title"],
       "A word that goes in front of your name, like \"Lord\" or \"Sergeant\". "
       .. "For a line after your name, use Epithet.")
-    addId("nickname",   "Nickname",                                          176, -42, HW2, 40):Info("Nickname",
-      "What friends call your character. It shows on your profile and never replaces your name.")
-    addId("race",       "Race",                                              0, -84,  HW2, 40)
-    addId("class",      "Class or calling",                                  176, -84, HW2, 40):Info("Class or calling",
-      "What your character does in the story, if that isn't their class, like \"Herbalist\" or \"Sellsword\".")
-    addId("eyes",       "Eyes",                                              0, -126, HW2 - 28, 40)
+    addId("nickname",   Loc["Nickname"],                                          176, -42, HW2, 40):Info(Loc["Nickname"],
+      Loc["What friends call your character. It shows on your profile and never replaces your name."])
+    addId("race",       Loc["Race"],                                              0, -84,  HW2, 40)
+    addId("class",      Loc["Class or calling"],                                  176, -84, HW2, 40):Info(Loc["Class or calling"],
+      Loc["What your character does in the story, if that isn't their class, like \"Herbalist\" or \"Sellsword\"."])
+    addId("eyes",       Loc["Eyes"],                                              0, -126, HW2 - 28, 40)
     -- Eye colour: a round swatch after the Eyes field. Right-click clears it.
     local function SetEyeColor(col)
       K:Profile().eyeColor = col and { col[1], col[2], col[3] } or nil
@@ -211,8 +212,8 @@ K:RegisterPage({
       .. "and Total RP 3 users see it too. Right-click to remove it.")
     UI:OnTheme(function() eye:Paint() end)
     c.eyeSwatch = eye
-    addId("birthplace", "Birthplace",                                        176, -126, HW2, 60)
-    addId("ooc",        "Out of character note",                             0, -168, IW, 255)
+    addId("birthplace", Loc["Birthplace"],                                        176, -126, HW2, 60)
+    addId("ooc",        Loc["Out of character note"],                             0, -168, IW, 255)
     local idHint = UI.Text(id, "Race and class only show when you fill them in; otherwise everyone sees your character's own. "
       .. "The out-of-character note sits under \"Currently\" on your tooltip.", "GameFontHighlightSmall", "subtle", IW)
     idHint:SetPoint("TOPLEFT", 2, -216)
@@ -239,7 +240,7 @@ K:RegisterPage({
       c.consent[i] = seg
     end
     local bdFoot = UI.Text(bd, K:Compat()
-      and "Total RP 3 shares these as your RP style while it runs, so set them there. Kinship shows what it shares."
+      and Loc["Total RP 3 shares these as your RP style while it runs, so set them there. Kinship shows what it shares."]
       or ("Wounds and captures from effects follow these, so no one is given what they haven't agreed to. "
       .. "Shared through the standard roleplay fields, so Total RP 3, MyRolePlay and XRP users see them too."),
       "GameFontHighlightSmall", "subtle", IW)
@@ -272,7 +273,7 @@ K:RegisterPage({
     c.epithet:SetText(p.epithet ~= "" and p.epithet or " ")
     c.status:Select(p.status)
     c.gem:SetStatus(p.status)
-    c.profileBtn:SetText("Profile: " .. K:MyProfiles().active)
+    c.profileBtn:SetText(Loc["Profile: "] .. K:MyProfiles().active)
     c.exp:SetText(K.Experience and K.Experience.ButtonText(p) or "")
     for key, eb in pairs(c.fields) do
       if not eb:HasFocus() then eb:SetText(p[key] or ""); eb:SetCursorPosition(0) end

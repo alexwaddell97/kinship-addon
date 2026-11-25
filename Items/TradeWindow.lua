@@ -10,6 +10,7 @@
 -- The receiving side only takes what it was shown, no more.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -54,12 +55,12 @@ function TW:TryAdd(id)
   local e = Count(self.mine, id)
   local have = I:Available(id)
   if not e then
-    if #self.mine >= SLOTS then I.Error("The trade can hold three Kinship items.") return true end
+    if #self.mine >= SLOTS then I.Error(Loc["The trade can hold three Kinship items."]) return true end
     e = { id = id, n = 0 }
     self.mine[#self.mine + 1] = e
   end
   local want = IsShiftKeyDown() and have or e.n + 1
-  if want > have then I.Error("You don't have any more of those.") return true end
+  if want > have then I.Error(Loc["You don't have any more of those."]) return true end
   e.n = math.min(want, have)
   if e.n < 1 then table.remove(self.mine, #self.mine) return true end
   if SOUNDKIT and SOUNDKIT.IG_BACKPACK_COIN_SELECT then PlaySound(SOUNDKIT.IG_BACKPACK_COIN_SELECT) end
@@ -117,7 +118,7 @@ local function Complete()
   end
   if #t.mine > 0 and K.Trade then
     local o, err = K.Trade:Offer(t.partner, t.mine, { req = REQ, quiet = true })
-    if not o then K:Print("Your Kinship items didn't go: " .. tostring(err)) end
+    if not o then K:Print(Loc["Your Kinship items didn't go: "] .. tostring(err)) end
   end
 end
 
@@ -142,7 +143,7 @@ end
 function TW:Received(sender, r)
   local parts = {}
   for _, e in ipairs(r.entries) do parts[#parts + 1] = I:Label(I:Get(e.def.id) or e.def, e.n) end
-  K:Print(("%s gave you %s in the trade."):format(Short(sender), table.concat(parts, ", ")))
+  K:Print((Loc["%s gave you %s in the trade."]):format(Short(sender), table.concat(parts, ", ")))
 end
 
 ---------------------------------------------------------------------------
@@ -175,10 +176,10 @@ function TW:Build()
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
   mono:SetPoint("TOPLEFT", 14, -12)
-  local head = UI.Text(f, "Kinship items", "Header", "heading")
+  local head = UI.Text(f, Loc["Kinship items"], "Header", "heading")
   head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
 
-  f.mine = Slots(f, -44, "You offer")
+  f.mine = Slots(f, -44, Loc["You offer"])
   for i, s in ipairs(f.mine) do
     s:SetScript("OnClick", function()
       if TW.mine[i] then TW:Remove(i) elseif K.Satchel then K.Satchel:Open(false) end
@@ -186,16 +187,16 @@ function TW:Build()
     s:HookScript("OnEnter", function(self)
       if not TW.mine[i] then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Add a Kinship item")
-        GameTooltip:AddLine("Right-click one in your Kinship bags. Shift for the whole stack.", 1, 1, 1, true)
+        GameTooltip:SetText(Loc["Add a Kinship item"])
+        GameTooltip:AddLine(Loc["Right-click one in your Kinship bags. Shift for the whole stack."], 1, 1, 1, true)
         GameTooltip:Show()
       else
-        GameTooltip:AddLine("Click to take it out.", 0.55, 0.55, 0.55)
+        GameTooltip:AddLine(Loc["Click to take it out."], 0.55, 0.55, 0.55)
         GameTooltip:Show()
       end
     end)
   end
-  f.theirs, f.theirsHead = Slots(f, -104, "They offer")
+  f.theirs, f.theirsHead = Slots(f, -104, Loc["They offer"])
   for _, s in ipairs(f.theirs) do s:SetScript("OnClick", nil) end
 
   f.note = UI.Text(f, "", "Small", "subtle", 192)
@@ -225,15 +226,15 @@ function TW:Paint()
     s:SetItem(e and (I:Get(e.def.id) or e.def), e and e.n)
     s:SetAlpha(1)
   end
-  local who = self.partner and Short(self.partner) or "They"
-  f.theirsHead:SetText(who .. " offers")
+  local who = self.partner and Short(self.partner) or Loc["They"]
+  f.theirsHead:SetText(who .. Loc[" offers"])
   local note
   if not self.heard then
-    note = who .. " hasn't opened Kinship's side of the trade. Without Kinship, your items stay with you."
+    note = who .. Loc[" hasn't opened Kinship's side of the trade. Without Kinship, your items stay with you."]
   elseif #self.mine == 0 and #self.theirs == 0 then
-    note = "Right-click a Kinship item in your bags to add it. Items move when the trade goes through."
+    note = Loc["Right-click a Kinship item in your bags to add it. Items move when the trade goes through."]
   else
-    note = "These move when you both press Trade, along with the rest."
+    note = Loc["These move when you both press Trade, along with the rest."]
   end
   f.note:SetText(note)
   f:SetHeight(164 + f.note:GetStringHeight() + 16)

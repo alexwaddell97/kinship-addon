@@ -4,6 +4,7 @@
 -- the Options > AddOns page, a button in Settings > General, and /kin kofi.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local S = {}
@@ -21,13 +22,13 @@ local function Build()
   icon:SetTexture(S.ICON)
   icon:SetSize(26, 26)
   icon:SetPoint("TOPLEFT", 20, -18)
-  local title = UI.Text(card, "Support Kinship", "Header", "text", 300)
+  local title = UI.Text(card, Loc["Support Kinship"], "Header", "text", 300)
   title:SetPoint("LEFT", icon, "RIGHT", 10, 0)
   local note = UI.Text(card, "I make Kinship in my spare time. If it's added something to your roleplay, "
     .. "a coffee on Ko-fi helps keep it going. Thank you either way.", "Small", "subtle", 350)
   note:SetPoint("TOPLEFT", 20, -58)
   note:SetSpacing(2)
-  local how = UI.Text(card, "Press Ctrl+C to copy the link, then paste it into your browser.", "Small", "subtle", 350)
+  local how = UI.Text(card, Loc["Press Ctrl+C to copy the link, then paste it into your browser."], "Small", "subtle", 350)
   how:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -8)
   m.edit = UI.Edit(card, 350, 26, nil, 80)
   m.edit:SetPoint("BOTTOMLEFT", 20, 50)
@@ -39,7 +40,7 @@ local function Build()
   m.edit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
   m.edit:SetScript("OnEnterPressed", function() m:Hide() end)
   m.edit:SetScript("OnEscapePressed", function() m:Hide() end)
-  local close = UI.Button(card, "Close", 90, 24)
+  local close = UI.Button(card, Loc["Close"], 90, 24)
   close:SetPoint("BOTTOMRIGHT", -16, 14)
   close:SetScript("OnClick", function() m:Hide() end)
   return m
@@ -61,7 +62,7 @@ function S.Link(parent, desk)
   b.icon:SetSize(14, 14)
   b.icon:SetPoint("LEFT", 0, 0)
   b.icon:SetAlpha(0.8)
-  b.text = UI.Text(b, "Support Kinship on Ko-fi", "Small", desk and "deskSubtle" or "subtle")
+  b.text = UI.Text(b, Loc["Support Kinship on Ko-fi"], "Small", desk and "deskSubtle" or "subtle")
   b.text:SetPoint("LEFT", b.icon, "RIGHT", 5, 0)
   b:SetSize(b.text:GetStringWidth() + 22, 16)
   b:SetScript("OnEnter", function(self)
@@ -103,8 +104,8 @@ local function AddJournalButton()
   b:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.1, paint)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("Support Kinship", 1, 0.82, 0)
-    GameTooltip:AddLine("A link to Kinship's Ko-fi page, to copy into your browser.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Support Kinship"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["A link to Kinship's Ko-fi page, to copy into your browser."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint); GameTooltip:Hide() end)

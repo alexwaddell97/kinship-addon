@@ -3,12 +3,13 @@
 -- over the grid; "Post a gathering" posts to the board you're looking at.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 local SCOPES = {
-  { key = "guild", label = "Guild" }, { key = "house", label = "House" }, { key = "public", label = "Public" },
+  { key = "guild", label = Loc["Guild"] }, { key = "house", label = Loc["House"] }, { key = "public", label = Loc["Public"] },
 }
 local COLS, ROWS, GAP = 3, 3, 10
 local W, H, TOP, FOOT = 696, 466, 36, 30
@@ -20,20 +21,20 @@ local function BoardNote(scope)
   local S = K.Sync
   if scope == "house" then
     local house = K:HouseName()
-    if house == "" then return "Give your character a house name on the Profile page to share with your house." end
-    if K.db.settings.gatherHouse == false then return "House gatherings are switched off in Settings." end
-    return ("Shared with House %s, passed between members as you see each other."):format(house)
+    if house == "" then return Loc["Give your character a house name on the Profile page to share with your house."] end
+    if K.db.settings.gatherHouse == false then return Loc["House gatherings are switched off in Settings."] end
+    return (Loc["Shared with House %s, passed between members as you see each other."]):format(house)
   elseif scope == "public" then
-    if K.db.settings.gatherPublic == false then return "Public gatherings are switched off in Settings." end
-    return "Shared with Kinship users near you, and passed along as people meet."
+    if K.db.settings.gatherPublic == false then return Loc["Public gatherings are switched off in Settings."] end
+    return Loc["Shared with Kinship users near you, and passed along as people meet."]
   end
-  return S.GuildName() and "Shared with your guild. Everyone with Kinship sees the same gatherings."
-    or "You're not in a guild, so gatherings here stay on this computer."
+  return S.GuildName() and Loc["Shared with your guild. Everyone with Kinship sees the same gatherings."]
+    or Loc["You're not in a guild, so gatherings here stay on this computer."]
 end
 local EMPTY = {
-  guild = "Nothing posted yet. Post a gathering to bring people together.",
-  house = "No house gatherings yet. A family dinner, a feud to settle, a wedding: post one for your kin.",
-  public = "Nothing nearby yet. Gatherings posted by Kinship users around you appear here, and more arrive as you meet people.",
+  guild = Loc["Nothing posted yet. Post a gathering to bring people together."],
+  house = Loc["No house gatherings yet. A family dinner, a feud to settle, a wedding: post one for your kin."],
+  public = Loc["Nothing nearby yet. Gatherings posted by Kinship users around you appear here, and more arrive as you meet people."],
 }
 local Short = K.Short
 
@@ -47,7 +48,7 @@ end
 local function DayText(day, long)
   if type(day) ~= "number" then return nil end
   local diff = math.floor((day - Noon(0)) / 86400 + 0.5)
-  if diff == 0 then return "Today" elseif diff == 1 then return "Tomorrow" elseif diff == -1 then return "Yesterday" end
+  if diff == 0 then return Loc["Today"] elseif diff == 1 then return Loc["Tomorrow"] elseif diff == -1 then return Loc["Yesterday"] end
   return date(long and "%A %d %B" or "%a %d %b", day)
 end
 -- "Fri 23 Oct, 8pm server time", or whichever half is there.
@@ -60,13 +61,13 @@ end
 local function DiscordText(g)
   local lines = {
     ("**%s**"):format(g.title),
-    ("**When:** %s"):format(WhenText(g, "To be decided", true)),
-    ("**Where:** %s"):format(g.where ~= "" and g.where or "To be decided"),
-    ("**Host:** %s"):format(Short(g.host)),
+    (Loc["**When:** %s"]):format(WhenText(g, Loc["To be decided"], true)),
+    (Loc["**Where:** %s"]):format(g.where ~= "" and g.where or Loc["To be decided"]),
+    (Loc["**Host:** %s"]):format(Short(g.host)),
   }
   if g.desc and g.desc ~= "" then lines[#lines + 1] = ""; lines[#lines + 1] = g.desc end
   lines[#lines + 1] = ""
-  lines[#lines + 1] = "_Posted with Kinship RP_"
+  lines[#lines + 1] = Loc["_Posted with Kinship RP_"]
   return table.concat(lines, "\n")
 end
 
@@ -109,9 +110,9 @@ function Cal.IsAdded(g) return g and g.id and Added()[g.id] ~= nil end
 
 -- Why a gathering can't go on the calendar, or nil when it can.
 function Cal.Blocked(g)
-  if not Cal.Available() then return "The game's calendar isn't available here." end
-  if type(g.day) ~= "number" then return "Give it a date first: only gatherings with a date can go on the calendar." end
-  if g.day + 43200 < time() then return "That day has already gone." end
+  if not Cal.Available() then return Loc["The game's calendar isn't available here."] end
+  if type(g.day) ~= "number" then return Loc["Give it a date first: only gatherings with a date can go on the calendar."] end
+  if g.day + 43200 < time() then return Loc["That day has already gone."] end
 end
 
 -- Cut to n bytes without splitting a letter.
@@ -130,12 +131,12 @@ function Cal.Add(g, quiet)
   local timed = hour ~= nil
   hour, minute = hour or 20, minute or 0
   local lines = {}
-  if g.where and g.where ~= "" then lines[#lines + 1] = "Where: " .. g.where end
-  lines[#lines + 1] = "Host: " .. (Ambiguate and Ambiguate(g.host or "", "none") or g.host or "")
-  if not timed then lines[#lines + 1] = (g.when and g.when ~= "") and ("Time: " .. g.when) or "Time to be decided" end
+  if g.where and g.where ~= "" then lines[#lines + 1] = Loc["Where: "] .. g.where end
+  lines[#lines + 1] = Loc["Host: "] .. (Ambiguate and Ambiguate(g.host or "", "none") or g.host or "")
+  if not timed then lines[#lines + 1] = (g.when and g.when ~= "") and (Loc["Time: "] .. g.when) or Loc["Time to be decided"] end
   if g.desc and g.desc ~= "" then lines[#lines + 1] = ""; lines[#lines + 1] = g.desc end
   lines[#lines + 1] = ""
-  lines[#lines + 1] = "A Kinship gathering"
+  lines[#lines + 1] = Loc["A Kinship gathering"]
   local C = C_Calendar
   local ok, err = pcall(function()
     C.CreatePlayerEvent()
@@ -149,13 +150,13 @@ function Cal.Add(g, quiet)
     C.AddEvent()
   end)
   if not ok then
-    if not quiet then K:Print("The calendar wouldn't take it: " .. tostring(err)) end
+    if not quiet then K:Print(Loc["The calendar wouldn't take it: "] .. tostring(err)) end
     return false
   end
   Added()[g.id] = time()
-  UI.Toast({ icon = K.Art("IconFire"), title = "Added to your calendar", duration = 5,
-    text = ("%s, %s at %d:%02d%s"):format(Cut(g.title, 40), date("%a %d %b", g.day), hour, minute,
-      timed and "" or " (time to be confirmed)") })
+  UI.Toast({ icon = K.Art("IconFire"), title = Loc["Added to your calendar"], duration = 5,
+    text = (Loc["%s, %s at %d:%02d%s"]):format(Cut(g.title, 40), date("%a %d %b", g.day), hour, minute,
+      timed and "" or Loc[" (time to be confirmed)"]) })
   return true
 end
 
@@ -237,9 +238,9 @@ local function Input(parent, label, x, y, w)
 end
 
 K:RegisterPage({
-  id = "gatherings", title = "Gatherings", heading = "Gatherings",
+  id = "gatherings", title = Loc["Gatherings"], heading = Loc["Gatherings"],
   host = "house", hostTab = "gatherings",   -- a tab of the Community page
-  subtitle = "Roleplay events for your guild and friends.",
+  subtitle = Loc["Roleplay events for your guild and friends."],
 
   build = function(c)
     local paneH = (c:GetHeight() or 0) > 200 and c:GetHeight() or H   -- the tab it sits in
@@ -251,7 +252,7 @@ K:RegisterPage({
     end)
     c.scopes:SetPoint("TOPLEFT", 0, 0)
 
-    local post = UI.Button(c, "Post a gathering", 140, 24)
+    local post = UI.Button(c, Loc["Post a gathering"], 140, 24)
     post:SetPoint("TOPRIGHT", 0, 0)
     c.postBtn = post
     post:SetScript("OnClick", function() c:Compose() end)
@@ -277,7 +278,7 @@ K:RegisterPage({
     c.emptyArt:SetTexture(K.Art("IconFire"))
     c.emptyArt:SetSize(72, 72)
     c.emptyArt:SetPoint("CENTER", 0, 30)
-    c.emptyText = UI.Text(c, "Nothing posted yet. Post a gathering to bring people together.", "QuestFont", "deskText", 320)
+    c.emptyText = UI.Text(c, Loc["Nothing posted yet. Post a gathering to bring people together."], "QuestFont", "deskText", 320)
     c.emptyText:SetPoint("TOP", c.emptyArt, "BOTTOM", 0, -14)
     c.emptyText:SetJustifyH("CENTER")
     c.emptyText:SetSpacing(3)
@@ -305,9 +306,9 @@ K:RegisterPage({
     view.title:SetWordWrap(false)
     view.host = UI.Text(vc, "", "GameFontHighlightSmall", "subtle", 330)
     view.host:SetPoint("TOPLEFT", view.title, "BOTTOMLEFT", 0, -4)
-    view.when = Line(vc, "When", -84, 214)
+    view.when = Line(vc, Loc["When"], -84, 214)
     -- On the When line: put it on your own calendar
-    view.cal = UI.Button(vc, "Add to calendar", 118, 20)
+    view.cal = UI.Button(vc, Loc["Add to calendar"], 118, 20)
     view.cal:SetPoint("TOPRIGHT", -24, -80)
     view.cal:SetScript("OnClick", function()
       if Cal.Add(c.selected) then K.Journal:RefreshCurrent() end
@@ -317,10 +318,10 @@ K:RegisterPage({
       local g = c.selected
       if not g then return end
       GameTooltip:SetOwner(self, "ANCHOR_TOP")
-      GameTooltip:SetText(Cal.IsAdded(g) and "On your calendar" or "Add to calendar", 1, 0.82, 0)
+      GameTooltip:SetText(Cal.IsAdded(g) and Loc["On your calendar"] or Loc["Add to calendar"], 1, 0.82, 0)
       local why = Cal.Blocked(g)
       if Cal.IsAdded(g) then
-        GameTooltip:AddLine("It's on your calendar. Delete it there if you no longer want it.", 1, 1, 1, true)
+        GameTooltip:AddLine(Loc["It's on your calendar. Delete it there if you no longer want it."], 1, 1, 1, true)
       elseif why then
         GameTooltip:AddLine(why, 1, 1, 1, true)
       else
@@ -330,8 +331,8 @@ K:RegisterPage({
       GameTooltip:Show()
     end)
     view.cal:HookScript("OnLeave", function() GameTooltip:Hide() end)
-    view.where = Line(vc, "Where", -104, 340)
-    view.count = Line(vc, "Going", -124, 340)
+    view.where = Line(vc, Loc["Where"], -104, 340)
+    view.count = Line(vc, Loc["Going"], -124, 340)
     local vdiv = UI.Divider(vc, 412)
     vdiv:SetPoint("TOPLEFT", 24, -150)
     view.desc = UI.ReadArea(vc, 412, 96, "QuestFont", "text")
@@ -345,10 +346,10 @@ K:RegisterPage({
       -- Going: onto your calendar too, in this same click (the game only allows it from one).
       if going and K.db.settings.gatherCalendar ~= false and not Cal.IsAdded(g) and not Cal.Blocked(g) then Cal.Add(g, true) end
     end)
-    view.discord = UI.Button(vc, "Copy for Discord", 136, 24)
+    view.discord = UI.Button(vc, Loc["Copy for Discord"], 136, 24)
     view.discord:SetPoint("LEFT", view.goBtn, "RIGHT", 8, 0)
-    view.discord:SetScript("OnClick", function() UI:Copy("Copy for Discord", DiscordText(c.selected)) end)
-    view.remove = UI.Button(vc, "Remove", 90, 24)
+    view.discord:SetScript("OnClick", function() UI:Copy(Loc["Copy for Discord"], DiscordText(c.selected)) end)
+    view.remove = UI.Button(vc, Loc["Remove"], 90, 24)
     view.remove:SetPoint("LEFT", view.discord, "RIGHT", 8, 0)
     view.remove:SetScript("OnClick", function() K:RemoveGathering(c.selected); c.selected = nil end)
 
@@ -356,51 +357,51 @@ K:RegisterPage({
     local form = UI.Modal(c, 460, 300, function() c.composing = false; K.Journal:RefreshCurrent() end)
     c.form = form
     local fc = form.card
-    local fh = UI.Text(fc, "Post a gathering", "GameFontNormalLarge", "heading")
+    local fh = UI.Text(fc, Loc["Post a gathering"], "GameFontNormalLarge", "heading")
     fh:SetPoint("TOPLEFT", 24, -24)
     form.heading = fh
     form.reach = UI.Text(fc, "", "Small", "subtle", 200)
     form.reach:SetPoint("BOTTOMRIGHT", -24, 22)
     form.reach:SetJustifyH("RIGHT")
     form.reach:SetSpacing(2)
-    form.title = Input(fc, "What's happening?", 24, -56, 412)
-    local dateLabel = UI.Text(fc, "Date", "GameFontNormalSmall", "subtle")
+    form.title = Input(fc, Loc["What's happening?"], 24, -56, 412)
+    local dateLabel = UI.Text(fc, Loc["Date"], "GameFontNormalSmall", "subtle")
     dateLabel:SetPoint("TOPLEFT", 25, -98)
-    form.date = UI.Button(fc, "No date", 128, 24)
+    form.date = UI.Button(fc, Loc["No date"], 128, 24)
     form.date:SetPoint("TOPLEFT", 24, -112)
     local function SetDay(day)
       form.day = day
-      form.date:SetText(DayText(day) or "No date")
+      form.date:SetText(DayText(day) or Loc["No date"])
     end
     form.SetDay = SetDay
     form.date:SetScript("OnClick", function(self)
       UI.Menu(self, function(root)
         if root.SetScrollMode then root:SetScrollMode(320) end
-        root:CreateRadio("No date", function() return form.day == nil end, function() SetDay(nil) end)
+        root:CreateRadio(Loc["No date"], function() return form.day == nil end, function() SetDay(nil) end)
         for i = 0, DATE_CHOICES - 1 do
           local day = Noon(i)
           root:CreateRadio(DayText(day), function() return form.day == day end, function() SetDay(day) end)
         end
       end)
     end)
-    UI.Tooltip(form.date, "Date", "A gathering with a date stays on the board until that day is over. "
+    UI.Tooltip(form.date, Loc["Date"], "A gathering with a date stays on the board until that day is over. "
       .. "Without one, it's taken down two weeks after you post it.")
-    form.when = Input(fc, "Time  (e.g. \"8pm server\")", 162, -98, 136)
-    form.where = Input(fc, "Where", 308, -98, 128)
-    local dl = UI.Text(fc, "Details", "GameFontNormalSmall", "subtle")
+    form.when = Input(fc, Loc["Time  (e.g. \"8pm server\")"], 162, -98, 136)
+    form.where = Input(fc, Loc["Where"], 308, -98, 128)
+    local dl = UI.Text(fc, Loc["Details"], "GameFontNormalSmall", "subtle")
     dl:SetPoint("TOPLEFT", 25, -140)
     form.desc = UI.TextArea(fc, 412, 86, 1000)
     form.desc:SetPoint("TOPLEFT", 24, -154)
-    local save = UI.Button(fc, "Post it", 96, 24)
+    local save = UI.Button(fc, Loc["Post it"], 96, 24)
     save:SetPoint("BOTTOMLEFT", 24, 20)
-    local cancel = UI.Button(fc, "Cancel", 96, 24)
+    local cancel = UI.Button(fc, Loc["Cancel"], 96, 24)
     cancel:SetPoint("LEFT", save, "RIGHT", 8, 0)
     cancel:SetScript("OnClick", function() c.composing = false; K.Journal:RefreshCurrent() end)
     save:SetScript("OnClick", function()
       local title = strtrim(form.title:GetText() or "")
-      if title == "" then K:Print("Give your gathering a name first.") return end
+      if title == "" then K:Print(Loc["Give your gathering a name first."]) return end
       if c.scope == "house" and K:HouseName() == "" then
-        K:Print("Give your character a house name on the Profile page first.")
+        K:Print(Loc["Give your character a house name on the Profile page first."])
         return
       end
       c.selected = K:AddGathering({
@@ -424,8 +425,8 @@ K:RegisterPage({
       form.desc.edit:SetText("")
       local label = { guild = "your guild", house = "your house", public = "the public board" }
       form.heading:SetText("Post to " .. (label[self.scope] or "your guild"))
-      form.reach:SetText(self.scope == "public" and "Kinship users of your faction near you see it, and it travels as people meet."
-        or (self.scope == "house" and "Members of your house receive it as you see each other." or ""))
+      form.reach:SetText(self.scope == "public" and Loc["Kinship users of your faction near you see it, and it travels as people meet."]
+        or (self.scope == "house" and Loc["Members of your house receive it as you see each other."] or ""))
       form.title:SetFocus()
     end
   end,
@@ -444,10 +445,10 @@ K:RegisterPage({
       b.item = g
       if g then
         b.title:SetText(g.title)
-        b.when:SetText(WhenText(g, "Time to be decided"))
-        b.where:SetText(g.where ~= "" and g.where or "Place to be decided")
-        b.going:SetText(("%d going"):format(GoingCount(g)))
-        b.host:SetText("by " .. Short(g.host) .. (g.via and " (unconfirmed)" or ""))
+        b.when:SetText(WhenText(g, Loc["Time to be decided"]))
+        b.where:SetText(g.where ~= "" and g.where or Loc["Place to be decided"])
+        b.going:SetText((Loc["%d going"]):format(GoingCount(g)))
+        b.host:SetText(Loc["by "] .. Short(g.host) .. (g.via and Loc[" (unconfirmed)"] or ""))
         b:Show()
       else
         b:Hide()
@@ -457,26 +458,26 @@ K:RegisterPage({
     c.emptyArt:SetShown(empty); c.emptyText:SetShown(empty)
     c.prev:SetShown(pages > 1); c.next:SetShown(pages > 1); c.pageText:SetShown(pages > 1)
     c.prev:SetEnabled(c.pageNum > 1); c.next:SetEnabled(c.pageNum < pages)
-    c.pageText:SetText(("Page %d of %d"):format(c.pageNum, pages))
+    c.pageText:SetText((Loc["Page %d of %d"]):format(c.pageNum, pages))
 
     c.form:SetShown(c.composing and true or false)
     local g, v = c.selected, c.view
     v:SetShown(g ~= nil and not c.composing)
     if not g or c.composing then return end
     v.title:SetText(g.title)
-    v.host:SetText("Hosted by " .. Short(g.host)
-      .. (g.via and ("  ·  shared by " .. Short(g.via) .. ", not yet confirmed by the host") or ""))
-    v.when:SetText(WhenText(g, "To be decided", true))
-    v.where:SetText(g.where ~= "" and g.where or "To be decided")
+    v.host:SetText(Loc["Hosted by "] .. Short(g.host)
+      .. (g.via and (Loc["  ·  shared by "] .. Short(g.via) .. Loc[", not yet confirmed by the host"]) or ""))
+    v.when:SetText(WhenText(g, Loc["To be decided"], true))
+    v.where:SetText(g.where ~= "" and g.where or Loc["To be decided"])
     local names = K:GoingNames(g)
     for i, n in ipairs(names) do names[i] = Short(n) end
-    v.count:SetText(#names > 0 and table.concat(names, ", ") or "Nobody yet")
-    v.desc:SetText(g.desc ~= "" and g.desc or "No details yet.")
-    v.goBtn:SetText(K:IsGoing(g) and "Not going" or "I'm going")
+    v.count:SetText(#names > 0 and table.concat(names, ", ") or Loc["Nobody yet"])
+    v.desc:SetText(g.desc ~= "" and g.desc or Loc["No details yet."])
+    v.goBtn:SetText(K:IsGoing(g) and Loc["Not going"] or Loc["I'm going"])
     v.remove:SetShown(K:IsHost(g))
     local added = Cal.IsAdded(g)
     v.cal:SetShown(Cal.Available())
-    v.cal:SetText(added and "On your calendar" or "Add to calendar")
+    v.cal:SetText(added and Loc["On your calendar"] or Loc["Add to calendar"])
     v.cal:SetEnabled(not added and Cal.Blocked(g) == nil)
   end,
 })

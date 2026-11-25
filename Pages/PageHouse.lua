@@ -2,6 +2,7 @@
 -- your group, and Gatherings (PageGatherings.lua) as a third tab.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
@@ -68,7 +69,7 @@ local function ShowPicker(anchor, current, onPick)
     if path then
       onPick(path)
     elseif UIErrorsFrame then
-      UIErrorsFrame:AddMessage("That icon can't be shared as a crest. Try another.", 1, 0.25, 0.2)
+      UIErrorsFrame:AddMessage(Loc["That icon can't be shared as a crest. Try another."], 1, 0.25, 0.2)
     end
   end)
 end
@@ -79,8 +80,8 @@ function K:SetHouseMember(key, name, state)
   if not h or not key then return end
   h.members = h.members or {}
   h.members[key] = state and { name = name, state = state } or nil
-  if state == "recognised" then self:Print(name .. " is now recognised as family.")
-  elseif state == "ignored" then self:Print(name .. "'s claim will no longer be shown.") end
+  if state == "recognised" then self:Print(name .. Loc[" is now recognised as family."])
+  elseif state == "ignored" then self:Print(name .. Loc["'s claim will no longer be shown."]) end
   self:Fire("HOUSE")
   K.Journal:RefreshCurrent()
 end
@@ -107,7 +108,7 @@ function K:HouseMembers()
       if not seen[k] then
         seen[k] = true
         recognised[#recognised + 1] = { name = p.name, key = k, mine = true, state = "recognised",
-          role = guid == self:CharKey() and "You" or "Your character" }
+          role = guid == self:CharKey() and Loc["You"] or Loc["Your character"] }
       end
     end
   end
@@ -128,7 +129,7 @@ function K:HouseMembers()
     local theirs = reg.profile and strtrim(reg.profile.house or "") or ""
     if theirs:lower() == key then
       add(Ambiguate and Ambiguate(reg.name, "none") or reg.name, reg.name,
-        (reg.t or 0) > recent and "|cff5fd35fNearby|r" or nil)
+        (reg.t or 0) > recent and Loc["|cff5fd35fNearby|r"] or nil)
     end
   end
   -- Kin who share the surname
@@ -160,33 +161,33 @@ end
 local TOP, PANE_H = 40, 466 - 40
 
 local HOUSE = {
-  arms = "Your arms", seal = true, event = "HOUSE",
+  arms = Loc["Your arms"], seal = true, event = "HOUSE",
   Name = function() return K:HouseName() end,
   Record = function() return K:House() end,
-  Title = function(name) return "House " .. name end,
+  Title = function(name) return Loc["House "] .. name end,
   Members = function() return K:HouseMembers() end,
   SetMember = function(key, name, state) K:SetHouseMember(key, name, state) end,
-  crestTip = "Click to choose your house's crest.",
-  mottoTip = "A few words your house lives by.",
-  story = "The house's story",
-  recognise = "Recognise as family",
-  claims = "Claims to be of this house",
-  membersNote = "Anyone can write a house name into their profile. Recognise the people who truly belong; only you see these choices.",
+  crestTip = Loc["Click to choose your house's crest."],
+  mottoTip = Loc["A few words your house lives by."],
+  story = Loc["The house's story"],
+  recognise = Loc["Recognise as family"],
+  claims = Loc["Claims to be of this house"],
+  membersNote = Loc["Anyone can write a house name into their profile. Recognise the people who truly belong; only you see these choices."],
 }
 
 local GROUP = {
-  arms = "Your banner", seal = false, event = "HOUSE",
+  arms = Loc["Your banner"], seal = false, event = "HOUSE",
   Name = function() return K:GroupName() end,
   Record = function() return K:Group() end,
   Title = function(name) return name end,
   Members = function() return K:GroupMembers() end,
   SetMember = function(key, name, state) K:SetGroupMember(key, name, state) end,
-  crestTip = "Click to choose your group's banner.",
-  mottoTip = "A few words your group stands for.",
-  story = "The group's story",
-  recognise = "Recognise as a member",
-  claims = "Claims to belong",
-  membersNote = "Anyone can write a group name into their profile. Recognise the people who truly belong; only you see these choices.",
+  crestTip = Loc["Click to choose your group's banner."],
+  mottoTip = Loc["A few words your group stands for."],
+  story = Loc["The group's story"],
+  recognise = Loc["Recognise as a member"],
+  claims = Loc["Claims to belong"],
+  membersNote = Loc["Anyone can write a group name into their profile. Recognise the people who truly belong; only you see these choices."],
 }
 
 -- Shared by both tabs: crest, name, motto, story and members.
@@ -221,11 +222,11 @@ local function BuildPane(c, kind)
   pane.title:SetWordWrap(false)
   pane.summary = UI.Text(hero, "", "GameFontHighlightSmall", "deskSubtle")
   pane.summary:SetPoint("TOPLEFT", pane.title, "BOTTOMLEFT", 1, -5)
-  pane.motto = UI.Field(hero, "Motto", kind.seal and 400 or 380, 90, function(text)
+  pane.motto = UI.Field(hero, Loc["Motto"], kind.seal and 400 or 380, 90, function(text)
     local r = kind.Record(); if r then r.motto = text; K:Fire(kind.event) end
   end, "desk")
   pane.motto:SetPoint("TOPLEFT", ring, "TOPRIGHT", 22, -54)
-  UI.Tooltip(pane.motto.edit, "Motto", kind.mottoTip)
+  UI.Tooltip(pane.motto.edit, Loc["Motto"], kind.mottoTip)
 
   local rule = UI.Line(hero)
   rule:SetPoint("TOPLEFT", hero, "BOTTOMLEFT", 0, -10)
@@ -285,13 +286,13 @@ local function BuildPane(c, kind)
       if button == "RightButton" and not m.mine then
         UI.Menu(self, function(root)
           root:CreateTitle(m.name)
-          root:CreateButton("View profile", function() K:ViewProfile(m.raw or m.name) end)
+          root:CreateButton(Loc["View profile"], function() K:ViewProfile(m.raw or m.name) end)
           if m.state == "recognised" then
-            root:CreateButton("Stop recognising", function() kind.SetMember(m.key, m.name, nil) end)
+            root:CreateButton(Loc["Stop recognising"], function() kind.SetMember(m.key, m.name, nil) end)
           else
             root:CreateButton(kind.recognise, function() kind.SetMember(m.key, m.name, "recognised") end)
           end
-          root:CreateButton("|cffff6060Ignore this claim|r", function() kind.SetMember(m.key, m.name, "ignored") end)
+          root:CreateButton(Loc["|cffff6060Ignore this claim|r"], function() kind.SetMember(m.key, m.name, "ignored") end)
         end)
       else
         K:ViewProfile(m.raw or m.name)
@@ -303,7 +304,7 @@ local function BuildPane(c, kind)
     end)
   end)
   pane.members:SetPoint("TOPRIGHT", 0, -24)
-  local mh = UI.Section(pane.body, "Members", true)
+  local mh = UI.Section(pane.body, Loc["Members"], true)
   mh:SetPoint("BOTTOMLEFT", pane.members, "TOPLEFT", 7, 7)
   pane.membersNote = UI.Text(pane.body, kind.membersNote, "GameFontHighlightSmall", "deskSubtle", 300)
   pane.membersNote:SetPoint("TOPLEFT", pane.members, "BOTTOMLEFT", 2, -6)
@@ -324,11 +325,11 @@ local function RefreshPane(pane)
   -- Your own characters always belong. Everyone else is a claim until you
   -- recognise them: anyone can type a name into their profile.
   local recognised, claims = kind.Members()
-  local summary = #recognised == 1 and "1 member" or (#recognised .. " members")
-  if #claims > 0 then summary = summary .. ("  ·  %d %s"):format(#claims, #claims == 1 and "claim" or "claims") end
+  local summary = #recognised == 1 and Loc["1 member"] or (#recognised .. Loc[" members"])
+  if #claims > 0 then summary = summary .. ("  ·  %d %s"):format(#claims, #claims == 1 and Loc["claim"] or Loc["claims"]) end
   pane.summary:SetText(summary)
   local items = {}
-  items[#items + 1] = { header = "Recognised" }
+  items[#items + 1] = { header = Loc["Recognised"] }
   for _, m in ipairs(recognised) do items[#items + 1] = m end
   if #claims > 0 then
     items[#items + 1] = { header = kind.claims }
@@ -344,42 +345,42 @@ local function RefreshPane(pane)
     row.icon:SetDesaturated(m.state ~= "recognised" and not m.mine)
     row.name:SetText(m.name)
     row.role:SetText(m.role or "")
-    row.btn:SetText(m.state == "recognised" and "Remove" or "Recognise")
+    row.btn:SetText(m.state == "recognised" and Loc["Remove"] or Loc["Recognise"])
   end)
 end
 
 K:RegisterPage({
-  id = "house", title = "Community", heading = "Community",
-  subtitle = "Your family, the company or order you belong to, and gatherings to share.",
+  id = "house", title = Loc["Community"], heading = Loc["Community"],
+  subtitle = Loc["Your family, the company or order you belong to, and gatherings to share."],
   guide = function(c)
     if c.tab == 3 and K.Guide and K.Guide.PageGuide then return K.Guide.PageGuide("gatherings"), c.gatherings end
   end,
 
   build = function(c)
     c.tab = 1
-    c.tabs = UI.TabBar(c, { "House", "Group", "Gatherings" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabs = UI.TabBar(c, { Loc["House"], Loc["Group"], Loc["Gatherings"] }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
     c.tabKeys = { "house", "group", "gatherings" }
     c.tabs:SetPoint("TOPLEFT", -10, 2)
 
     -- House: its name comes from your profile (your surname, to start with)
     local h = BuildPane(c, HOUSE)
-    h.noneTitle:SetText("No house yet")
+    h.noneTitle:SetText(Loc["No house yet"])
     h.noneText:SetText(K:Compat()
-      and "In Total RP 3, edit your Characteristics and add a House name under Additional Information to found a house. Other characters who share that name can join it."
+      and Loc["In Total RP 3, edit your Characteristics and add a House name under Additional Information to found a house. Other characters who share that name can join it."]
       or ("Set a house name on your Profile page to found a house. " ..
       "Other characters who share that name can join it."))
-    local go = UI.Button(h.none, K:Compat() and "Open Total RP 3" or "Go to Profile", 140, 24)
+    local go = UI.Button(h.none, K:Compat() and Loc["Open Total RP 3"] or Loc["Go to Profile"], 140, 24)
     go:SetPoint("TOP", h.noneText, "BOTTOM", 0, -18)
     go:SetScript("OnClick", function() K:OpenProfileEditor() end)
 
     -- Group: named right here, with your place in it
     local g = BuildPane(c, GROUP)
-    g.noneTitle:SetText("No group yet")
+    g.noneTitle:SetText(Loc["No group yet"])
     g.noneText:SetText("A company, an order, an RP guild: anything you belong to that isn't a family. "
       .. "Name one to found it, or use the same name as others to join them.")
-    g.join = UI.Field(g.none, "Group name", 240, K.MAX_GROUP_NAME, nil, "desk")
+    g.join = UI.Field(g.none, Loc["Group name"], 240, K.MAX_GROUP_NAME, nil, "desk")
     g.join:SetPoint("TOP", g.noneText, "BOTTOM", -59, -18)
-    g.joinBtn = UI.Button(g.none, "Found or join", 110, 23)
+    g.joinBtn = UI.Button(g.none, Loc["Found or join"], 110, 23)
     g.joinBtn:SetPoint("BOTTOMLEFT", g.join.edit, "BOTTOMRIGHT", 8, 0)
     local function join()
       local name = strtrim(g.join.edit:GetText() or "")
@@ -392,17 +393,17 @@ K:RegisterPage({
     g.joinBtn:SetScript("OnClick", join)
     g.join.edit:SetScript("OnEnterPressed", join)
 
-    g.role = UI.Field(g.hero, "Your place in it", 150, K.MAX_GROUP_ROLE, function(text) K:SetGroupRole(text) end, "desk")
+    g.role = UI.Field(g.hero, Loc["Your place in it"], 150, K.MAX_GROUP_ROLE, function(text) K:SetGroupRole(text) end, "desk")
     g.role:SetPoint("TOPRIGHT", 0, -54)
-    g.role:Info("Your place in it", "What you are in the group, like \"Sergeant\", \"Founder\" or \"Recruit\". "
+    g.role:Info(Loc["Your place in it"], "What you are in the group, like \"Sergeant\", \"Founder\" or \"Recruit\". "
       .. "It shows beside your name in the members list, and on your tooltip.")
-    g.leave = UI.Button(g.hero, "Leave", 70, 22)
+    g.leave = UI.Button(g.hero, Loc["Leave"], 70, 22)
     g.leave:SetPoint("TOPRIGHT", 0, -4)
     g.leave:SetScript("OnClick", function()
       K:SetGroup("")
       K.Journal:RefreshCurrent()
     end)
-    UI.Tooltip(g.leave, "Leave the group", "Takes it off your profile. Its crest and story stay saved here, "
+    UI.Tooltip(g.leave, Loc["Leave the group"], "Takes it off your profile. Its crest and story stay saved here, "
       .. "so naming it again brings them back.")
 
     -- Gatherings, built by its own page

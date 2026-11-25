@@ -1,12 +1,13 @@
 -- Kinship RP: Kin page (everyone you've adventured with).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
 local GROUPS = {
-  { key = "all", label = "Everyone" }, { key = "group", label = "Travelled together" },
-  { key = "manual", label = "Added by you" },
+  { key = "all", label = Loc["Everyone"] }, { key = "group", label = Loc["Travelled together"] },
+  { key = "manual", label = Loc["Added by you"] },
 }
 
 local function ClassColor(class)
@@ -21,9 +22,9 @@ local function Closeness(e)
 end
 
 local function Ago(t)
-  if not t then return "never" end
+  if not t then return Loc["never"] end
   local d = math.floor((time() - t) / 86400)
-  if d <= 0 then return "today" elseif d == 1 then return "yesterday" else return d .. " days ago" end
+  if d <= 0 then return Loc["today"] elseif d == 1 then return Loc["yesterday"] else return d .. Loc[" days ago"] end
 end
 
 local function RelationMenu(owner, e)
@@ -37,23 +38,23 @@ local function RelationMenu(owner, e)
         end)
     end
     root:CreateDivider()
-    root:CreateButton("View profile", function() K:ViewProfile(e.name) end)
-    root:CreateButton("Whisper", function()
+    root:CreateButton(Loc["View profile"], function() K:ViewProfile(e.name) end)
+    root:CreateButton(Loc["Whisper"], function()
       K:Whisper(e.name)
     end)
-    root:CreateButton("|cffff6060Remove from Kin|r", function() K:RemoveKin(e.name:lower()) end)
+    root:CreateButton(Loc["|cffff6060Remove from Kin|r"], function() K:RemoveKin(e.name:lower()) end)
   end)
 end
 
 K:RegisterPage({
-  id = "kin", title = "Kin", heading = "Kin",
-  subtitle = "Everyone you've adventured with, and where you met.",
+  id = "kin", title = Loc["Kin"], heading = Loc["Kin"],
+  subtitle = Loc["Everyone you've adventured with, and where you met."],
 
   build = function(c)
     c.group, c.search = "all", ""
     c.groups = UI.Segments(c, GROUPS, 128, function(key) c.group = key; K.Journal:RefreshCurrent() end)
     c.groups:SetPoint("TOPLEFT", 0, 0)
-    local search = UI.Search(c, 170, "Search Kin", function(t) c.search = t; K.Journal:RefreshCurrent() end)
+    local search = UI.Search(c, 170, Loc["Search Kin"], function(t) c.search = t; K.Journal:RefreshCurrent() end)
     search:SetPoint("TOPRIGHT", 0, 0)
     c.searchBox = search
 
@@ -66,9 +67,9 @@ K:RegisterPage({
       t:SetPoint("LEFT", x, 0)
       return t
     end
-    col("Name", 40); col("Bond", 246); col("Where you met", 358); col("Last seen", 598)
+    col(Loc["Name"], 40); col(Loc["Bond"], 246); col(Loc["Where you met"], 358); col(Loc["Last seen"], 598)
 
-    c.list = UI.List(c, 696, 370, 28, "No Kin yet. Group up with a roleplayer, or add a name below.",
+    c.list = UI.List(c, 696, 370, 28, Loc["No Kin yet. Group up with a roleplayer, or add a name below."],
       function(row)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(22, 22)
@@ -92,14 +93,14 @@ K:RegisterPage({
       end, { emptyIcon = K.Art("IconKin") })
     c.list:SetPoint("TOPLEFT", 0, -50)
 
-    local tip = UI.Text(c, "Click someone to view their profile. Right-click to set your bond with them.",
+    local tip = UI.Text(c, Loc["Click someone to view their profile. Right-click to set your bond with them."],
       "GameFontHighlightSmall", "deskSubtle", 370)
     tip:SetPoint("TOPLEFT", c.list, "BOTTOMLEFT", 2, -10)
 
-    local add = UI.Field(c, "Add someone by name", 220, 60, nil, "desk")
+    local add = UI.Field(c, Loc["Add someone by name"], 220, 60, nil, "desk")
     add:SetPoint("BOTTOMRIGHT", -84, -3)
     c.addBox = add
-    local addBtn = UI.Button(c, "Add", 76, 23)
+    local addBtn = UI.Button(c, Loc["Add"], 76, 23)
     addBtn:SetPoint("BOTTOMRIGHT", 0, 0)
     local function doAdd()
       if K:AddKinByName(add.edit:GetText()) then add.edit:SetText(""); add.edit:ClearFocus() end
@@ -135,7 +136,7 @@ K:RegisterPage({
       else row.name:SetTextColor(unpack(t.text)) end
       row.bond:SetText(K.RelationLabel(e.rel))
       local m = e.met or {}
-      row.met:SetText(("%s, level %d, %s"):format(m.place or "?", m.level or 0, date("%d %b", m.t or time())))
+      row.met:SetText((Loc["%s, level %d, %s"]):format(m.place or "?", m.level or 0, date("%d %b", m.t or time())))
       row.seen:SetText(Ago(e.seen or m.t))
     end)
   end,
@@ -152,32 +153,32 @@ end
 
 StaticPopupDialogs["KINSHIPRP_TIDY_KIN"] = {
   text = "%s",
-  button1 = "Remove", button2 = "Cancel",
+  button1 = Loc["Remove"], button2 = Loc["Cancel"],
   OnAccept = function()
     local n = K:TidyKin()
-    K:Print(n == 1 and "Removed 1 person from your Kin." or ("Removed %d people from your Kin."):format(n))
+    K:Print(n == 1 and Loc["Removed 1 person from your Kin."] or (Loc["Removed %d people from your Kin."]):format(n))
     if K.Journal and K.Journal.RefreshCurrent then K.Journal:RefreshCurrent() end
   end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
 
-K:RegisterSettings({ id = "kin", title = "Kin", order = 15,
+K:RegisterSettings({ id = "kin", title = Loc["Kin"], order = 15,
   keywords = "group party raid dungeon travelled together tidy clean remove", build = function(card)
-  card:Segments("Add people you group with", {
-    { key = "rp", label = "RP players" }, { key = "all", label = "Everyone" }, { key = "off", label = "Nobody" },
+  card:Segments(Loc["Add people you group with"], {
+    { key = "rp", label = Loc["RP players"] }, { key = "all", label = Loc["Everyone"] }, { key = "off", label = Loc["Nobody"] },
   }, function() return K:KinFromGroups() end,
   function(v) K.db.settings.kinFromGroups = v ~= "rp" and v or nil end, 90)
-  card:Note("RP players means anyone using Kinship or another RP addon. People already in your Kin are kept either way.")
+  card:Note(Loc["RP players means anyone using Kinship or another RP addon. People already in your Kin are kept either way."])
   local note = card:Note("", 14)
-  card:Button("Tidy Kin", function()
+  card:Button(Loc["Tidy Kin"], function()
     local n = Passing()
     if n == 0 then return end
-    StaticPopup_Show("KINSHIPRP_TIDY_KIN", ((n == 1 and "Remove 1 person" or ("Remove %d people"):format(n))
-      .. " you only grouped with?\n\nThey have no bond and no roleplay profile, and you didn't add them yourself."))
+    StaticPopup_Show("KINSHIPRP_TIDY_KIN", ((n == 1 and Loc["Remove 1 person"] or (Loc["Remove %d people"]):format(n))
+      .. Loc[" you only grouped with?\n\nThey have no bond and no roleplay profile, and you didn't add them yourself."]))
   end, 110)
   card:OnRefresh(function()
     local n = Passing()
-    note:SetText(n == 0 and "Nothing to tidy."
-      or ((n == 1 and "1 person" or (n .. " people")) .. " in your Kin only from grouping."))
+    note:SetText(n == 0 and Loc["Nothing to tidy."]
+      or ((n == 1 and Loc["1 person"] or (n .. Loc[" people"])) .. Loc[" in your Kin only from grouping."]))
   end)
 end })

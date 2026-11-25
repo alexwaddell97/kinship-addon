@@ -18,6 +18,7 @@
 -- The card is refreshed whenever the page is shown.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
@@ -300,12 +301,12 @@ local function NewCard(parent, def)
 end
 
 K:RegisterPage({
-  id = "settings", title = "Settings", heading = "Settings", hidden = true,
-  subtitle = "Choose what Kinship does for you.",
+  id = "settings", title = Loc["Settings"], heading = Loc["Settings"], hidden = true,
+  subtitle = Loc["Choose what Kinship does for you."],
 
   build = function(c)
     c.query = ""
-    c.search = UI.Search(c, 300, "Search settings: nameplates, pvp, map pins...", function(text)
+    c.search = UI.Search(c, 300, Loc["Search settings: nameplates, pvp, map pins..."], function(text)
       c.query = text
       c.token = (c.token or 0) + 1
       local token = c.token
@@ -385,7 +386,7 @@ K:RegisterPage({
           local state = ""
           if it.get then
             local ok, v = K.Try("settings", it.get)
-            if ok then state = v and "  ·  On" or "  ·  Off" end
+            if ok then state = v and Loc["  ·  On"] or Loc["  ·  Off"] end
           end
           r.where:SetText(UI.Escape(it.card.titleText) .. state)
         end
@@ -499,10 +500,10 @@ K:RegisterPage({
     c.firstMatch = order[1]
 
     if searching then
-      c.found:SetText(#order == 0 and "" or ((#order == 1 and "1 section" or (#order .. " sections"))
-        .. (#picks > 0 and "  ·  arrows and Enter to jump to one" or "")))
+      c.found:SetText(#order == 0 and "" or ((#order == 1 and Loc["1 section"] or (#order .. Loc[" sections"]))
+        .. (#picks > 0 and Loc["  ·  arrows and Enter to jump to one"] or "")))
       c.none:SetShown(#order == 0)
-      c.none:SetText(("Nothing matches \"%s\".\nTry a word like nameplates, effects, chat or map."):format(UI.Escape(c.query or "")))
+      c.none:SetText((Loc["Nothing matches \"%s\".\nTry a word like nameplates, effects, chat or map."]):format(UI.Escape(c.query or "")))
     else
       c.found:SetText("")
       c.none:Hide()
@@ -523,9 +524,9 @@ K.LookChoice = Look
 
 local LOOKS = {
   { key = "kinship", theme = "classic", label = "Kinship",
-    desc = "Teal and gold, with cream pages." },
+    desc = Loc["Teal and gold, with cream pages."] },
   { key = "blizzard", theme = "blizzard", label = "Blizzard",
-    desc = "Looks like the game's own windows." },
+    desc = Loc["Looks like the game's own windows."] },
 }
 local PREVIEW_W, PREVIEW_H = 220, 108
 
@@ -603,11 +604,11 @@ local function BuildLook(host)
   local m = UI.Modal(host, 540, 330, function() Look.asker:Done() end)
   Look.asker = m
   local card = m.card
-  local head = UI.Section(card, "Before you begin")
+  local head = UI.Section(card, Loc["Before you begin"])
   head:SetPoint("TOPLEFT", 21, -15)
-  local title = UI.Text(card, "How should Kinship look?", "Title", "text", 500)
+  local title = UI.Text(card, Loc["How should Kinship look?"], "Title", "text", 500)
   title:SetPoint("TOPLEFT", 20, -42)
-  local sub = UI.Text(card, "Pick one to see how it looks. You can change it later in Settings > Look.", "Small", "subtle", 500)
+  local sub = UI.Text(card, Loc["Pick one to see how it looks. You can change it later in Settings > Look."], "Small", "subtle", 500)
   sub:SetPoint("TOPLEFT", 20, -68)
   sub:SetSpacing(2)
 
@@ -644,7 +645,7 @@ local function BuildLook(host)
     m.cards[i] = b
   end
 
-  local go = UI.Button(card, "Continue", 120, 26)
+  local go = UI.Button(card, Loc["Continue"], 120, 26)
   go:SetPoint("BOTTOMRIGHT", -16, 14)
   go:SetScript("OnClick", function() m:Done() end)
 
@@ -668,42 +669,42 @@ function Look:Ask(host, after)
   m:Show()
 end
 
-K:RegisterSettings({ id = "look", title = "Look", order = 3, keywords = "theme style skin blizzard dark colours appearance",
+K:RegisterSettings({ id = "look", title = Loc["Look"], order = 3, keywords = "theme style skin blizzard dark colours appearance",
     build = function(card)
-  card:Segments("Window style", {
+  card:Segments(Loc["Window style"], {
     { key = "kinship", label = "Kinship" },
     { key = "blizzard", label = "Blizzard" },
   }, function() return S().uiTheme == "blizzard" and "blizzard" or "kinship" end, function(key)
     S().uiTheme = key == "blizzard" and "blizzard" or nil
     UI:ApplyTheme()
   end)
-  card:Note("Kinship uses teal and gold with cream pages. Blizzard matches the game's own windows.")
+  card:Note(Loc["Kinship uses teal and gold with cream pages. Blizzard matches the game's own windows."])
 end })
 
-K:RegisterSettings({ id = "chat", trp3 = "hide", title = "Roleplay chat", order = 10, build = function(card)
-  card:Toggle("Roleplay names", "Shows roleplay names in chat, followed by the character name.", "chatNames")
-  card:Toggle("Colour emotes and speech", "Colours \"quotes\" in emotes and *actions* in speech.", "chatEmotes")
-  card:Toggle("Dim (( out of character ))", "Greys out text inside (( double brackets )).", "chatOOC")
-  card:Toggle("NPC speech", "Type /e || Guard says: Halt! to speak as someone else.", "chatNPC")
+K:RegisterSettings({ id = "chat", trp3 = "hide", title = Loc["Roleplay chat"], order = 10, build = function(card)
+  card:Toggle(Loc["Roleplay names"], Loc["Shows roleplay names in chat, followed by the character name."], "chatNames")
+  card:Toggle(Loc["Colour emotes and speech"], Loc["Colours \"quotes\" in emotes and *actions* in speech."], "chatEmotes")
+  card:Toggle(Loc["Dim (( out of character ))"], Loc["Greys out text inside (( double brackets ))."], "chatOOC")
+  card:Toggle(Loc["NPC speech"], Loc["Type /e || Guard says: Halt! to speak as someone else."], "chatNPC")
   local note = card:Note("", 14)
   card:OnRefresh(function()
     local other = K.Comm:OtherRPAddon()
-    note:SetText(other and ("|cffe6a04c%s is also changing chat.|r You can turn it off under General.")
-      :format(K.Import.Label(other)) or "Works in say, yell, emote, party, raid, guild and whispers.")
+    note:SetText(other and (Loc["|cffe6a04c%s is also changing chat.|r You can turn it off under General."])
+      :format(K.Import.Label(other)) or Loc["Works in say, yell, emote, party, raid, guild and whispers."])
   end)
 end })
 
-K:RegisterSettings({ id = "warfront", title = "Warfront", order = 20, build = function(card)
-  card:Toggle("Battle toasts", "Shows a message after a win or loss in world PvP, and asks who killed you when you die. Not shown for duels or battlegrounds.", "warToasts")
-  card:Toggle("Record battles in your Chronicle", "Adds world PvP wins and losses to your Chronicle.", "warChronicle")
-  card:Toggle("Remember enemies you meet", "Saves enemy players you target or mouse over in your Sighted list.", "warSightings")
-  card:Toggle("Rival line in tooltips", "Shows your score with a rival when you mouse over them.", "warTooltip")
-  card:Toggle("Beside the PvP window", "Shows your record and recent rivals next to the PvP window.", "pvpCard")
-  card:Toggle("Narrate parley for your side", "Adds a short emote of your own to each Parley emote.", "parleyNarrate")
+K:RegisterSettings({ id = "warfront", title = Loc["Warfront"], order = 20, build = function(card)
+  card:Toggle(Loc["Battle toasts"], Loc["Shows a message after a win or loss in world PvP, and asks who killed you when you die. Not shown for duels or battlegrounds."], "warToasts")
+  card:Toggle(Loc["Record battles in your Chronicle"], Loc["Adds world PvP wins and losses to your Chronicle."], "warChronicle")
+  card:Toggle(Loc["Remember enemies you meet"], Loc["Saves enemy players you target or mouse over in your Sighted list."], "warSightings")
+  card:Toggle(Loc["Rival line in tooltips"], Loc["Shows your score with a rival when you mouse over them."], "warTooltip")
+  card:Toggle(Loc["Beside the PvP window"], Loc["Shows your record and recent rivals next to the PvP window."], "pvpCard")
+  card:Toggle(Loc["Narrate parley for your side"], Loc["Adds a short emote of your own to each Parley emote."], "parleyNarrate")
 end })
 
-K:RegisterSettings({ id = "letters", title = "Letters", order = 30, build = function(card)
-  card:Toggle("Only accept letters from my Kin", "Letters from anyone else are declined.", {
+K:RegisterSettings({ id = "letters", title = Loc["Letters"], order = 30, build = function(card)
+  card:Toggle(Loc["Only accept letters from my Kin"], Loc["Letters from anyone else are declined."], {
     get = function() return S().lettersFrom == "kin" end,
     set = function(v) S().lettersFrom = v and "kin" or "anyone" end,
   })
@@ -711,29 +712,29 @@ end })
 
 -- The game's Key Bindings, opened where Kinship's keys are (AddOns > Kinship RP).
 local function OpenKeyBindings()
-  if InCombatLockdown() then K:Print("Key bindings can't be opened in combat.") return end
+  if InCombatLockdown() then K:Print(Loc["Key bindings can't be opened in combat."]) return end
   local GS = rawget(_G, "Settings")
   if GS and GS.OpenToCategory and GS.KEYBINDINGS_CATEGORY_ID and pcall(GS.OpenToCategory, GS.KEYBINDINGS_CATEGORY_ID) then return end
   local load = (C_AddOns and C_AddOns.LoadAddOn) or rawget(_G, "LoadAddOn")
   if load then pcall(load, "Blizzard_BindingUI") end
   local kb = rawget(_G, "KeyBindingFrame")
-  if kb then pcall(ShowUIPanel, kb) else K:Print("Open Key Bindings from the game menu, under AddOns > Kinship RP.") end
+  if kb then pcall(ShowUIPanel, kb) else K:Print(Loc["Open Key Bindings from the game menu, under AddOns > Kinship RP."]) end
 end
 
-K:RegisterSettings({ id = "general", title = "General", order = 90, keywords = "backup restore saved data key bindings keys",
+K:RegisterSettings({ id = "general", title = Loc["General"], order = 90, keywords = "backup restore saved data key bindings keys",
     build = function(card)
-  card:Toggle("Status button", "A small IC / LFRP / OOC button. Shift-drag to move it.", {
+  card:Toggle(Loc["Status button"], Loc["A small IC / LFRP / OOC button. Shift-drag to move it."], {
     get = function() return K.db.statusButton.shown and true or false end,
     set = function(v) K.db.statusButton.shown = v; K.StatusButton:Update() end,
   })
-  card:Toggle("Minimap button", "Click to open the journal. Right-click for Settings.", {
+  card:Toggle(Loc["Minimap button"], Loc["Click to open the journal. Right-click for Settings."], {
     get = function() return not (K.db.minimap and K.db.minimap.hide) end,
     set = function(v) K:SetMinimapButton(v) end,
   })
   card:EndRow()
-  local keys = card:Button("Key bindings", OpenKeyBindings, 130)
-  UI.Tooltip(keys, "Key bindings", "Set keys for the journal, Parley wheel, dice, satchel, status and target profile. They're under AddOns > Kinship RP.")
-  local kofi = UI.Button(card, "Support Kinship on Ko-fi", 200, 26)
+  local keys = card:Button(Loc["Key bindings"], OpenKeyBindings, 130)
+  UI.Tooltip(keys, Loc["Key bindings"], Loc["Set keys for the journal, Parley wheel, dice, satchel, status and target profile. They're under AddOns > Kinship RP."])
+  local kofi = UI.Button(card, Loc["Support Kinship on Ko-fi"], 200, 26)
   kofi:SetPoint("LEFT", keys, "RIGHT", 8, 0)
   kofi:SetScript("OnClick", function() if K.Support then K.Support:Show() end end)
   card.items[#card.items + 1] = { widget = kofi, text = function() return kofi:GetText() end, button = true }
@@ -741,18 +742,18 @@ K:RegisterSettings({ id = "general", title = "General", order = 90, keywords = "
 
   -- Other roleplay addons, last: their buttons only show while one is running
   local note = card:Note("", 28)
-  local move = card:Button("Move to Kinship", function() K.Import:Show(true) end, 160)
-  local adds = UI.Button(card, "What Kinship adds", 170, 26)
+  local move = card:Button(Loc["Move to Kinship"], function() K.Import:Show(true) end, 160)
+  local adds = UI.Button(card, Loc["What Kinship adds"], 170, 26)
   adds:SetScript("OnClick", function() if K.TRP3 then K.TRP3:Show() end end)
   card.items[#card.items + 1] = { widget = adds, text = function() return adds:GetText() end, button = true }
   card:OnRefresh(function()
     local other = K.Comm:OtherRPAddon()
     if K:Compat() then
-      note:SetText(("Running alongside Total RP 3, which handles %s. Move to Kinship to copy your profiles over and use Kinship on its own.")
+      note:SetText((Loc["Running alongside Total RP 3, which handles %s. Move to Kinship to copy your profiles over and use Kinship on its own."])
         :format(K.TRP3 and K.TRP3.KEEPS or "your profile"))
     else
-      note:SetText(other and ("%s is still running. Copy your profiles into Kinship and turn it off."):format(K.Import.Label(other))
-        or "Kinship is your only roleplay addon.")
+      note:SetText(other and (Loc["%s is still running. Copy your profiles into Kinship and turn it off."]):format(K.Import.Label(other))
+        or Loc["Kinship is your only roleplay addon."])
     end
     move:SetShown(other ~= nil)
     adds:SetShown(K:Compat())

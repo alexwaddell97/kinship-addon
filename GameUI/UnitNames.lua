@@ -14,6 +14,7 @@
 -- frames with the game's names.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local Safe = K.Safe
 local N = {}
@@ -277,14 +278,14 @@ K:On("REGISTRY", function(key)
   end
 end)
 
-K:RegisterSettings({ id = "unitNames", title = "Unit frames", order = 41, build = function(card)
-  card:Toggle("Roleplay names on unit frames", "Shows your roleplay name on your player frame, followed by your character name, and your pet's companion name on your pet frame.", {
+K:RegisterSettings({ id = "unitNames", title = Loc["Unit frames"], order = 41, build = function(card)
+  card:Toggle(Loc["Roleplay names on unit frames"], "Shows your roleplay name on your player frame, followed by your character name, and your pet's companion name on your pet frame.", {
     get = function() return S().rpUnitNames ~= false end,
     set = function(v) K.db.settings.rpUnitNames = v; N:Refresh() end,
   })
-  card:Toggle("Include target and focus", "Shows roleplay names on your target and focus frames once Kinship has their profile. Pets with a companion profile show its name.", {
+  card:Toggle(Loc["Include target and focus"], "Shows roleplay names on your target and focus frames once Kinship has their profile. Pets with a companion profile show its name.", {
     get = function() return S().rpUnitNamesOthers ~= false end,
     set = function(v) K.db.settings.rpUnitNamesOthers = v; N:Refresh() end,
   })
-  card:Note("Works with the game's unit frames and EllesmereUI's. The character name always stays visible, so you know who to whisper or invite.")
+  card:Note(Loc["Works with the game's unit frames and EllesmereUI's. The character name always stays visible, so you know who to whisper or invite."])
 end })

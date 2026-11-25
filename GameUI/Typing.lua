@@ -8,6 +8,7 @@
 -- Settings > Typing indicator turns sharing and showing on or off.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -223,10 +224,10 @@ K:On("LOGIN", function()
   C_Timer.NewTicker(1, function() if next(T.typing) then K.Try("typing", T.Refresh, T) end end)
 end)
 
-K:RegisterSettings({ id = "typing", title = "Typing indicator", order = 11,
+K:RegisterSettings({ id = "typing", title = Loc["Typing indicator"], order = 11,
   keywords = "typing writing dots emote say yell nameplate", build = function(card)
-  card:Toggle("Show when others are typing", "Shows dots over a nearby Kinship user's nameplate while they type in say, emote or yell. Also shows on your target bar.",
+  card:Toggle(Loc["Show when others are typing"], Loc["Shows dots over a nearby Kinship user's nameplate while they type in say, emote or yell. Also shows on your target bar."],
     { get = Showing, set = function(v) S().typingShow = v; T:Refresh() end })
-  card:Toggle("Let others see when I'm typing", "Nearby Kinship users can see when you're typing. What you type is never sent.", { get = Sharing, set = function(v) S().typingShare = v; if not v then Stop() end end })
-  card:Note("You need friendly nameplates turned on to see the dots.")
+  card:Toggle(Loc["Let others see when I'm typing"], Loc["Nearby Kinship users can see when you're typing. What you type is never sent."], { get = Sharing, set = function(v) S().typingShare = v; if not v then Stop() end end })
+  card:Note(Loc["You need friendly nameplates turned on to see the dots."])
 end })

@@ -6,6 +6,7 @@
 -- differs between clients; it is never changed, only sat beside.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local PC = { hooked = {} }
@@ -37,7 +38,7 @@ function PC:Build()
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
   mono:SetPoint("TOPLEFT", 14, -12)
-  local head = UI.Text(f, "Warfront", "Header", "heading")
+  local head = UI.Text(f, Loc["Warfront"], "Header", "heading")
   head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
   f.record = UI.Text(f, "", "Small", "subtle")
   f.record:SetPoint("TOPRIGHT", -14, -18)
@@ -66,11 +67,11 @@ function PC:Build()
     row:SetScript("OnClick", function(self) if self.r then K.War:Open(self.r) end end)
     f.rows[i] = row
   end
-  f.empty = UI.Text(f, "No rivals yet. Duels, honourable kills and the enemies you face in the field gather in the Warfront.",
+  f.empty = UI.Text(f, Loc["No rivals yet. Duels, honourable kills and the enemies you face in the field gather in the Warfront."],
     "Small", "subtle", W_CARD - 28)
   f.empty:SetPoint("TOPLEFT", 14, -46)
   f.empty:SetSpacing(2)
-  f.open = UI.Button(f, "Open the Warfront", W_CARD - 28, 24)
+  f.open = UI.Button(f, Loc["Open the Warfront"], W_CARD - 28, 24)
   f.open:SetScript("OnClick", function() K.Journal:Open("warfront") end)
   K:On("RIVALS", function() if f:IsShown() then PC:Paint() end end)
   return f

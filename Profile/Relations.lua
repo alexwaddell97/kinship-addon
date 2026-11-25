@@ -10,6 +10,7 @@
 --   K.Relations:Menu(owner, name), K.Relations:FillMenu(menuDescription, name)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -23,26 +24,26 @@ local OnCard = UI.OnCard or function(c) return c end
 
 -- Icons checked against LibRPMediaData_Forever (they exist on this client).
 K.RELATION_TYPES = {
-  { key = "friend",     label = "Friend",     color = { 0.42, 0.82, 0.46 }, icon = Icon("achievement_reputation_06"),
-    desc = "Someone you trust and are glad to see." },
-  { key = "family",     label = "Family",     color = { 0.96, 0.70, 0.26 }, icon = Icon("achievement_reputation_07"),
-    desc = "Kin by blood, by marriage or by choice." },
-  { key = "love",       label = "Love",       color = { 0.96, 0.52, 0.68 }, icon = Icon("inv_valentinescandy"),
-    desc = "A sweetheart, a spouse, or a quiet longing." },
-  { key = "ally",       label = "Ally",       color = { 0.38, 0.64, 0.96 }, icon = Icon("inv_shield_06"),
-    desc = "On the same side, for now or for good." },
-  { key = "mentor",     label = "Mentor",     color = { 0.66, 0.56, 0.94 }, icon = Icon("inv_misc_book_09"),
-    desc = "A teacher, or someone you are teaching." },
-  { key = "business",   label = "Business",   color = { 0.92, 0.82, 0.36 }, icon = Icon("achievement_reputation_08"),
-    desc = "Coin, contracts and favours owed." },
-  { key = "neutral",    label = "Neutral",    color = { 0.64, 0.68, 0.76 }, icon = Icon("achievement_reputation_05"),
-    desc = "Known to you, without strong feeling either way." },
-  { key = "unfriendly", label = "Unfriendly", color = { 0.92, 0.56, 0.30 }, icon = Icon("spell_shadow_curseofmannoroth"),
-    desc = "Bad blood, distrust or an old grudge." },
-  { key = "rival",      label = "Rival",      color = { 0.90, 0.40, 0.32 }, icon = Icon("ability_warrior_challange"),
-    desc = "A worthy opponent you measure yourself against." },
-  { key = "enemy",      label = "Enemy",      color = { 0.82, 0.20, 0.24 }, icon = Icon("inv_misc_bone_humanskull_01"),
-    desc = "Someone your character would gladly see fall." },
+  { key = "friend",     label = Loc["Friend"],     color = { 0.42, 0.82, 0.46 }, icon = Icon("achievement_reputation_06"),
+    desc = Loc["Someone you trust and are glad to see."] },
+  { key = "family",     label = Loc["Family"],     color = { 0.96, 0.70, 0.26 }, icon = Icon("achievement_reputation_07"),
+    desc = Loc["Kin by blood, by marriage or by choice."] },
+  { key = "love",       label = Loc["Love"],       color = { 0.96, 0.52, 0.68 }, icon = Icon("inv_valentinescandy"),
+    desc = Loc["A sweetheart, a spouse, or a quiet longing."] },
+  { key = "ally",       label = Loc["Ally"],       color = { 0.38, 0.64, 0.96 }, icon = Icon("inv_shield_06"),
+    desc = Loc["On the same side, for now or for good."] },
+  { key = "mentor",     label = Loc["Mentor"],     color = { 0.66, 0.56, 0.94 }, icon = Icon("inv_misc_book_09"),
+    desc = Loc["A teacher, or someone you are teaching."] },
+  { key = "business",   label = Loc["Business"],   color = { 0.92, 0.82, 0.36 }, icon = Icon("achievement_reputation_08"),
+    desc = Loc["Coin, contracts and favours owed."] },
+  { key = "neutral",    label = Loc["Neutral"],    color = { 0.64, 0.68, 0.76 }, icon = Icon("achievement_reputation_05"),
+    desc = Loc["Known to you, without strong feeling either way."] },
+  { key = "unfriendly", label = Loc["Unfriendly"], color = { 0.92, 0.56, 0.30 }, icon = Icon("spell_shadow_curseofmannoroth"),
+    desc = Loc["Bad blood, distrust or an old grudge."] },
+  { key = "rival",      label = Loc["Rival"],      color = { 0.90, 0.40, 0.32 }, icon = Icon("ability_warrior_challange"),
+    desc = Loc["A worthy opponent you measure yourself against."] },
+  { key = "enemy",      label = Loc["Enemy"],      color = { 0.82, 0.20, 0.24 }, icon = Icon("inv_misc_bone_humanskull_01"),
+    desc = Loc["Someone your character would gladly see fall."] },
 }
 local BUILTIN = {}
 for i, d in ipairs(K.RELATION_TYPES) do d.order = i; BUILTIN[d.key] = d end
@@ -145,7 +146,7 @@ local function RebuildKinBonds()
   local list = K.RELATIONS
   if type(list) ~= "table" then return end
   wipe(list)
-  list[1] = { key = "", label = "Companion" }
+  list[1] = { key = "", label = Loc["Companion"] }
   for _, d in ipairs(K:RelationTypes()) do list[#list + 1] = { key = d.key, label = d.label } end
 end
 RebuildKinBonds()
@@ -271,13 +272,13 @@ end
 -- Fill a menu (or a submenu description) with the relationship choices.
 function R:FillMenu(root, name)
   local function current() local d = K:RelationOf(name); return d and d.key or nil end
-  root:CreateRadio("No relationship", function() return current() == nil end, function() K:SetRelation(name, nil) end)
+  root:CreateRadio(Loc["No relationship"], function() return current() == nil end, function() K:SetRelation(name, nil) end)
   for _, d in ipairs(K:RelationTypes()) do
     local key = d.key
     root:CreateRadio(MenuLabel(d), function() return current() == key end, function() K:SetRelation(name, key) end)
   end
   root:CreateDivider()
-  root:CreateButton("Manage relationships...", function() if K.Journal then K.Journal:Open("settings") end end)
+  root:CreateButton(Loc["Manage relationships..."], function() if K.Journal then K.Journal:Open("settings") end end)
 end
 
 local function MouseOwner()
@@ -321,7 +322,7 @@ local function IsOther(unit, name)
 end
 
 K:RegisterTargetButton({
-  id = "relation", order = 25, label = "Relationship", icon = BUTTON_ICON,
+  id = "relation", order = 25, label = Loc["Relationship"], icon = BUTTON_ICON,
   shown = function(unit, name) return IsOther(unit, name) end,
   onClick = function(_, name, owner) R:Menu(owner, name) end,
 })
@@ -396,7 +397,7 @@ function Editor:Build()
   local card = ov.card
   host:HookScript("OnHide", function() Editor:Close() end)
 
-  self.heading = UI.Section(card, "New relationship")
+  self.heading = UI.Section(card, Loc["New relationship"])
   self.heading:SetPoint("TOPLEFT", 21, -18)
 
   -- Preview: how it will read in tooltips and menus
@@ -420,12 +421,12 @@ function Editor:Build()
   pv.name = UI.Text(pv, "", "Title", "plain", EW - 80)
   pv.name:SetPoint("TOPLEFT", pv.ring, "TOPRIGHT", 12, -2)
   pv.name:SetWordWrap(false)
-  pv.hint = UI.Text(pv, "How it reads in tooltips, menus and on your Kin page.", "Small", "subtle", EW - 80)
+  pv.hint = UI.Text(pv, Loc["How it reads in tooltips, menus and on your Kin page."], "Small", "subtle", EW - 80)
   pv.hint:SetPoint("TOPLEFT", pv.name, "BOTTOMLEFT", 0, -4)
   pv.hint:SetWordWrap(false)
   self.preview = pv
 
-  self.field = UI.Field(card, "Name", EW, MAX_LABEL, function() Editor:Paint() end)
+  self.field = UI.Field(card, Loc["Name"], EW, MAX_LABEL, function() Editor:Paint() end)
   self.field:SetPoint("TOPLEFT", 16, -108)
   self.field.edit:SetScript("OnEnterPressed", function() Editor:Save() end)
   self.error = UI.Text(card, "", "Small", "plain", 220)
@@ -434,7 +435,7 @@ function Editor:Build()
   local ec = OnCard({ 0.90, 0.36, 0.30 })
   self.error:SetTextColor(ec[1], ec[2], ec[3])
 
-  local cl = UI.Text(card, "Colour", "Label", "subtle")
+  local cl = UI.Text(card, Loc["Colour"], "Label", "subtle")
   cl:SetPoint("TOPLEFT", 17, -160)
   self.swatches = {}
   local gap = math.floor((EW - #SWATCHES * 22) / (#SWATCHES - 1))
@@ -444,7 +445,7 @@ function Editor:Build()
     self.swatches[i] = s
   end
 
-  local il = UI.Text(card, "Icon", "Label", "subtle")
+  local il = UI.Text(card, Loc["Icon"], "Label", "subtle")
   il:SetPoint("TOPLEFT", 17, -212)
   self.icons = {}
   local per = 12
@@ -456,10 +457,10 @@ function Editor:Build()
     self.icons[i] = b
   end
 
-  self.save = UI.Button(card, "Save", 110, 26)
+  self.save = UI.Button(card, Loc["Save"], 110, 26)
   self.save:SetPoint("BOTTOMRIGHT", -16, 16)
   self.save:SetScript("OnClick", function() Editor:Save() end)
-  self.cancel = UI.Button(card, "Cancel", 90, 26)
+  self.cancel = UI.Button(card, Loc["Cancel"], 90, 26)
   self.cancel:SetPoint("RIGHT", self.save, "LEFT", -8, 0)
   self.cancel:SetScript("OnClick", function() Editor:Close() end)
   self.delete = UI.Button(card, "", 120, 26)
@@ -480,7 +481,7 @@ function Editor:Paint()
   pv.ring:SetVertexColor(c[1], c[2], c[3], 1)
   pv.icon:SetTexture(d.icon)
   local tc = OnCard(c)
-  pv.name:SetText(label ~= "" and label or "Your relationship")
+  pv.name:SetText(label ~= "" and label or Loc["Your relationship"])
   pv.name:SetTextColor(tc[1], tc[2], tc[3], label ~= "" and 1 or 0.55)
   for _, s in ipairs(self.swatches) do
     s.selected = s.color[1] == c[1] and s.color[2] == c[2] and s.color[3] == c[3]
@@ -492,7 +493,7 @@ function Editor:Paint()
   end
   self.save:SetEnabled(label ~= "")
   if label ~= "" and LabelTaken(label, self.editing) then
-    self.error:SetText("You already have one called that.")
+    self.error:SetText(Loc["You already have one called that."])
   else
     self.error:SetText("")
   end
@@ -503,10 +504,10 @@ function Editor:Open(def)
   self.editing = def
   local c = def and def.color or SWATCHES[2]
   self.draft = { color = { c[1], c[2], c[3] }, icon = def and def.icon or ICONS[12] }
-  self.heading:SetText(def and "Edit relationship" or "New relationship")
+  self.heading:SetText(def and Loc["Edit relationship"] or Loc["New relationship"])
   self.field.edit:SetText(def and def.label or "")
   self.delete:SetShown(def ~= nil)
-  self.delete:SetText("|cffd85a50Delete|r")
+  self.delete:SetText(Loc["|cffd85a50Delete|r"])
   self.armed = false
   self.ov:Show()
   self:Paint()
@@ -523,8 +524,8 @@ end
 function Editor:Save()
   if not self.draft then return end
   local label = Plain(self.field.edit:GetText())
-  if label == "" then self.error:SetText("Give it a name first."); return end
-  if LabelTaken(label, self.editing) then self.error:SetText("You already have one called that."); return end
+  if label == "" then self.error:SetText(Loc["Give it a name first."]); return end
+  if LabelTaken(label, self.editing) then self.error:SetText(Loc["You already have one called that."]); return end
   R:SaveCustom(self.editing, label, self.draft.color, self.draft.icon)
   if SOUNDKIT then PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB) end
   self:Close()
@@ -538,11 +539,11 @@ function Editor:Delete()
   if not self.armed then
     self.armed = true
     local n = Uses(def.key)
-    self.delete:SetText(n > 0 and ("|cffd85a50Remove from %d?|r"):format(n) or "|cffd85a50Sure?|r")
+    self.delete:SetText(n > 0 and (Loc["|cffd85a50Remove from %d?|r"]):format(n) or Loc["|cffd85a50Sure?|r"])
     C_Timer.After(3, function()
       if Editor.editing == def and Editor.armed then
         Editor.armed = false
-        Editor.delete:SetText("|cffd85a50Delete|r")
+        Editor.delete:SetText(Loc["|cffd85a50Delete|r"])
       end
     end)
     return
@@ -589,7 +590,7 @@ local function Tile(parent, d, w, h)
     GameTooltip:SetText(("|T%s:16:16%s|t %s"):format(d.icon, CROP, d.label), d.color[1], d.color[2], d.color[3])
     GameTooltip:AddLine(d.desc, 1, 1, 1, true)
     local n = Uses(d.key)
-    GameTooltip:AddLine(n > 0 and (n == 1 and "You have 1 of these." or ("You have " .. n .. " of these.")) or "Set it from the target bar or your Kin.",
+    GameTooltip:AddLine(n > 0 and (n == 1 and Loc["You have 1 of these."] or (Loc["You have "] .. n .. Loc[" of these."])) or Loc["Set it from the target bar or your Kin."],
       0.7, 0.7, 0.7, true)
     GameTooltip:Show()
   end)
@@ -610,21 +611,21 @@ function R:RefreshSettings()
     row.name:SetText(d.label)
     row.name:SetTextColor(c[1], c[2], c[3])
     local n = Uses(d.key)
-    row.sub:SetText(n == 0 and "Not given to anyone yet" or (n == 1 and "Given to 1 person" or ("Given to " .. n .. " people")))
+    row.sub:SetText(n == 0 and Loc["Not given to anyone yet"] or (n == 1 and Loc["Given to 1 person"] or (Loc["Given to "] .. n .. Loc[" people"])))
   end)
   if self.customCount then
     local n = #items
-    self.customCount:SetText(n == 0 and "" or (n == 1 and "1 of your own" or (n .. " of your own")))
+    self.customCount:SetText(n == 0 and "" or (n == 1 and Loc["1 of your own"] or (n .. Loc[" of your own"])))
   end
 end
 
-K:RegisterSettings({ id = "relations", title = "Relationships", order = 32, build = function(card)
+K:RegisterSettings({ id = "relations", title = Loc["Relationships"], order = 32, build = function(card)
   local W = card:GetWidth() - 32
-  card:Toggle("Relationship in tooltips", "Shows your relationship with a player when you mouse over them.", "relTooltip")
+  card:Toggle(Loc["Relationship in tooltips"], Loc["Shows your relationship with a player when you mouse over them."], "relTooltip")
   card:Space(2)
 
   local y = card.y
-  local l1 = UI.Text(card, "Built in", "Label", "subtle")
+  local l1 = UI.Text(card, Loc["Built in"], "Label", "subtle")
   l1:SetPoint("TOPLEFT", 17, y)
   y = y - 18
   local cols, gap, th = 5, 8, 34
@@ -635,18 +636,18 @@ K:RegisterSettings({ id = "relations", title = "Relationships", order = 32, buil
   end
   y = y - 2 * th - gap - 20
 
-  local l2 = UI.Text(card, "Your own", "Label", "subtle")
+  local l2 = UI.Text(card, Loc["Your own"], "Label", "subtle")
   l2:SetPoint("TOPLEFT", 17, y)
   R.customCount = UI.Text(card, "", "Label", "subtle")
   R.customCount:SetPoint("LEFT", l2, "RIGHT", 10, 0)
   R.customCount:SetAlpha(0.8)
-  local new = UI.Button(card, "New relationship", 150, 24)
+  local new = UI.Button(card, Loc["New relationship"], 150, 24)
   new:SetPoint("TOPRIGHT", -16, y + 7)
   new:SetScript("OnClick", function() Editor:Open(nil) end)
   y = y - 24
 
   R.customList = UI.List(card, W, 150, 40,
-    "You haven't made any yet. Add your own, like sworn sister, debtor or old flame.",
+    Loc["You haven't made any yet. Add your own, like sworn sister, debtor or old flame."],
     function(row)
       row.ring = UI.Circle(row, 26, "ARTWORK", 0)
       row.ring:SetPoint("LEFT", 10, 0)
@@ -660,7 +661,7 @@ K:RegisterSettings({ id = "relations", title = "Relationships", order = 32, buil
       row.name:SetWordWrap(false)
       row.sub = UI.Text(row, "", "Small", "subtle", 300)
       row.sub:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -3)
-      row.edit = UI.Button(row, "Edit", 72, 22)
+      row.edit = UI.Button(row, Loc["Edit"], 72, 22)
       row.edit:SetPoint("RIGHT", -8, 0)
       row.edit:SetScript("OnClick", function() Editor:Open(row.item) end)
       row:SetScript("OnClick", function(self) Editor:Open(self.item) end)

@@ -15,12 +15,13 @@
 --   K.QuestMarkers.LevelText(q), .LevelHex(q)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local QM = {}
 K.QuestMarkers = QM
 
-QM.SIZES = { { r = 0, label = "Exact spot" }, { r = 30, label = "Small area" }, { r = 100, label = "Wide area" } }
+QM.SIZES = { { r = 0, label = Loc["Exact spot"] }, { r = 30, label = Loc["Small area"] }, { r = 100, label = Loc["Wide area"] } }
 QM.PIN_ICON = K.Art("IconPlace")
 
 local S = K.Settings
@@ -89,7 +90,7 @@ end
 -- "Elwynn Forest  42.1, 65.3"
 function QM.Label(mk)
   if not mk then return nil end
-  local z = mk.z or MapName(mk.m) or "Somewhere"
+  local z = mk.z or MapName(mk.m) or Loc["Somewhere"]
   return ("%s  %.1f, %.1f"):format(UI.Escape(z), mk.x * 100, mk.y * 100)
 end
 
@@ -107,7 +108,7 @@ end
 
 function QM.Here()
   local map, x, y = PlayerPos()
-  if not map then return nil, "You can't mark a spot here (inside a dungeon, or the map doesn't know where you are)." end
+  if not map then return nil, Loc["You can't mark a spot here (inside a dungeon, or the map doesn't know where you are)."] end
   return QM.Sanitize({ m = map, x = x, y = y, z = MapName(map) })
 end
 
@@ -159,8 +160,8 @@ end
 -- "140 yds", "1.2 km"-free: yards all the way, rounded to tens.
 function QM.DistText(d)
   if not d then return nil end
-  if d < 15 then return "here" end
-  return ("%d yds"):format(math.floor(d / 10 + 0.5) * 10)
+  if d < 15 then return Loc["here"] end
+  return (Loc["%d yds"]):format(math.floor(d / 10 + 0.5) * 10)
 end
 
 ---------------------------------------------------------------------------
@@ -168,9 +169,9 @@ end
 ---------------------------------------------------------------------------
 local picker
 function QM:Pick(onPick)
-  if InCombatLockdown() then K:Print("Not during combat.") return end
+  if InCombatLockdown() then K:Print(Loc["Not during combat."]) return end
   local map = _G.WorldMapFrame
-  if not map then K:Print("The world map isn't available.") return end
+  if not map then K:Print(Loc["The world map isn't available."]) return end
   local journal = K.Journal and K.Journal.frame
   local reopen = journal and journal:IsShown()
   if reopen then journal:Hide() end
@@ -183,7 +184,7 @@ function QM:Pick(onPick)
     picker.banner = UI.Panel(picker)
     picker.banner:SetSize(360, 34)
     picker.banner:SetPoint("TOP", 0, -10)
-    picker.banner.t = UI.Text(picker.banner, "Click where it happens. Right-click to cancel.", "Body", "heading")
+    picker.banner.t = UI.Text(picker.banner, Loc["Click where it happens. Right-click to cancel."], "Body", "heading")
     picker.banner.t:SetPoint("CENTER")
     picker:SetScript("OnHide", function(self) if self.done then self.done(nil) end end)
   end
@@ -214,7 +215,7 @@ function QM:Pick(onPick)
       y = (canvas:GetTop() - cy / s) / canvas:GetHeight()
     end
     local mk = mapID and QM.Sanitize({ m = mapID, x = x, y = y, z = MapName(mapID) })
-    if not mk then K:Print("That isn't a spot on the map.") return end
+    if not mk then K:Print(Loc["That isn't a spot on the map."]) return end
     Done(mk)
   end)
   picker:Show()
@@ -226,14 +227,14 @@ end
 function QM:Menu(owner, title, get, set)
   UI.Menu(owner, function(root)
     root:CreateTitle(title)
-    root:CreateButton("Mark where I'm standing", function()
+    root:CreateButton(Loc["Mark where I'm standing"], function()
       local mk, err = QM.Here()
       if not mk then K:Print(err) return end
       local old = get()
       mk.r = old and old.r or nil
       set(mk)
     end)
-    root:CreateButton("Pick on the world map", function()
+    root:CreateButton(Loc["Pick on the world map"], function()
       QM:Pick(function(mk)
         local old = get()
         mk.r = old and old.r or nil
@@ -250,7 +251,7 @@ function QM:Menu(owner, title, get, set)
         end)
       end
       root:CreateDivider()
-      root:CreateButton("Clear", function() set(nil) end)
+      root:CreateButton(Loc["Clear"], function() set(nil) end)
     end
   end)
 end
@@ -289,8 +290,8 @@ local function PinTooltip(owner, item)
   end
   GameTooltip:AddLine(QM.Label(item.mk), 0.75, 0.75, 0.75)
   local d = QM.Distance(item.mk)
-  if d then GameTooltip:AddLine(QM.DistText(d) .. (item.mk.r and (", within " .. item.mk.r .. " yds") or ""), 0.55, 0.80, 1) end
-  GameTooltip:AddLine("Click to open the quest.", 0.62, 0.62, 0.62)
+  if d then GameTooltip:AddLine(QM.DistText(d) .. (item.mk.r and (Loc[", within "] .. item.mk.r .. Loc[" yds"]) or ""), 0.55, 0.80, 1) end
+  GameTooltip:AddLine(Loc["Click to open the quest."], 0.62, 0.62, 0.62)
   GameTooltip:Show()
 end
 
@@ -531,7 +532,7 @@ local function HookForeverMap()
   local api = rawget(_G, "ForeverWorldMapAPI")
   if type(api) ~= "table" or type(api.AddLayer) ~= "function" then return false end
   local ok, layer = pcall(api.AddLayer, {
-    key = FWM_KEY, label = "Roleplay quests (Kinship)", level = 42, size = 22, icon = { texture = QM.PIN_ICON },
+    key = FWM_KEY, label = Loc["Roleplay quests (Kinship)"], level = 42, size = 22, icon = { texture = QM.PIN_ICON },
     perMap = function(uiMapID, marks)
       if S().questPins == false then return end
       for _, item in ipairs(QM.cache) do
@@ -551,14 +552,14 @@ local function HookForeverMap()
             size = item.index and 16 or 22,
             tooltip = function(tooltip)
               local e = item.quest
-              tooltip:SetText(UI.Escape(e.title or "Roleplay quest"), 1, 0.82, 0)
+              tooltip:SetText(UI.Escape(e.title or Loc["Roleplay quest"]), 1, 0.82, 0)
               if item.index then
                 local o = e.objectives[item.index]
                 tooltip:AddLine(("%d. %s"):format(item.index, UI.Escape(o and o.text or "")), 1, 1, 1, true)
               end
               local d = QM.Distance(mk)
               if d then tooltip:AddLine(QM.DistText(d), 0.55, 0.80, 1) end
-              tooltip:AddLine("Click to open the quest in Kinship.", 0.6, 0.6, 0.6)
+              tooltip:AddLine(Loc["Click to open the quest in Kinship."], 0.6, 0.6, 0.6)
             end,
             click = function() K.Quests:Open(item.quest.id) end,
           }
@@ -593,9 +594,9 @@ K:On("LOGIN", function()
 end)
 K:On("QUESTS", function() QM.cache = Markers(); K.Try("map pins", wm.Layout, wm) end)
 
-K:RegisterSettings({ id = "questMarkers", title = "Quest markers", order = 35,
+K:RegisterSettings({ id = "questMarkers", title = Loc["Quest markers"], order = 35,
   shown = function() return K:ExtOn("campaigns") end, build = function(card)
-  card:Toggle("On the world map", "Shows map pins for your tracked roleplay quests and their objectives.",
+  card:Toggle(Loc["On the world map"], Loc["Shows map pins for your tracked roleplay quests and their objectives."],
     { get = function() return S().questPins ~= false end, set = function(v) K.db.settings.questPins = v; K.Try("map pins", wm.Layout, wm) end })
-  card:Toggle("On the minimap", "Shows the same pins on your minimap. Distant ones sit at the edge.", "questMinimap")
+  card:Toggle(Loc["On the minimap"], Loc["Shows the same pins on your minimap. Distant ones sit at the edge."], "questMinimap")
 end })

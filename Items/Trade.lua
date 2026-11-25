@@ -12,6 +12,7 @@
 --   itemDone   giver -> recipient   { id }   (stops the recipient repeating its answer)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -29,11 +30,11 @@ local SEND_LIMIT, SEND_WINDOW = 6, 60
 local RECV_LIMIT, RECV_WINDOW = 4, 120
 
 local REASONS = {
-  declined = "turned it down",
-  busy = "is still answering another offer from you",
-  full = "has no room in their bags",
-  closed = "isn't accepting items",
-  expired = "didn't answer in time",
+  declined = Loc["turned it down"],
+  busy = Loc["is still answering another offer from you"],
+  full = Loc["has no room in their bags"],
+  closed = Loc["isn't accepting items"],
+  expired = Loc["didn't answer in time"],
 }
 
 local Short = I.Short
@@ -107,22 +108,22 @@ end
 function T:Offer(target, entries, opts)
   opts = opts or {}
   local src = opts.src or "bag"
-  if type(target) ~= "string" or strtrim(target) == "" then return nil, "Who should receive it?" end
+  if type(target) ~= "string" or strtrim(target) == "" then return nil, Loc["Who should receive it?"] end
   target = strtrim(target)
   local key = K.NameKey(target)
-  if not key or key == K.NameKey(K:MyName()) then return nil, "You can't give items to yourself." end
-  if K:IsIgnored(target) then return nil, "You're ignoring " .. Short(target) .. "." end
-  if not K.Net:Ready() then return nil, "Kinship can't send messages right now." end
-  if self:PendingTo(target) then return nil, "You're already waiting on " .. Short(target) .. "." end
-  if not Allowed() then return nil, "Slow down a little: too many offers in a minute." end
-  if type(entries) ~= "table" or #entries == 0 or #entries > MAX_ENTRIES then return nil, "Choose something to give." end
+  if not key or key == K.NameKey(K:MyName()) then return nil, Loc["You can't give items to yourself."] end
+  if K:IsIgnored(target) then return nil, Loc["You're ignoring "] .. Short(target) .. "." end
+  if not K.Net:Ready() then return nil, Loc["Kinship can't send messages right now."] end
+  if self:PendingTo(target) then return nil, Loc["You're already waiting on "] .. Short(target) .. "." end
+  if not Allowed() then return nil, Loc["Slow down a little: too many offers in a minute."] end
+  if type(entries) ~= "table" or #entries == 0 or #entries > MAX_ENTRIES then return nil, Loc["Choose something to give."] end
 
   local items, msgItems = {}, {}
   for _, e in ipairs(entries) do
     local def = I:Get(e.id)
     local n = math.floor(Num(e.n) or 0)
-    if not def or n < 1 then return nil, "Choose something to give." end
-    if SrcCount(src, e.id) - self:Reserved(src, e.id) < n then return nil, "You don't have that many to give." end
+    if not def or n < 1 then return nil, Loc["Choose something to give."] end
+    if SrcCount(src, e.id) - self:Reserved(src, e.id) < n then return nil, Loc["You don't have that many to give."] end
     items[#items + 1] = { id = e.id, n = n, slot = e.slot }
     local doc = def.documentId and K.Documents and K.Documents:Pack(def.documentId) or nil
     msgItems[#msgItems + 1] = { d = I:Pack(e.id), n = n, doc = doc }
@@ -130,7 +131,7 @@ function T:Offer(target, entries, opts)
 
   local tid = ("%d%06d"):format(Now(), math.random(0, 999999))
   if not K.Net:Send("itemOffer", { id = tid, items = msgItems, req = opts.req }, "WHISPER", target) then
-    return nil, "The offer couldn't be sent."
+    return nil, Loc["The offer couldn't be sent."]
   end
   self.sent[#self.sent + 1] = GetTime()
   local o = { id = tid, to = target, key = key, items = items, src = src, t = Now(), state = "pending",
@@ -153,7 +154,7 @@ local function Describe(o)
   local e = o.items[1]
   local def = e and I:Get(e.id)
   local s = I:Label(def, e and e.n)
-  if #o.items > 1 then s = s .. (" and %d more"):format(#o.items - 1) end
+  if #o.items > 1 then s = s .. (Loc[" and %d more"]):format(#o.items - 1) end
   return s, def
 end
 
@@ -163,8 +164,8 @@ function T:Notify(o, why)
   local good = why == "done"
   UI.Toast({
     icon = def and I.IconTexture(def.icon) or I.DEFAULT_ICON, iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-    title = good and ("Given to " .. Short(o.to)) or (Short(o.to) .. " " .. (REASONS[why] or REASONS.declined)),
-    text = good and what or (what .. " stays with you."),
+    title = good and (Loc["Given to "] .. Short(o.to)) or (Short(o.to) .. " " .. (REASONS[why] or REASONS.declined)),
+    text = good and what or (what .. Loc[" stays with you."]),
     color = good and I.Quality(def and def.quality).color or { 0.90, 0.36, 0.30 },
     duration = 6,
   })
@@ -246,13 +247,13 @@ function T:Accept(key)
   if not r or r.state ~= "pending" then return end
   if GetTime() - r.at > OFFER_WINDOW then
     r.state = "declined"
-    I.Error("That offer has expired.")
+    I.Error(Loc["That offer has expired."])
     return
   end
   if not Fits(r) then
     r.state = "declined"
     Reply(r, false, "full")
-    I.Error("There's no room in your bags.")
+    I.Error(Loc["There's no room in your bags."])
     return
   end
   for _, e in ipairs(r.entries) do
@@ -270,7 +271,7 @@ function T:Accept(key)
   local first = r.entries[1]
   local def = I:Get(first.def.id)
   if not r.req then
-    K:Print(("You received %s from %s."):format(I:Label(def, first.n), Short(r.from)))
+    K:Print((Loc["You received %s from %s."]):format(I:Label(def, first.n), Short(r.from)))
   end
   if self.offerFrame and self.offerFrame.key == key then self.offerFrame:Hide() end
   K:Fire("TRADE")
@@ -356,14 +357,14 @@ K.Net:On("itemOffer", function(msg, sender, channel)
   local d = first.def
   local qc = I.Quality(d.quality).color
   local text = I:Label(d, first.n)
-  if #entries > 1 then text = text .. (" and %d more"):format(#entries - 1) end
+  if #entries > 1 then text = text .. (Loc[" and %d more"]):format(#entries - 1) end
   if d.description ~= "" then
     local line = d.description:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("\n.*", "")
     text = text .. "\n|cffb8b0a0" .. UI.Escape(I.Cut(line, 90)) .. "|r"
   end
   UI.Toast({
     icon = I.IconTexture(d.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-    title = Short(sender) .. " offers you " .. (#entries == 1 and first.n == 1 and "an item" or "items"),
+    title = Short(sender) .. Loc[" offers you "] .. (#entries == 1 and first.n == 1 and Loc["an item"] or Loc["items"]),
     text = text, color = qc, duration = OFFER_WINDOW - 4, sound = "TELL_MESSAGE",
     onClick = function() T:ShowOffer(key) end,
     actions = { { label = "Decline", fn = function() T:Decline(key) end }, { label = "Accept", fn = function() T:Accept(key) end } },
@@ -378,7 +379,7 @@ function T:ShowOffer(key)
   if not r or r.state ~= "pending" then return end
   local f = self.offerFrame
   if not f then
-    f = UI.Window("KinshipRPItemOffer", "An offer", 360, 330)
+    f = UI.Window("KinshipRPItemOffer", Loc["An offer"], 360, 330)
     f:SetFrameStrata("DIALOG")
     f.slot = I.NewSlot(f, 52)
     f.slot:SetPoint("TOPLEFT", 18, -52)
@@ -404,7 +405,7 @@ function T:ShowOffer(key)
     f:HookScript("OnUpdate", function(self)
       local rr = T.inc[self.key or ""]
       if not rr or rr.state ~= "pending" then self:Hide() return end
-      self.timer:SetText(("Expires in %ds"):format(math.max(0, math.ceil(OFFER_WINDOW - (GetTime() - rr.at)))))
+      self.timer:SetText((Loc["Expires in %ds"]):format(math.max(0, math.ceil(OFFER_WINDOW - (GetTime() - rr.at)))))
     end)
     self.offerFrame = f
   end
@@ -416,14 +417,14 @@ function T:ShowOffer(key)
   f.slot.def = d
   f.name:SetText(UI.Escape(d.name) .. (e.n > 1 and (" x" .. e.n) or ""))
   f.name:SetTextColor(qc[1], qc[2], qc[3])
-  f.from:SetText(("From %s  ·  %s"):format(Short(r.from), I.Quality(d.quality).label))
-  local body = d.description ~= "" and UI.Clean(d.description) or "No description."
+  f.from:SetText((Loc["From %s  ·  %s"]):format(Short(r.from), I.Quality(d.quality).label))
+  local body = d.description ~= "" and UI.Clean(d.description) or Loc["No description."]
   if d.flavor ~= "" then body = body .. "\n|cffe6c97a\"" .. UI.Clean(d.flavor) .. "\"|r" end
   f.desc:SetText(body)
   local extra = {}
-  if d.useText ~= "" then extra[#extra + 1] = "Use: " .. UI.Escape(d.useText) end
-  if e.doc then extra[#extra + 1] = "Carries writing: " .. UI.Escape(K.Documents.Title(e.doc)) end
-  if #r.entries > 1 then extra[#extra + 1] = ("And %d more item%s."):format(#r.entries - 1, #r.entries > 2 and "s" or "") end
+  if d.useText ~= "" then extra[#extra + 1] = Loc["Use: "] .. UI.Escape(d.useText) end
+  if e.doc then extra[#extra + 1] = Loc["Carries writing: "] .. UI.Escape(K.Documents.Title(e.doc)) end
+  if #r.entries > 1 then extra[#extra + 1] = (Loc["And %d more item%s."]):format(#r.entries - 1, #r.entries > 2 and "s" or "") end
   f.extra:SetText(table.concat(extra, "\n"))
   f:Show()
   f:Raise()
@@ -443,20 +444,20 @@ end
 
 function T:BuildGive()
   if self.give then return self.give end
-  local f = UI.Window("KinshipRPGive", "Give an item", GW, GH)
+  local f = UI.Window("KinshipRPGive", Loc["Give an item"], GW, GH)
   f:SetFrameStrata("DIALOG")
   self.give = f
-  f.to = UI.Field(f, "To", 220, 60, nil, "desk")
+  f.to = UI.Field(f, Loc["To"], 220, 60, nil, "desk")
   f.to:SetPoint("TOPLEFT", 18, -46)
   K.Suggest(f.to.edit)   -- names you know, as you type
-  f.toTarget = UI.Button(f, "My target", 96, 23)
+  f.toTarget = UI.Button(f, Loc["My target"], 96, 23)
   f.toTarget:SetPoint("TOPLEFT", 248, -60)
   f.toTarget:SetScript("OnClick", function()
     local n = TargetName("target")
-    if n and UnitIsPlayer("target") then f.to.edit:SetText(n) else I.Error("Target a player first.") end
+    if n and UnitIsPlayer("target") then f.to.edit:SetText(n) else I.Error(Loc["Target a player first."]) end
   end)
 
-  local sec = UI.Section(f, "From your bags", true)
+  local sec = UI.Section(f, Loc["From your bags"], true)
   sec:SetPoint("TOPLEFT", 25, -104)
   f.cells = {}
   for i = 1, I.SLOTS do
@@ -471,7 +472,7 @@ function T:BuildGive()
     end)
     f.cells[i] = s
   end
-  f.empty = UI.Text(f, "Your bags are empty. Make something in the Workshop first.", "Body", "deskSubtle", GW - 60)
+  f.empty = UI.Text(f, Loc["Your bags are empty. Make something in the Workshop first."], "Body", "deskSubtle", GW - 60)
   f.empty:SetPoint("TOP", 0, -190)
   f.empty:SetJustifyH("CENTER")
 
@@ -494,15 +495,15 @@ function T:BuildGive()
   end
   f.plus:SetScript("OnClick", function() step(1) end)
   f.minus:SetScript("OnClick", function() step(-1) end)
-  UI.Tooltip(f.plus, "More", "Shift-click for all of them.")
+  UI.Tooltip(f.plus, Loc["More"], Loc["Shift-click for all of them."])
 
   f.status = UI.Text(f, "", "Small", "deskSubtle", 220)
   f.status:SetPoint("BOTTOMLEFT", 18, 22)
-  f.offer = UI.Button(f, "Offer", 110, 26)
+  f.offer = UI.Button(f, Loc["Offer"], 110, 26)
   f.offer:SetPoint("BOTTOMRIGHT", -16, 16)
   f.offer:SetScript("OnClick", function()
     local s = f.slot and I:Slot(f.slot)
-    if not s then I.Error("Choose an item to give.") return end
+    if not s then I.Error(Loc["Choose an item to give."]) return end
     local o, err = T:Offer(f.to.edit:GetText(), { { id = s.def, n = f.n or 1, slot = f.slot } })
     if not o then I.Error(err) return end
     f.waiting = o
@@ -514,7 +515,7 @@ function T:BuildGive()
     if not self.waiting or self.waiting.state ~= "pending" then return end
     self.dots = (self.dots or 0) + elapsed
     local n = math.floor(self.dots * 2) % 4
-    self.status:SetText("Waiting for " .. Short(self.waiting.to) .. string.rep(".", n))
+    self.status:SetText(Loc["Waiting for "] .. Short(self.waiting.to) .. string.rep(".", n))
   end)
   K:On("TRADE", function() if f:IsShown() then T:RefreshGive() end end)
   K:On("INVENTORY", function() if f:IsShown() then T:RefreshGive() end end)
@@ -555,7 +556,7 @@ function T:RefreshGive()
     f.minus:SetEnabled(f.n > 1)
     f.plus:SetEnabled(f.n < avail)
   else
-    f.pick:SetText(idx > 0 and "Choose an item" or "")
+    f.pick:SetText(idx > 0 and Loc["Choose an item"] or "")
     f.pick:SetTextColor(unpack(K:Theme().deskSubtle))
     f.count:SetText("")
     f.minus:SetEnabled(false)
@@ -567,9 +568,9 @@ function T:RefreshGive()
   f.offer:SetEnabled(def ~= nil and not waiting and I:Available(s.def) >= 1)
   if not waiting then
     local w = f.waiting
-    if w and w.state == "done" then f.status:SetText("Given to " .. Short(w.to) .. ".")
-    elseif w and (w.state == "declined" or w.state == "expired") then f.status:SetText("Not given. It stays with you.")
-    else f.status:SetText("They'll be asked to accept it.") end
+    if w and w.state == "done" then f.status:SetText(Loc["Given to "] .. Short(w.to) .. ".")
+    elseif w and (w.state == "declined" or w.state == "expired") then f.status:SetText(Loc["Not given. It stays with you."])
+    else f.status:SetText(Loc["They'll be asked to accept it."]) end
   end
 end
 
@@ -597,7 +598,7 @@ local function CanGiveTo(unit)
 end
 
 K:RegisterTargetButton({
-  id = "giveItem", icon = "Interface\\Icons\\INV_Misc_Gift_01", label = "Give an item", order = 50,
+  id = "giveItem", icon = "Interface\\Icons\\INV_Misc_Gift_01", label = Loc["Give an item"], order = 50,
   shown = function(unit) return K:ExtOn("inventory") and CanGiveTo(unit) end,
   onClick = function(unit, name)
     local n = TargetName(unit) or (Safe(name) and type(name) == "string" and name) or nil

@@ -12,6 +12,7 @@
 -- filter, its words or a profile's flag change.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -32,9 +33,9 @@ local DEFAULT_WORDS = {
 -- Profile keys that never hold player-written text.
 local SKIP = { addon = true, status = true, stance = true, crest = true, consent = true, icon = true, music = true }
 local LEVELS = {
-  { key = 1, label = "Strict" },    -- one listed word is enough
-  { key = 2, label = "Balanced" },  -- two different listed words
-  { key = 3, label = "Relaxed" },   -- three different listed words
+  { key = 1, label = Loc["Strict"] },    -- one listed word is enough
+  { key = 2, label = Loc["Balanced"] },  -- two different listed words
+  { key = 3, label = Loc["Relaxed"] },   -- three different listed words
 }
 
 local function DB() return K.db and K.db.safety end
@@ -372,14 +373,14 @@ function Confirm:Build()
   body:SetPoint("TOPLEFT", 18, -84)
   body:SetSpacing(2)
 
-  self.reason = UI.Field(card, "Reason (only you can see it)", 364, 80)
+  self.reason = UI.Field(card, Loc["Reason (only you can see it)"], 364, 80)
   self.reason:SetPoint("TOPLEFT", 18, -140)
   self.reason.edit:SetScript("OnEnterPressed", function() Confirm:Accept() end)
 
-  self.ok = UI.Button(card, ("|cff%sIgnore|r"):format(UI.Hex(DANGER)), 110, 26)   -- on a dark teal button
+  self.ok = UI.Button(card, (Loc["|cff%sIgnore|r"]):format(UI.Hex(DANGER)), 110, 26)   -- on a dark teal button
   self.ok:SetPoint("BOTTOMRIGHT", -16, 16)
   self.ok:SetScript("OnClick", function() Confirm:Accept() end)
-  local cancel = UI.Button(card, "Cancel", 90, 26)
+  local cancel = UI.Button(card, Loc["Cancel"], 90, 26)
   cancel:SetPoint("RIGHT", self.ok, "LEFT", -8, 0)
   cancel:SetScript("OnClick", function() Confirm:Close() end)
 end
@@ -390,8 +391,8 @@ function Confirm:Open(name)
   local short = Short(name)
   local reg = K:ProfileOf(name)
   local rp = reg and reg.profile and strtrim(UI.Clean(reg.profile.rpName or "")) or ""
-  self.title:SetText("Ignore " .. short .. "?")
-  self.sub:SetText(rp ~= "" and ("Known to you as " .. UI.Escape((rp:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))) or name)
+  self.title:SetText(Loc["Ignore "] .. short .. "?")
+  self.sub:SetText(rp ~= "" and (Loc["Known to you as "] .. UI.Escape((rp:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")))) or name)
   self.reason.edit:SetText("")
   S.host:Show()
   self.ov:Show()
@@ -407,9 +408,9 @@ function Confirm:Accept()
     if SOUNDKIT then PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB) end
     UI.Toast({
       icon = SHIELD, round = true, color = DANGER,
-      title = "Ignoring " .. Short(name),
-      text = "Their profile and messages are hidden from you.",
-      actions = { { label = "Undo", fn = function() K:Unignore(name) end } },
+      title = Loc["Ignoring "] .. Short(name),
+      text = Loc["Their profile and messages are hidden from you."],
+      actions = { { label = Loc["Undo"], fn = function() K:Unignore(name) end } },
       duration = 8,
     })
   end
@@ -467,17 +468,17 @@ function S:Cover(parent)
   c.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   UI.Round(c.icon)
 
-  c.title = UI.Text(c, "This profile may contain mature content", "Header", "heading", 250)
+  c.title = UI.Text(c, Loc["This profile may contain mature content"], "Header", "heading", 250)
   c.title:SetPoint("TOP", mid, "CENTER", 0, 14)
   c.title:SetJustifyH("CENTER")
   c.title:SetSpacing(2)
-  c.text = UI.Text(c, "Some of its words match your mature filter. You can look anyway, or leave it covered.",
+  c.text = UI.Text(c, Loc["Some of its words match your mature filter. You can look anyway, or leave it covered."],
     "Small", "subtle", 240)
   c.text:SetPoint("TOP", c.title, "BOTTOM", 0, -8)
   c.text:SetJustifyH("CENTER")
   c.text:SetSpacing(2)
 
-  c.show = UI.Button(c, "Show anyway", 116, 26)
+  c.show = UI.Button(c, Loc["Show anyway"], 116, 26)
   c.show:SetPoint("TOPRIGHT", c.text, "BOTTOM", -4, -16)
   c.show:SetScript("OnClick", function()
     local name = c.name
@@ -489,8 +490,8 @@ function S:Cover(parent)
     end)
     K:Unflag(name)
   end)
-  UI.Tooltip(c.show, "Show anyway", "Uncover this profile, now and from now on.")
-  c.settings = UI.Button(c, "Filter settings", 116, 26)
+  UI.Tooltip(c.show, Loc["Show anyway"], Loc["Uncover this profile, now and from now on."])
+  c.settings = UI.Button(c, Loc["Filter settings"], 116, 26)
   c.settings:SetPoint("TOPLEFT", c.text, "BOTTOM", 4, -16)
   c.settings:SetScript("OnClick", function() if K.Journal then K.Journal:Open("settings") end end)
 
@@ -527,17 +528,17 @@ local function IsOther(unit, name)
 end
 
 K:RegisterTargetButton({
-  id = "ignore", order = 90, label = "Ignore profile", icon = SHIELD,
+  id = "ignore", order = 90, label = Loc["Ignore profile"], icon = SHIELD,
   shown = function(unit, name) return IsOther(unit, name) and not K:IsIgnored(name) end,
   onClick = function(_, name) S:ConfirmIgnore(name) end,
 })
 K:RegisterTargetButton({
-  id = "unignore", order = 90, label = "Stop ignoring", icon = SHIELD,
+  id = "unignore", order = 90, label = Loc["Stop ignoring"], icon = SHIELD,
   shown = function(unit, name) return IsOther(unit, name) and K:IsIgnored(name) end,
   onClick = function(_, name)
     if K:Unignore(name) then
-      UI.Toast({ icon = SHIELD, round = true, title = "No longer ignoring " .. Short(name),
-        text = "Their profile will show again when it next arrives." })
+      UI.Toast({ icon = SHIELD, round = true, title = Loc["No longer ignoring "] .. Short(name),
+        text = Loc["Their profile will show again when it next arrives."] })
     end
   end,
 })
@@ -555,7 +556,7 @@ function S:RefreshSettings()
   ui.ignoreCount:SetText(#ignored > 0 and tostring(#ignored) or "")
   ui.ignoreList:SetItems(ignored, function(row, e)
     row.name:SetText(UI.Escape(Short(e.name)))
-    local when = e.t and ("Ignored " .. UI.Ago(e.t)) or "Ignored"
+    local when = e.t and (Loc["Ignored "] .. UI.Ago(e.t)) or Loc["Ignored"]
     row.sub:SetText(e.reason and (when .. "  ·  " .. UI.Escape(e.reason)) or when)
   end)
 
@@ -564,9 +565,9 @@ function S:RefreshSettings()
   table.sort(words)
   local flagged = self:FlaggedCount()
   if self.scanning then
-    ui.wordCount:SetText("Checking profiles...")
+    ui.wordCount:SetText(Loc["Checking profiles..."])
   else
-    ui.wordCount:SetText(("%d words  ·  %d covered"):format(#words, flagged))
+    ui.wordCount:SetText((Loc["%d words  ·  %d covered"]):format(#words, flagged))
   end
   ui.wordList:SetItems(words, function(row, w) row.word:SetText(UI.Escape(w)) end)
   -- The words stay out of sight until you ask to see them.
@@ -575,17 +576,17 @@ function S:RefreshSettings()
   ui.wordList:SetShown(shown)
   ui.wordCover:SetShown(not shown)
   ui.hideWords:SetShown(shown)
-  ui.wordCoverText:SetText(#words == 0 and "Your list is empty."
-    or ((#words == 1 and "1 word" or (#words .. " words")) .. " in your list."))
+  ui.wordCoverText:SetText(#words == 0 and Loc["Your list is empty."]
+    or ((#words == 1 and Loc["1 word"] or (#words .. Loc[" words"])) .. Loc[" in your list."]))
 end
 
-K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = function(card)
+K:RegisterSettings({ id = "safety", title = Loc["Safety"], order = 40, build = function(card)
   local W = card:GetWidth() - 32
-  card:Toggle("Mature content filter", "Hides profiles that use words from your list. You can still choose to view them.", {
+  card:Toggle(Loc["Mature content filter"], Loc["Hides profiles that use words from your list. You can still choose to view them."], {
     get = function() return K.db.settings.matureFilter and true or false end,
     set = function(v) K.db.settings.matureFilter = v; K:Fire("SAFETY"); RefreshJournal() end,
   })
-  card:Segments("Filter sensitivity", LEVELS, function() return DB() and DB().level or 2 end,
+  card:Segments(Loc["Filter sensitivity"], LEVELS, function() return DB() and DB().level or 2 end,
     function(v) if DB() then DB().level = v; S:RescanAll() end end, 92)
 
   local ui = {}
@@ -596,13 +597,13 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   local y = card.y
 
   -- Ignored players ---------------------------------------------------------
-  local lh = UI.Text(card, "Ignored players", "Label", "subtle")
+  local lh = UI.Text(card, Loc["Ignored players"], "Label", "subtle")
   lh:SetPoint("TOPLEFT", 17, y)
   ui.ignoreCount = UI.Text(card, "", "Label", "subtle")
   ui.ignoreCount:SetPoint("LEFT", lh, "RIGHT", 8, 0)
   ui.ignoreCount:SetAlpha(0.8)
   ui.ignoreList = UI.List(card, colW, LIST_H, 42,
-    "You haven't ignored anyone. Ignore someone from the target bar or below to hide them from Kinship.",
+    Loc["You haven't ignored anyone. Ignore someone from the target bar or below to hide them from Kinship."],
     function(row)
       row.name = UI.Text(row, "", "Body", "heading", colW - 140)
       row.name:SetPoint("TOPLEFT", 10, -7)
@@ -610,15 +611,15 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
       row.sub = UI.Text(row, "", "Small", "subtle", colW - 140)
       row.sub:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -3)
       row.sub:SetWordWrap(false)
-      row.stop = UI.Button(row, "Stop ignoring", 100, 22)
+      row.stop = UI.Button(row, Loc["Stop ignoring"], 100, 22)
       row.stop:SetPoint("RIGHT", -6, 0)
       row.stop:SetScript("OnClick", function() if row.item then K:Unignore(row.item.key) end end)
     end, { emptyIcon = K.Art("IconKin") })
   ui.ignoreList:SetPoint("TOPLEFT", 16, y - 16)
 
-  local ie = HintEdit(card, colW - 92, "Ignore someone by name", 60)
+  local ie = HintEdit(card, colW - 92, Loc["Ignore someone by name"], 60)
   ie:SetPoint("TOPLEFT", 16, y - 16 - LIST_H - 8)
-  local ib = UI.Button(card, "Ignore", 84, 24)
+  local ib = UI.Button(card, Loc["Ignore"], 84, 24)
   ib:SetPoint("LEFT", ie, "RIGHT", 8, 0)
   local function addIgnore()
     local name = strtrim(ie:GetText() or "")
@@ -628,13 +629,13 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   ie:SetScript("OnEnterPressed", addIgnore)
 
   -- Filter words ------------------------------------------------------------
-  local wh = UI.Text(card, "Filter words", "Label", "subtle")
+  local wh = UI.Text(card, Loc["Filter words"], "Label", "subtle")
   wh:SetPoint("TOPLEFT", x2 + 1, y)
   ui.wordCount = UI.Text(card, "", "Label", "subtle")
   ui.wordCount:SetPoint("LEFT", wh, "RIGHT", 8, 0)
   ui.wordCount:SetAlpha(0.8)
   ui.wordList = UI.List(card, colW, LIST_H, 26,
-    "Your list is empty, so no profiles are hidden. Add words below, or click Reset for the default list.",
+    Loc["Your list is empty, so no profiles are hidden. Add words below, or click Reset for the default list."],
     function(row)
       row.word = UI.Text(row, "", "Body", "text", colW - 60)
       row.word:SetPoint("LEFT", 10, 0)
@@ -642,7 +643,7 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
       row.remove = UI.CloseButton(row, true, 18)
       row.remove:SetPoint("RIGHT", -6, 0)
       row.remove:SetScript("OnClick", function() if row.item then S:RemoveWord(row.item) end end)
-      UI.Tooltip(row.remove, "Remove word")
+      UI.Tooltip(row.remove, Loc["Remove word"])
     end, { emptyIcon = K.Art("IconNote") })
   ui.wordList:SetPoint("TOPLEFT", x2, y - 16)
 
@@ -661,34 +662,34 @@ K:RegisterSettings({ id = "safety", title = "Safety", order = 40, build = functi
   ui.wordCoverText:SetPoint("TOP", art, "BOTTOM", 0, -8)
   ui.wordCoverText:SetJustifyH("CENTER")
   ui.wordCoverText:SetWordWrap(true)
-  local show = UI.Button(cover, "Show words", 110, 24)
+  local show = UI.Button(cover, Loc["Show words"], 110, 24)
   show:SetPoint("TOP", ui.wordCoverText, "BOTTOM", 0, -10)
   show:SetScript("OnClick", function() ui.wordsShown = true; S:RefreshSettings() end)
   ui.wordCover = cover
-  ui.hideWords = UI.Button(card, "Hide words", 90, 20)
+  ui.hideWords = UI.Button(card, Loc["Hide words"], 90, 20)
   ui.hideWords:SetPoint("BOTTOMRIGHT", ui.wordList, "TOPRIGHT", 0, 2)
   ui.hideWords:SetScript("OnClick", function() ui.wordsShown = false; S:RefreshSettings() end)
   ui.hideWords:Hide()
   -- Hidden again when Settings closes (the card goes, and the list with it).
   card:HookScript("OnHide", function() ui.wordsShown = false end)
 
-  local we = HintEdit(card, colW - 152, "Add words", 60)
+  local we = HintEdit(card, colW - 152, Loc["Add words"], 60)
   we:SetPoint("TOPLEFT", x2, y - 16 - LIST_H - 8)
-  local wb = UI.Button(card, "Add", 64, 24)
+  local wb = UI.Button(card, Loc["Add"], 64, 24)
   wb:SetPoint("LEFT", we, "RIGHT", 8, 0)
   local function addWords()
     if S:AddWords(we:GetText() or "") >= 0 then we:SetText(""); we:ClearFocus() end
   end
   wb:SetScript("OnClick", addWords)
   we:SetScript("OnEnterPressed", addWords)
-  local reset = UI.Button(card, "Reset", 72, 24)
+  local reset = UI.Button(card, Loc["Reset"], 72, 24)
   reset:SetPoint("LEFT", wb, "RIGHT", 8, 0)
   reset:SetScript("OnClick", function() S:ResetWords() end)
-  UI.Tooltip(reset, "Reset words", "Restores the default list. Your own changes are lost.")
+  UI.Tooltip(reset, Loc["Reset words"], Loc["Restores the default list. Your own changes are lost."])
 
   y = y - 16 - LIST_H - 8 - 24
   card:Space(card.y - y + 12)
-  card:Note("Kinship checks every part of a profile, including names, descriptions, history and glances. It also catches plurals, repeated letters (\"sexxx\"), spaced-out letters and swaps like \"s3x\". Ignoring someone also deletes the profile Kinship saved for them.")
+  card:Note(Loc["Kinship checks every part of a profile, including names, descriptions, history and glances. It also catches plurals, repeated letters (\"sexxx\"), spaced-out letters and swaps like \"s3x\". Ignoring someone also deletes the profile Kinship saved for them."])
   card:OnRefresh(function() S:RefreshSettings() end)
 end })
 

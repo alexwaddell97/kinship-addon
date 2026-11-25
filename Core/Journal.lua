@@ -3,6 +3,7 @@
 -- page itself on the desk below it.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local J = { pages = {} }
@@ -82,7 +83,7 @@ function J:Build()
   logo:SetTexture(K.ICON)
   local name = UI.Text(side, "Kinship", "Title", "deskHeading")
   name:SetPoint("TOPLEFT", logo, "TOPRIGHT", 10, 0)
-  local tag = UI.Text(side, "Roleplay journal", "Small", "deskSubtle")
+  local tag = UI.Text(side, Loc["Roleplay journal"], "Small", "deskSubtle")
   tag:SetPoint("TOPLEFT", name, "BOTTOMLEFT", 0, -3)
 
   -- Settings sits at the foot of the sidebar, apart from the pages, under a hairline.
@@ -90,7 +91,7 @@ function J:Build()
   footLine:SetPoint("BOTTOMLEFT", 14, 50)
   footLine:SetPoint("BOTTOMRIGHT", -14, 50)
   UI:OnTheme(function(t) footLine:SetVertexColor(unpack(t.line)) end)
-  local gear = UI.NavButton(side, "Settings", { "Interface\\Icons\\INV_Misc_Gear_01", round = true }, SIDE - 1, function()
+  local gear = UI.NavButton(side, Loc["Settings"], { "Interface\\Icons\\INV_Misc_Gear_01", round = true }, SIDE - 1, function()
     local i = J:Index("settings")
     if i then J:Show(i) end
   end)
@@ -105,7 +106,7 @@ function J:Build()
     for i, page in ipairs(self.pages) do
       if not page.hidden and not page.host and Group(page) == group then
         if not g.header then
-          g.header = UI.Text(side, group:upper(), "Label", "deskSubtle")
+          g.header = UI.Text(side, Loc[group]:upper(), "Label", "deskSubtle")
           g.header:SetAlpha(0.8)
         end
         local b = UI.NavButton(side, page.title, NavIcon(page), SIDE - 1, function() J:Show(i) end)
@@ -200,7 +201,7 @@ function J:Ensure(i)
   local ok, err = pcall(page.build, c)
   c.ok = ok
   if ok then return true end
-  K:Print(("The %s page couldn't open. Please report this: %s"):format(page.title or page.id, tostring(err)))
+  K:Print((Loc["The %s page couldn't open. Please report this: %s"]):format(page.title or page.id, tostring(err)))
   for _, child in ipairs({ c:GetChildren() }) do child:Hide() end
   for _, region in ipairs({ c:GetRegions() }) do region:Hide() end
   local card = UI.Panel(c)
@@ -286,7 +287,7 @@ function J:Open(id)
   self:Build()
   local i = self:Index(id)
   if i and not Enabled(self.pages[i]) then
-    K:Print(("%s is switched off (Settings > Extended features)."):format(self.pages[i].title or id))
+    K:Print((Loc["%s is switched off (Settings > Extended features)."]):format(self.pages[i].title or id))
     i = nil
   end
   self.frame:Show()

@@ -19,6 +19,7 @@
 -- Fires "AURAS" whenever your effects or designs change.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -37,16 +38,16 @@ local MIN, HOUR, DAY = 60, 3600, 86400
 ---------------------------------------------------------------------------
 A.KIND_ORDER = { "boon", "bane", "wound", "capture", "state" }
 A.KINDS = {
-  boon    = { label = "Boon",       plural = "Boons",   color = { 0.40, 0.80, 0.48 } },
-  bane    = { label = "Affliction", plural = "Banes",   color = { 0.72, 0.46, 0.95 } },
-  wound   = { label = "Wound",      plural = "Wounds",  color = { 0.90, 0.36, 0.30 }, consent = "RI" },
-  capture = { label = "Capture",    plural = "Capture", color = { 0.95, 0.76, 0.36 }, consent = "RO" },
-  state   = { label = "State",      plural = "States",  color = { 0.55, 0.74, 0.86 } },
+  boon    = { label = Loc["Boon"],       plural = Loc["Boons"],   color = { 0.40, 0.80, 0.48 } },
+  bane    = { label = Loc["Affliction"], plural = Loc["Banes"],   color = { 0.72, 0.46, 0.95 } },
+  wound   = { label = Loc["Wound"],      plural = Loc["Wounds"],  color = { 0.90, 0.36, 0.30 }, consent = "RI" },
+  capture = { label = Loc["Capture"],    plural = Loc["Capture"], color = { 0.95, 0.76, 0.36 }, consent = "RO" },
+  state   = { label = Loc["State"],      plural = Loc["States"],  color = { 0.55, 0.74, 0.86 } },
 }
 
 A.DURATIONS = {
-  { key = 10 * MIN, label = "10 min" }, { key = HOUR, label = "1 hour" }, { key = DAY, label = "1 day" },
-  { key = 3 * DAY, label = "3 days" }, { key = 7 * DAY, label = "1 week" }, { key = 0, label = "Ongoing" },
+  { key = 10 * MIN, label = Loc["10 min"] }, { key = HOUR, label = Loc["1 hour"] }, { key = DAY, label = Loc["1 day"] },
+  { key = 3 * DAY, label = Loc["3 days"] }, { key = 7 * DAY, label = Loc["1 week"] }, { key = 0, label = Loc["Ongoing"] },
 }
 
 local function P(id, kind, name, icon, dur, desc, nxt)
@@ -110,10 +111,10 @@ end
 function A.LeftShort(expires)
   if not expires then return nil end
   local s = math.max(0, expires - Now())
-  if s >= DAY then return ("%dd"):format(math.floor(s / DAY)) end
-  if s >= HOUR then return ("%dh"):format(math.floor(s / HOUR)) end
-  if s >= MIN then return ("%dm"):format(math.floor(s / MIN)) end
-  return ("%ds"):format(math.floor(s))
+  if s >= DAY then return (Loc["%dd"]):format(math.floor(s / DAY)) end
+  if s >= HOUR then return (Loc["%dh"]):format(math.floor(s / HOUR)) end
+  if s >= MIN then return (Loc["%dm"]):format(math.floor(s / MIN)) end
+  return (Loc["%ds"]):format(math.floor(s))
 end
 
 function A.Left(expires)
@@ -121,23 +122,23 @@ function A.Left(expires)
   local s = math.max(0, expires - Now())
   if s >= DAY then
     local d, h = math.floor(s / DAY), math.floor((s % DAY) / HOUR)
-    return h > 0 and ("%dd %dh"):format(d, h) or ("%dd"):format(d)
+    return h > 0 and (Loc["%dd %dh"]):format(d, h) or (Loc["%dd"]):format(d)
   elseif s >= HOUR then
     local h, m = math.floor(s / HOUR), math.floor((s % HOUR) / MIN)
-    return m > 0 and ("%dh %dm"):format(h, m) or ("%dh"):format(h)
+    return m > 0 and (Loc["%dh %dm"]):format(h, m) or (Loc["%dh"]):format(h)
   elseif s >= MIN then
-    return ("%dm"):format(math.floor(s / MIN))
+    return (Loc["%dm"]):format(math.floor(s / MIN))
   end
-  return ("%ds"):format(math.floor(s))
+  return (Loc["%ds"]):format(math.floor(s))
 end
 
 -- "1 hour", "3 days", "Ongoing"
 function A.DurLabel(dur)
   for _, d in ipairs(A.DURATIONS) do if d.key == dur then return d.label end end
-  if not dur or dur <= 0 then return "Ongoing" end
-  if dur >= DAY then return ("%d days"):format(math.floor(dur / DAY + 0.5)) end
-  if dur >= HOUR then return ("%d hours"):format(math.floor(dur / HOUR + 0.5)) end
-  return ("%d min"):format(math.max(1, math.floor(dur / MIN + 0.5)))
+  if not dur or dur <= 0 then return Loc["Ongoing"] end
+  if dur >= DAY then return (Loc["%d days"]):format(math.floor(dur / DAY + 0.5)) end
+  if dur >= HOUR then return (Loc["%d hours"]):format(math.floor(dur / HOUR + 0.5)) end
+  return (Loc["%d min"]):format(math.max(1, math.floor(dur / MIN + 0.5)))
 end
 
 -- Check and copy a design (yours, a preset, or one someone sent).
@@ -187,7 +188,7 @@ function A:SaveCustom(fields, id)
   raw.id = old and old.id or ("my#%d#%d"):format(time(), math.random(100000, 999999))
   raw.custom = true
   local def = A.Sanitize(raw)
-  if not def then return nil, "Give the effect a name first." end
+  if not def then return nil, Loc["Give the effect a name first."] end
   K.db.auraLib[def.id] = def
   K:Fire("AURAS")
   return def
@@ -231,8 +232,8 @@ function A:Apply(def, dur, from, note, quiet)
   local renewed = e ~= nil
   if not e then
     if #list >= MAX_ACTIVE then
-      if not quiet then UI.Toast({ icon = def.icon, round = true, title = "Too many effects",
-        text = "End one before taking on another.", color = A.Color(def.kind) }) end
+      if not quiet then UI.Toast({ icon = def.icon, round = true, title = Loc["Too many effects"],
+        text = Loc["End one before taking on another."], color = A.Color(def.kind) }) end
       return nil
     end
     e = { key = ("%d#%d"):format(Now(), math.random(1000, 9999)) }
@@ -244,10 +245,10 @@ function A:Apply(def, dur, from, note, quiet)
   e.t = Now()
   e.expires = dur > 0 and (Now() + dur) or nil
   if not quiet then
-    local how = (from and ("From " .. Short(from) .. ". ") or "") .. (e.expires and (A.DurLabel(dur) .. ".") or "Until you end it.")
+    local how = (from and (Loc["From "] .. Short(from) .. ". ") or "") .. (e.expires and (A.DurLabel(dur) .. ".") or Loc["Until you end it."])
     UI.Toast({
       icon = def.icon, round = true, color = A.Color(def.kind), duration = 5,
-      title = (renewed and "Renewed: " or "") .. UI.Escape(def.name),
+      title = (renewed and Loc["Renewed: "] or "") .. UI.Escape(def.name),
       text = how .. (def.desc ~= "" and (" " .. UI.Escape(def.desc)) or ""),
     })
   end
@@ -285,10 +286,10 @@ function A:Expire()
       if nxt then
         self:Apply(nxt, nxt.dur, e.from, e.note, true)
         UI.Toast({ icon = nxt.icon, round = true, color = A.Color(nxt.kind), duration = 6,
-          title = UI.Escape(e.name) .. " gives way", text = "Now: " .. nxt.name .. ". " .. nxt.desc })
+          title = UI.Escape(e.name) .. Loc[" gives way"], text = Loc["Now: "] .. nxt.name .. ". " .. nxt.desc })
       elseif (now - e.expires) < 120 then
         UI.Toast({ icon = e.icon, round = true, color = A.Color(e.kind), duration = 4,
-          title = UI.Escape(e.name) .. " has passed", text = "It's no longer on you." })
+          title = UI.Escape(e.name) .. Loc[" has passed"], text = Loc["It's no longer on you."] })
       end
     end
   end
@@ -327,7 +328,7 @@ function A:AutoGive(id, dur, text)
   e.auto = true
   UI.Toast({ icon = e.icon, round = true, color = A.Color(def.kind), duration = 8,
     title = def.name, text = text or def.desc,
-    actions = { { label = "Not now", fn = function() A:Remove(e.key, true) end } } })
+    actions = { { label = Loc["Not now"], fn = function() A:Remove(e.key, true) end } } })
   return e
 end
 
@@ -354,7 +355,7 @@ function A:RestFor(spent)
   if A.AutoOn("rested") and box.rest >= A.REST_FOR and not self:Find("exhausted") and not self:Find("rested")
     and now - (box.restedAt or 0) >= A.REST_AGAIN then
     box.rest, box.restedAt = 0, now
-    if self:AutoGive("rested", nil, "A good rest has done you good. " .. PRESET.rested.desc) and K.AutoEffects then
+    if self:AutoGive("rested", nil, Loc["A good rest has done you good. "] .. PRESET.rested.desc) and K.AutoEffects then
       K.AutoEffects:Rested()
     end
     return
@@ -422,16 +423,16 @@ function A:ShowTooltip(owner, e, other, anchor)
   local icon = e.icon and ("|T%s:20:20:0:0:64:64:5:59:5:59|t  "):format(tostring(e.icon)) or ""
   GameTooltip:SetText(icon .. C(e.name), c[1], c[2], c[3])
   local left = e.expires and A.Left(e.expires)
-  GameTooltip:AddLine(A.Kind(e.kind).label .. (left and ("  ·  " .. left .. " left") or (e.dur and e.dur > 0 and not e.key
-    and ("  ·  " .. A.DurLabel(e.dur)) or "  ·  ongoing")), 0.62, 0.62, 0.62)
+  GameTooltip:AddLine(A.Kind(e.kind).label .. (left and ("  ·  " .. left .. Loc[" left"]) or (e.dur and e.dur > 0 and not e.key
+    and ("  ·  " .. A.DurLabel(e.dur)) or Loc["  ·  ongoing"])), 0.62, 0.62, 0.62)
   if e.desc and e.desc ~= "" then GameTooltip:AddLine(C(e.desc), 0.95, 0.93, 0.88, true) end
   if e.note and e.note ~= "" then GameTooltip:AddLine("\"" .. C(e.note) .. "\"", 1, 0.82, 0, true) end
-  if e.from then GameTooltip:AddLine("From " .. UI.Escape(Short(e.from)), 0.55, 0.55, 0.55) end
-  if e.next and PRESET[e.next] then GameTooltip:AddLine("Then: " .. PRESET[e.next].name, 0.55, 0.55, 0.55) end
+  if e.from then GameTooltip:AddLine(Loc["From "] .. UI.Escape(Short(e.from)), 0.55, 0.55, 0.55) end
+  if e.next and PRESET[e.next] then GameTooltip:AddLine(Loc["Then: "] .. PRESET[e.next].name, 0.55, 0.55, 0.55) end
   if not other and A.Mends(e) and S().auraRest ~= false then
-    local what = e.kind == "wound" and "Mending" or "Passing"
-    if A.Resting() then GameTooltip:AddLine(what .. " twice as fast while you rest.", 0.40, 0.80, 0.48, true)
-    else GameTooltip:AddLine("Rest at an inn or in a city and it passes twice as fast.", 0.55, 0.55, 0.55, true) end
+    local what = e.kind == "wound" and Loc["Mending"] or Loc["Passing"]
+    if A.Resting() then GameTooltip:AddLine(what .. Loc[" twice as fast while you rest."], 0.40, 0.80, 0.48, true)
+    else GameTooltip:AddLine(Loc["Rest at an inn or in a city and it passes twice as fast."], 0.55, 0.55, 0.55, true) end
   end
   GameTooltip:Show()
 end
@@ -440,7 +441,7 @@ end
 function A.Summary(list, other, max)
   local parts = {}
   for i, e in ipairs(list) do
-    if i > (max or 4) then parts[#parts + 1] = ("+%d more"):format(#list - (max or 4)) break end
+    if i > (max or 4) then parts[#parts + 1] = (Loc["+%d more"]):format(#list - (max or 4)) break end
     local c = A.Color(e.kind)
     local name = other and UI.Clean(e.name) or UI.Escape(e.name)
     local left = e.expires and A.Left(e.expires)
@@ -528,17 +529,17 @@ A.sent = {}
 
 -- Can I offer this kind to them? Returns ok, and a reason when not (or a note when they'll be asked).
 function A:CanOffer(name, kind)
-  if not name or not K.Net then return false, "Choose a player first." end
-  if K:IsIgnored(name) then return false, "You've ignored them." end
+  if not name or not K.Net then return false, Loc["Choose a player first."] end
+  if K:IsIgnored(name) then return false, Loc["You've ignored them."] end
   local c = self:ConsentOf(name, kind)
-  if c == "2" then return false, "Their boundaries say no to " .. A.Kind(kind).plural:lower() .. "." end
-  if c == "3" then return true, "They'll be asked first." end
+  if c == "2" then return false, Loc["Their boundaries say no to "] .. A.Kind(kind).plural:lower() .. "." end
+  if c == "3" then return true, Loc["They'll be asked first."] end
   return true, nil
 end
 
 function A:Offer(name, def, dur, note)
   def = A.Sanitize(def)
-  if not def then return false, "Choose an effect first." end
+  if not def then return false, Loc["Choose an effect first."] end
   local ok, why = self:CanOffer(name, def.kind)
   if not ok then return false, why end
   local r = ("%d%d"):format(time() % 100000, math.random(100, 999))
@@ -546,7 +547,7 @@ function A:Offer(name, def, dur, note)
     r = r, d = { id = def.id, name = def.name, icon = def.icon, kind = def.kind, desc = def.desc, next = def.next },
     dur = tonumber(dur) or def.dur, note = note,
   }, "WHISPER", name)
-  if not sent then return false, "Couldn't reach them. Effects only travel between Kinship users." end
+  if not sent then return false, Loc["Couldn't reach them. Effects only travel between Kinship users."] end
   self.sent[r] = { to = name, def = def, t = GetTime() }
   return true
 end
@@ -577,8 +578,8 @@ K.Net:On("auraOffer", function(msg, sender)
   local c = A.Color(def.kind)
   UI.Toast({
     icon = def.icon, round = true, color = c, duration = 30, sound = "TELL_MESSAGE",
-    title = Short(sender) .. " lays an effect on you",
-    text = ("|cff%s%s|r for %s.%s"):format(UI.Hex(c), UI.Escape(def.name), A.DurLabel(dur):lower(),
+    title = Short(sender) .. Loc[" lays an effect on you"],
+    text = (Loc["|cff%s%s|r for %s.%s"]):format(UI.Hex(c), UI.Escape(def.name), A.DurLabel(dur):lower(),
       note and note ~= "" and (" \"" .. UI.Clean(note) .. "\"") or ""),
     actions = {
       { label = "Decline", fn = function() Reply(sender, msg.r, false, "declined") end },
@@ -590,8 +591,8 @@ K.Net:On("auraOffer", function(msg, sender)
 end)
 
 local WHY = {
-  boundary = "Their boundaries say no to that.", closed = "They aren't accepting effects from others.",
-  declined = "They declined.", full = "They already carry too many effects.",
+  boundary = Loc["Their boundaries say no to that."], closed = Loc["They aren't accepting effects from others."],
+  declined = Loc["They declined."], full = Loc["They already carry too many effects."],
 }
 K.Net:On("auraReply", function(msg, sender)
   if type(msg) ~= "table" or type(msg.r) ~= "string" then return end
@@ -601,8 +602,8 @@ K.Net:On("auraReply", function(msg, sender)
   local c = A.Color(o.def.kind)
   UI.Toast({
     icon = o.def.icon, round = true, color = c, duration = 5,
-    title = Short(sender) .. (msg.ok and " took it on" or " turned it away"),
-    text = msg.ok and (UI.Escape(o.def.name) .. " is on them now.") or (WHY[msg.why] or "Not this time."),
+    title = Short(sender) .. (msg.ok and Loc[" took it on"] or Loc[" turned it away"]),
+    text = msg.ok and (UI.Escape(o.def.name) .. Loc[" is on them now."]) or (WHY[msg.why] or Loc["Not this time."]),
   })
 end)
 
@@ -617,11 +618,11 @@ local function OnDeath()
   C_Timer.After(2, function()
     UI.Toast({
       icon = PRESET.wounded.icon, round = true, color = A.Color("wound"), duration = 25,
-      title = "Did the fight leave a mark?",
-      text = "Carry a wound from " .. UI.Escape(Short(foe)) .. " into your story. It heals on its own.",
+      title = Loc["Did the fight leave a mark?"],
+      text = Loc["Carry a wound from "] .. UI.Escape(Short(foe)) .. Loc[" into your story. It heals on its own."],
       actions = {
-        { label = "Wounded", fn = function() A:Apply(PRESET.wounded, PRESET.wounded.dur, foe) end },
-        { label = "Gravely", fn = function() A:Apply(PRESET.grave, PRESET.grave.dur, foe) end },
+        { label = Loc["Wounded"], fn = function() A:Apply(PRESET.wounded, PRESET.wounded.dur, foe) end },
+        { label = Loc["Gravely"], fn = function() A:Apply(PRESET.grave, PRESET.grave.dur, foe) end },
       },
     })
   end)
@@ -704,7 +705,7 @@ local function BarIcon(f, i)
   b:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.1, paint)
     A:ShowTooltip(self, self.entry, false, "ANCHOR_BOTTOMLEFT")
-    GameTooltip:AddLine("Right-click to end it.", 0.55, 0.80, 1)
+    GameTooltip:AddLine(Loc["Right-click to end it."], 0.55, 0.80, 1)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint); GameTooltip:Hide() end)
@@ -753,7 +754,7 @@ function A:OpenJournal(target)
 end
 
 K:RegisterTargetButton({
-  id = "aura", order = 30, label = "Lay an effect", icon = ICONS .. "Spell_Holy_MagicalSentry",
+  id = "aura", order = 30, label = Loc["Lay an effect"], icon = ICONS .. "Spell_Holy_MagicalSentry",
   shown = function(_, name)
     if not K:ExtOn("auras") or not name or K:IsIgnored(name) then return false end
     local me = UnitIsUnit("target", "player")
@@ -803,21 +804,21 @@ K:On("LOGIN", function()
   end)
 end)
 
-K:RegisterSettings({ id = "auras", title = "Effects", order = 16,
+K:RegisterSettings({ id = "auras", title = Loc["Effects"], order = 16,
   shown = function() return K:ExtOn("auras") end, build = function(card)
-  card:Toggle("Effects bar", "Shows your effects as icons with time left. Drag to move.",
+  card:Toggle(Loc["Effects bar"], Loc["Shows your effects as icons with time left. Drag to move."],
     { get = function() return S().auraBar ~= false end, set = function(v) K.db.settings.auraBar = v; Bar:Update() end })
-  card:Toggle("Effects in tooltips", "Show players' effects when you hover over them.", "auraTooltip")
-  card:Toggle("Offer a wound after a PvP death", "When an enemy player kills you, asks if you want to add a wound.",
+  card:Toggle(Loc["Effects in tooltips"], Loc["Show players' effects when you hover over them."], "auraTooltip")
+  card:Toggle(Loc["Offer a wound after a PvP death"], Loc["When an enemy player kills you, asks if you want to add a wound."],
     "auraDeathPrompt")
-  card:Toggle("Lock the effects bar", "Stops the bar from being dragged.", "auraBarLock")
-  card:Toggle("Rest speeds healing", "Wounds and exhaustion heal twice as fast at an inn or in a city.",
+  card:Toggle(Loc["Lock the effects bar"], Loc["Stops the bar from being dragged."], "auraBarLock")
+  card:Toggle(Loc["Rest speeds healing"], Loc["Wounds and exhaustion heal twice as fast at an inn or in a city."],
     { get = function() return S().auraRest ~= false end, set = function(v) K.db.settings.auraRest = v end })
-  card:Segments("From other players", {
-    { key = "ask", label = "Ask me" }, { key = "group", label = "Trust my group" }, { key = "never", label = "Never" },
+  card:Segments(Loc["From other players"], {
+    { key = "ask", label = Loc["Ask me"] }, { key = "group", label = Loc["Trust my group"] }, { key = "never", label = Loc["Never"] },
   }, function() return S().auraAccept or "ask" end, function(v) K.db.settings.auraAccept = v end, 110)
-  card:Note("Wounds and captures follow your Injury and Capture boundaries (Profile > Boundaries). \"No\" always declines and \"Ask\" always asks, whatever you pick here.")
-  card:Button("Reset the effects bar position", function()
+  card:Note(Loc["Wounds and captures follow your Injury and Capture boundaries (Profile > Boundaries). \"No\" always declines and \"Ask\" always asks, whatever you pick here."])
+  card:Button(Loc["Reset the effects bar position"], function()
     K.db.settings.auraBarPos = nil
     if Bar.frame then BarPlace(Bar.frame) end
   end, 220)

@@ -8,6 +8,7 @@
 -- client can't turn it into an ID.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local IP = {}
@@ -23,8 +24,8 @@ local FOOT_Y = CARD_Y - CARD_H - 14                 -- -398
 local MAX_RECENT = 40
 
 local FILTERS = {
-  { key = "all", label = "All" }, { key = "spells", label = "Spells" },
-  { key = "items", label = "Items" }, { key = "recent", label = "Recent" },
+  { key = "all", label = Loc["All"] }, { key = "spells", label = "Spells" },
+  { key = "items", label = Loc["Items"] }, { key = "recent", label = Loc["Recent"] },
 }
 
 ---------------------------------------------------------------------------
@@ -225,7 +226,7 @@ end
 
 function IP:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPIconPicker", "Choose an icon", W, H)
+  local f = UI.Window("KinshipRPIconPicker", Loc["Choose an icon"], W, H)
   f:SetFrameStrata("DIALOG")
   f:SetScript("OnShow", function(s) UI.FadeIn(s, 0.15) end)
   f:SetScript("OnHide", function()
@@ -256,7 +257,7 @@ function IP:Build()
       IP:Flash("No icon by that name or ID.")
     end
   end)
-  UI.Tooltip(search, "Find an icon", "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
+  UI.Tooltip(search, Loc["Find an icon"], "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
     .. "A file ID or a full name (INV_Misc_Book_09) and Enter picks that icon.")
   self.search = search
 
@@ -307,10 +308,10 @@ function IP:Build()
   f.hint:SetPoint("TOPLEFT", f.selName, "BOTTOMLEFT", 0, -4)
   f.hint:SetWordWrap(false)
 
-  local choose = UI.Button(f, "Choose", 96, 26)
+  local choose = UI.Button(f, Loc["Choose"], 96, 26)
   choose:SetPoint("RIGHT", f, "TOPRIGHT", -16, FOOT_Y - 20)
   choose:SetScript("OnClick", function() IP:Commit() end)
-  local cancel = UI.Button(f, "Cancel", 76, 26)
+  local cancel = UI.Button(f, Loc["Cancel"], 76, 26)
   cancel:SetPoint("RIGHT", choose, "LEFT", -6, 0)
   cancel:SetScript("OnClick", function() f:Hide() end)
   f.choose = choose

@@ -16,6 +16,7 @@
 -- Kinship letter, so longer letters go in parts, joined back when they arrive.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local L = K.Letters
@@ -257,13 +258,13 @@ end
 P.SendTab = SendTab
 
 function P:PostAll()
-  if not self.open then K:Print("Letters are posted at a mailbox.") return end
+  if not self.open then K:Print(Loc["Letters are posted at a mailbox."]) return end
   if self.busy then return end
   local waiting = L:Outbox()
   if #waiting == 0 then return end
   local copper, goods, cod = SendTab()
   if cod then
-    K:Print("Kinship letters can't be sent cash on delivery. Switch the Send Mail tab to Send Money, or clear it.")
+    K:Print(Loc["Kinship letters can't be sent cash on delivery. Switch the Send Mail tab to Send Money, or clear it."])
     return
   end
   -- What's on the Send Mail tab goes with the first letter posted
@@ -320,8 +321,8 @@ function P:Sent()
     job.letter.posted = time()
     job.letter.parts = #job.parts
     table.remove(self.jobs, 1)
-    K:Print(("Posted your letter to %s%s."):format(Short(job.letter.to),
-      #job.parts > 1 and (" in %d parts"):format(#job.parts) or ""))
+    K:Print((Loc["Posted your letter to %s%s."]):format(Short(job.letter.to),
+      #job.parts > 1 and (Loc[" in %d parts"]):format(#job.parts) or ""))
     K:Fire("LETTERS")
   end
   C_Timer.After(0.4, function() self:Next() end)
@@ -333,7 +334,7 @@ function P:Failed(why)
   if job then
     job.letter.state = "failed"
     job.letter.why = why
-    K:Print(("Couldn't post your letter to %s%s"):format(Short(job.letter.to), why and why ~= "" and (": " .. why) or "."))
+    K:Print((Loc["Couldn't post your letter to %s%s"]):format(Short(job.letter.to), why and why ~= "" and (": " .. why) or "."))
     K:Fire("LETTERS")
   end
   -- The rest stay in the Outbox for another try
@@ -346,7 +347,7 @@ end
 function P:Retry(letter)
   letter.state, letter.why = "outbox", nil
   K:Fire("LETTERS")
-  K:Print("Back with your letters to post. Press Post them at a mailbox to send it.")
+  K:Print(Loc["Back with your letters to post. Press Post them at a mailbox to send it."])
 end
 
 ---------------------------------------------------------------------------
@@ -490,7 +491,7 @@ function P:KeepCard()
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
   mono:SetPoint("TOPLEFT", 14, -12)
-  local head = UI.Text(f, "Kinship letters", "Header", "heading")
+  local head = UI.Text(f, Loc["Kinship letters"], "Header", "heading")
   head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
   f.status = UI.Text(f, "", "Small", "text", 192)
   f.status:SetPoint("TOPLEFT", 14, -44)
@@ -555,17 +556,17 @@ function P:Build()
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
   mono:SetPoint("TOPLEFT", 14, -12)
-  local head = UI.Text(f, "Kinship letters", "Header", "heading")
+  local head = UI.Text(f, Loc["Kinship letters"], "Header", "heading")
   head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
   f.status = UI.Text(f, "", "Small", "text", 192)
   f.status:SetPoint("TOPLEFT", 14, -44)
   f.status:SetSpacing(2)
-  f.post = UI.Button(f, "Post them", 192, 24)
+  f.post = UI.Button(f, Loc["Post them"], 192, 24)
   f.post:SetPoint("TOPLEFT", f.status, "BOTTOMLEFT", 0, -10)   -- follows the text, however many lines
   f.post:SetScript("OnClick", function() P:PostAll() end)
-  UI.Tooltip(f.post, "Post them", "Sends your sealed letters as game mail, so they reach people even when they're "
+  UI.Tooltip(f.post, Loc["Post them"], "Sends your sealed letters as game mail, so they reach people even when they're "
     .. "offline. Each mail costs the usual postage, shown above. Nothing is posted until you press this.")
-  f.write = UI.Button(f, "Write a letter", 192, 24)
+  f.write = UI.Button(f, Loc["Write a letter"], 192, 24)
   f.write:SetPoint("TOPLEFT", f.post, "BOTTOMLEFT", 0, -6)
   f.write:SetScript("OnClick", function() L:Compose("") end)
   return f
@@ -592,21 +593,21 @@ function P:Paint()
   if not (f and self.open) then return end
   local waiting = #L:Outbox()
   if self.busy then
-    f.status:SetText("Posting your letters...")
+    f.status:SetText(Loc["Posting your letters..."])
   elseif waiting > 0 then
     local mails, cost = self:Postage()
-    local text = ("%d %s waiting to be posted.\nPostage: %s%s"):format(waiting, waiting == 1 and "letter" or "letters",
-      Money(cost), mails > waiting and (" (%d mails)"):format(mails) or "")
+    local text = (Loc["%d %s waiting to be posted.\nPostage: %s%s"]):format(waiting, waiting == 1 and Loc["letter"] or Loc["letters"],
+      Money(cost), mails > waiting and (Loc[" (%d mails)"]):format(mails) or "")
     local copper, goods, cod = SendTab()
     if cod then
-      text = text .. "\n|cffe6a04cCash on delivery can't go with a letter.|r"
+      text = text .. Loc["\n|cffe6a04cCash on delivery can't go with a letter.|r"]
     elseif copper > 0 or #goods > 0 then
       local what = L.EnclosedLine({ purse = copper > 0 and copper or nil, goods = goods })
-      text = text .. ("\nGoing with your letter to %s: %s."):format(Short(L:Outbox()[1].to), what)
+      text = text .. (Loc["\nGoing with your letter to %s: %s."]):format(Short(L:Outbox()[1].to), what)
     end
     f.status:SetText(text)
   else
-    f.status:SetText("Nothing waiting to be posted.")
+    f.status:SetText(Loc["Nothing waiting to be posted."])
   end
   f.post:SetEnabled(waiting > 0 and not self.busy)
   -- Tall enough for the text and the buttons beneath it
@@ -660,7 +661,7 @@ function P:Sheet()
   local sealed = CreateFrame("Frame", nil, s)
   sealed:SetAllPoints()
   s.sealed = sealed
-  sealed.from = UI.Text(sealed, "A letter from", "Small", "inkSubtle")
+  sealed.from = UI.Text(sealed, Loc["A letter from"], "Small", "inkSubtle")
   sealed.from:SetPoint("TOP", 0, -22)
   sealed.name = UI.Text(sealed, "", "Title", "inkHeading", IW)
   sealed.name:SetPoint("TOP", sealed.from, "BOTTOM", 0, -4)
@@ -670,7 +671,7 @@ function P:Sheet()
   sealed.title:SetJustifyH("CENTER")
   sealed.seal = UI.Seal(sealed, math.min(76, math.floor(h * 0.3)))
   sealed.seal:SetPoint("CENTER", 0, -12)
-  sealed.open = UI.Button(sealed, "Break the seal", 140, 26)
+  sealed.open = UI.Button(sealed, Loc["Break the seal"], 140, 26)
   sealed.open:SetPoint("BOTTOM", 0, 18)
   sealed.open:SetScript("OnClick", function() P:BreakSeal() end)
 
@@ -691,13 +692,13 @@ function P:Sheet()
   open.encl = UI.Text(open, "", "Small", "ink", IW - 40)
   open.encl:SetPoint("BOTTOMLEFT", 54, 42)
   open.encl:SetWordWrap(false)
-  open.take = UI.Button(open, "Take them", 90, 22)
+  open.take = UI.Button(open, Loc["Take them"], 90, 22)
   open.take:SetPoint("BOTTOMRIGHT", -14, 40)
   open.take:SetScript("OnClick", function() if P.sheetLetter and L:TakeEnclosed(P.sheetLetter) then P:ShowSheet() end end)
-  open.decipher = UI.Button(open, "Decipher...", 100, 22)
+  open.decipher = UI.Button(open, Loc["Decipher..."], 100, 22)
   open.decipher:SetPoint("BOTTOM", 0, 14)
   open.decipher:SetScript("OnClick", function() if P.sheetLetter then L:Open(P.sheetLetter) end end)
-  UI.Tooltip(open.decipher, "In cipher", "It reads as nonsense without its key word. Open it on your Letters page to decipher it.")
+  UI.Tooltip(open.decipher, Loc["In cipher"], Loc["It reads as nonsense without its key word. Open it on your Letters page to decipher it."])
   self.sheet = s
   return s
 end
@@ -740,14 +741,14 @@ function P:ShowSheet()
     s.sealed.title:SetText(l.title ~= "" and ("\"" .. UI.Escape(l.title) .. "\"") or "")
     s.sealed.seal:SetSeal(l.seal, crest)
   else
-    s.open.title:SetText(l.title ~= "" and UI.Escape(l.title) or ("From " .. Short(l.from)))
+    s.open.title:SetText(l.title ~= "" and UI.Escape(l.title) or (Loc["From "] .. Short(l.from)))
     s.open.body.text:SetFontObject(L.HandFont(l.hand))
     s.open.body:SetText(UI.Escape(l.body))
     s.open.sign:SetFontObject(L.HandFont(l.hand))
     s.open.sign:SetText(l.sign ~= "" and ("— " .. UI.Escape(l.sign)) or "")
     s.open.decipher:SetShown((l.cipher and not l.solved) and true or false)
     local line = L.EnclosedLine(l)
-    s.open.encl:SetText(line and ("Enclosed: " .. line) or "")
+    s.open.encl:SetText(line and (Loc["Enclosed: "] .. line) or "")
     s.open.take:SetShown((l.enclosed and not l.taken) and true or false)
     s.open.seal:SetSeal(l.seal, crest)
   end
@@ -802,12 +803,12 @@ ev:SetScript("OnEvent", function(_, event)
     P:Paint()
     local waiting = #L:Outbox()
     if waiting > 0 then
-      K:Print(("%d %s waiting to be posted. Click Post them beside the mail window."):format(waiting,
-        waiting == 1 and "letter" or "letters"))
+      K:Print((Loc["%d %s waiting to be posted. Click Post them beside the mail window."]):format(waiting,
+        waiting == 1 and Loc["letter"] or Loc["letters"]))
     end
   elseif event == "MAIL_CLOSED" then
     P.open = false
-    if P.busy then P:Failed("the mailbox closed") end
+    if P.busy then P:Failed(Loc["the mailbox closed"]) end
     if P.card then P.card:Hide() end
   elseif event == "MAIL_INBOX_UPDATE" then
     K.Try("post scan", P.Scan, P)

@@ -22,6 +22,7 @@
 -- and titles are only re-labelled after the game sets them.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -282,29 +283,29 @@ local function BuildPane()
   end
 
   -- Name in window titles
-  pane.titleToggle = UI.Toggle(body, "Name in window titles", nil,
+  pane.titleToggle = UI.Toggle(body, Loc["Name in window titles"], nil,
     function() return S().rpTitles == true end,
     function(v) S().rpTitles = v; CP:ApplyTitles() end, 200, false)
-  UI.Tooltip(pane.titleToggle, "Roleplay name in window titles",
-    "Show your roleplay name where the character window shows your character's name, and others' in the inspect window.")
+  UI.Tooltip(pane.titleToggle, Loc["Roleplay name in window titles"],
+    Loc["Show your roleplay name where the character window shows your character's name, and others' in the inspect window."])
   Add(pane.titleToggle, 24, 0)
-  pane.frameToggle = UI.Toggle(body, "Name on unit frames", nil,
+  pane.frameToggle = UI.Toggle(body, Loc["Name on unit frames"], nil,
     function() return S().rpUnitNames ~= false end,
     function(v) S().rpUnitNames = v; if K.UnitNames then K.UnitNames:Refresh() end end, 200, false)
-  UI.Tooltip(pane.frameToggle, "Roleplay names on unit frames",
-    "Show your roleplay name on your player frame, and others' on your target and focus frames. More options in Settings > Unit frames.")
+  UI.Tooltip(pane.frameToggle, Loc["Roleplay names on unit frames"],
+    Loc["Show your roleplay name on your player frame, and others' on your target and focus frames. More options in Settings > Unit frames."])
   Add(pane.frameToggle, 24, 4)
 
   -- Right now
   if not alongside then
-    Section("Right now", 10)
+    Section(Loc["Right now"], 10)
     local cl = CreateFrame("Frame", nil, body)
-    cl.t = UI.Text(cl, "Currently", "Label", "deskSubtle"); cl.t:SetPoint("LEFT", 1, 0)
+    cl.t = UI.Text(cl, Loc["Currently"], "Label", "deskSubtle"); cl.t:SetPoint("LEFT", 1, 0)
     Add(cl, 14, 6)
     pane.currently = UI.Edit(body, 100, 24, "desk", 255)
     Add(pane.currently, 24, 2)
     local ol = CreateFrame("Frame", nil, body)
-    ol.t = UI.Text(ol, "Out of character", "Label", "deskSubtle"); ol.t:SetPoint("LEFT", 1, 0)
+    ol.t = UI.Text(ol, Loc["Out of character"], "Label", "deskSubtle"); ol.t:SetPoint("LEFT", 1, 0)
     Add(ol, 14, 6)
     pane.ooc = UI.Edit(body, 100, 24, "desk", 255)
     Add(pane.ooc, 24, 2)
@@ -313,8 +314,8 @@ local function BuildPane()
     end
 
     -- Glances
-    Section("Glances", 12)
-    pane.glances = Add(IconRow(body, 5, 26, "None yet. Add them on the Persona page."), nil, 6)
+    Section(Loc["Glances"], 12)
+    pane.glances = Add(IconRow(body, 5, 26, Loc["None yet. Add them on the Persona page."]), nil, 6)
     for _, m in ipairs(pane.glances.icons) do
       m:SetScript("OnEnter", function(self)
         UI.Tween(self, 1, 0.1, function(p) self:Paint(p) end)
@@ -329,15 +330,15 @@ local function BuildPane()
   end   -- Right now and Glances: Total RP 3's alongside it
 
   -- Effects
-  pane.effectsTitle = Section("Effects", 12)
-  pane.effects = Add(IconRow(body, 6, 26, "Nothing on you right now."), nil, 6)
+  pane.effectsTitle = Section(Loc["Effects"], 12)
+  pane.effects = Add(IconRow(body, 6, 26, Loc["Nothing on you right now."]), nil, 6)
   for _, m in ipairs(pane.effects.icons) do
     m:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     m:SetScript("OnEnter", function(self)
       UI.Tween(self, 1, 0.1, function(p) self:Paint(p) end)
       if K.Auras and self.entry then
         K.Auras:ShowTooltip(self, self.entry, false, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Right-click to end it.", 0.55, 0.80, 1)
+        GameTooltip:AddLine(Loc["Right-click to end it."], 0.55, 0.80, 1)
         GameTooltip:Show()
       end
     end)
@@ -350,15 +351,15 @@ local function BuildPane()
   pane.effects.empty:SetPoint("RIGHT", -30, 0)
   pane.addEffect = UI.Button(pane.effects, "+", 24, 24)
   pane.addEffect:SetScript("OnClick", function() if K.Auras then K.Auras:OpenJournal() end end)
-  UI.Tooltip(pane.addEffect, "Take on an effect", "A wound, a blessing, a bottle too many.")
+  UI.Tooltip(pane.addEffect, Loc["Take on an effect"], Loc["A wound, a blessing, a bottle too many."])
 
   -- Warfront
-  Section("Warfront", 12)
-  pane.stance = Add(Line(body, "Stance", function() K:SetStance(Next(K.STANCE_ORDER, K:Profile().stance or "duel")) end), 20, 4)
+  Section(Loc["Warfront"], 12)
+  pane.stance = Add(Line(body, Loc["Stance"], function() K:SetStance(Next(K.STANCE_ORDER, K:Profile().stance or "duel")) end), 20, 4)
   pane.stance:HookScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("War stance", 1, 0.82, 0)
-    GameTooltip:AddLine("Click to change: Open war, Honour first, Non-combatant.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["War stance"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["Click to change: Open war, Honour first, Non-combatant."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   pane.consent = {}
@@ -374,7 +375,7 @@ local function BuildPane()
       row:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(f.label, 1, 0.82, 0)
-        GameTooltip:AddLine(f.desc .. (alongside and ".\nSet in Total RP 3, as your RP style." or ".\nClick to cycle: Yes, Ask first, No, not stated."), 1, 1, 1, true)
+        GameTooltip:AddLine(f.desc .. (alongside and Loc[".\nSet in Total RP 3, as your RP style."] or Loc[".\nClick to cycle: Yes, Ask first, No, not stated."]), 1, 1, 1, true)
         GameTooltip:Show()
       end)
       row.key = f.key
@@ -389,21 +390,21 @@ local function BuildPane()
   pane.profileBtn:SetPoint("BOTTOMRIGHT", -PAD, 42)
   pane.profileBtn:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Profiles")
+      root:CreateTitle(Loc["Profiles"])
       for _, name in ipairs(K:ProfileNames()) do
         root:CreateRadio(name, function() return name == K:MyProfiles().active end, function() K:SwitchProfile(name) end)
       end
     end)
   end)
-  pane.journal = UI.Button(pane, "Journal", 100, 26)
+  pane.journal = UI.Button(pane, Loc["Journal"], 100, 26)
   pane.journal:SetPoint("BOTTOMLEFT", PAD, 12)
   pane.journal:SetPoint("RIGHT", pane, "BOTTOM", -3, 0)
   pane.journal:SetScript("OnClick", function() K.Journal:Open(K:Compat() and "persona" or "profile") end)
-  pane.preview = UI.Button(pane, "Preview", 100, 26)
+  pane.preview = UI.Button(pane, Loc["Preview"], 100, 26)
   pane.preview:SetPoint("BOTTOMRIGHT", -PAD, 12)
   pane.preview:SetPoint("LEFT", pane, "BOTTOM", 3, 0)
   pane.preview:SetScript("OnClick", function() K:ViewProfile() end)
-  UI.Tooltip(pane.preview, "Preview", "See your profile the way other players will.")
+  UI.Tooltip(pane.preview, Loc["Preview"], Loc["See your profile the way other players will."])
 
   -- Widths follow the pane. The pane is sized by the window before it's ever
   -- shown, so this runs on show as well as on every resize.
@@ -467,7 +468,7 @@ function CP:Refresh()
   pane.name:SetText(K:DisplayName(p))
   pane.name:SetTextColor(NameRGB(p, "player"))
   local sub = K.Epithet(p, strtrim(p.epithet or ""))
-  if sub == "" and K:HouseName() ~= "" then sub = "of House " .. K:HouseName() end
+  if sub == "" and K:HouseName() ~= "" then sub = Loc["of House "] .. K:HouseName() end
   pane.epithet:SetText(sub)
   if pane.status then pane.status:Select(p.status) end
 
@@ -532,7 +533,7 @@ function CP:Refresh()
 
   pane.body:SetHeight(math.max(1, pane.bodyHeight))
   if pane.bar and pane.bar.Update then pane.bar.Update() end
-  pane.profileBtn:SetText("Profile: " .. (K:MyProfiles().active or "?"))
+  pane.profileBtn:SetText(Loc["Profile: "] .. (K:MyProfiles().active or "?"))
 end
 
 ---------------------------------------------------------------------------
@@ -682,7 +683,7 @@ local function NewSidebarTab(bar, after, onClick)
   t:SetScript("OnClick", onClick)
   t:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Roleplay")
+    GameTooltip:SetText(Loc["Roleplay"])
     GameTooltip:Show()
   end)
   t:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -865,7 +866,7 @@ local function BuildTab()
   local ok, t = pcall(CreateFrame, "Frame", "KinshipRPCharacterTab", cf.ModeTabs, "LargeSideTabButtonTemplate")
   if not ok or not t then return end
   tab = t
-  tab.tooltipText = "Roleplay"
+  tab.tooltipText = Loc["Roleplay"]
   if tab.Icon then tab.Icon:SetTexture(TAB_ICON) end
   if tab.SetFillToInterior then tab:SetFillToInterior(true) end
   if tab.SetChecked then tab:SetChecked(false) end
@@ -972,7 +973,7 @@ function CP:BuildTheirs()
   f.med = Medallion(f, 40)
   f.med:SetPoint("TOPLEFT", PAD, -PAD - 2)
   f.med:SetScript("OnClick", function() if f.who then K:ViewProfile(f.who, f.unit) end end)
-  UI.Tooltip(f.med, "Full profile")
+  UI.Tooltip(f.med, Loc["Full profile"])
   f.name = UI.Text(f, "", "Header", "plain", 270 - 2 * PAD - 52 - 20)
   f.name:SetPoint("TOPLEFT", f.med, "TOPRIGHT", 8, -5)
   f.name:SetWordWrap(false)
@@ -1024,11 +1025,11 @@ function CP:BuildTheirs()
   f.body = UI.ReadArea(f, 270 - 2 * PAD, 1, "Read", "deskText")
   f.body:SetPoint("TOPLEFT", f.effects, "BOTTOMLEFT", 2, -8)
   f.body:SetPoint("BOTTOMRIGHT", -PAD, 46)
-  f.view = UI.Button(f, "Full profile", 100, 26)
+  f.view = UI.Button(f, Loc["Full profile"], 100, 26)
   f.view:SetPoint("BOTTOMLEFT", PAD, 12)
   f.view:SetPoint("RIGHT", f, "BOTTOM", -3, 0)
   f.view:SetScript("OnClick", function() if f.who then K:ViewProfile(f.who, f.unit) end end)
-  f.letter = UI.Button(f, "Write a letter", 100, 26)
+  f.letter = UI.Button(f, Loc["Write a letter"], 100, 26)
   f.letter:SetPoint("BOTTOMRIGHT", -PAD, 12)
   f.letter:SetPoint("LEFT", f, "BOTTOM", 3, 0)
   f.letter:SetScript("OnClick", function() if f.who then K.Letters:Compose(f.who) end end)
@@ -1068,10 +1069,10 @@ function CP:RefreshTheirs()
   f.name:SetTextColor(NameRGB(p, unit))
   f.epithet:SetText(p and K.Epithet(p, C(p.epithet)) or "")
   local st = p and K.STATUS[p.status]
-  f.rows.Status.value:SetText(st and st.label or "|cff808080Unknown|r")
+  f.rows.Status.value:SetText(st and st.label or Loc["|cff808080Unknown|r"])
   if st then f.rows.Status.value:SetTextColor(unpack(st.color)) end
   local stance = p and p.stance and K.STANCES[p.stance]
-  f.rows.Stance.value:SetText(stance and stance.label or "|cff808080Not stated|r")
+  f.rows.Stance.value:SetText(stance and stance.label or Loc["|cff808080Not stated|r"])
   if stance then f.rows.Stance.value:SetTextColor(unpack(stance.color)) end
   local house = p and strtrim(C(p.house)) or ""
   f.rows.House.value:SetText(house ~= "" and house or "|cff808080-|r")
@@ -1100,7 +1101,7 @@ function CP:RefreshTheirs()
   end
 
   if not p then
-    f.body:SetText("|cff9a9a9aNo roleplay profile has reached you from this player yet.|r")
+    f.body:SetText(Loc["|cff9a9a9aNo roleplay profile has reached you from this player yet.|r"])
     return
   end
   local parts = {}
@@ -1109,10 +1110,10 @@ function CP:RefreshTheirs()
     text = text and strtrim(C(text)) or ""
     if text ~= "" then parts[#parts + 1] = "|cff" .. head .. label .. "|r\n" .. text end
   end
-  add("Currently", p.currently)
+  add(Loc["Currently"], p.currently)
   add("At a glance", p.glance)
-  add("Out of character", p.ooc)
-  add("Appearance", p.appearance)
+  add(Loc["Out of character"], p.ooc)
+  add(Loc["Appearance"], p.appearance)
   f.body:SetText(table.concat(parts, "\n\n"))
 end
 
@@ -1143,20 +1144,20 @@ end)
 -- Your roleplay name changed: re-title an open character window.
 K:On("PROFILE", function() if S().rpTitles then CP:ApplyTitles() end end)
 
-K:RegisterSettings({ id = "characterPanel", title = "Character sheet", order = 40, build = function(card)
-  card:Toggle("Roleplay tab on the character sheet", "Adds a Roleplay tab to your character sheet with your roleplay details.", {
+K:RegisterSettings({ id = "characterPanel", title = Loc["Character sheet"], order = 40, build = function(card)
+  card:Toggle(Loc["Roleplay tab on the character sheet"], Loc["Adds a Roleplay tab to your character sheet with your roleplay details."], {
     get = function() return S().charPanel ~= false end,
     set = function(v) S().charPanel = v; ApplySetting() end,
   })
-  card:Toggle("Profile when inspecting", "Shows a player's profile next to the inspect window.", {
+  card:Toggle(Loc["Profile when inspecting"], Loc["Shows a player's profile next to the inspect window."], {
     get = function() return S().inspectPanel ~= false end,
     set = function(v) S().inspectPanel = v; CP:RefreshTheirs() end,
   })
-  card:Toggle("Roleplay items on the gear slots", "On the Roleplay tab, the gear slots show your roleplay items instead of your real gear. Click a slot to equip or remove an item.", {
+  card:Toggle(Loc["Roleplay items on the gear slots"], Loc["On the Roleplay tab, the gear slots show your roleplay items instead of your real gear. Click a slot to equip or remove an item."], {
     get = function() return S().rpDoll ~= false end,
     set = function(v) S().rpDoll = v; ShowDoll(active) end,
   })
-  card:Toggle("Roleplay name in window titles", "Shows roleplay names in the character and inspect windows, next to the character name.", {
+  card:Toggle(Loc["Roleplay name in window titles"], Loc["Shows roleplay names in the character and inspect windows, next to the character name."], {
     get = function() return S().rpTitles == true end,
     set = function(v) S().rpTitles = v; CP:ApplyTitles() end,
   })

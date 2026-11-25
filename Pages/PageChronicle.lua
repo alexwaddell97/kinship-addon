@@ -2,13 +2,14 @@
 -- Left: the timeline. Right: the chosen entry, or a new page being written.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
 local FILTERS = {
-  { key = "all", label = "Everything" }, { key = "place", label = "Places" }, { key = "milestone", label = "Milestones" },
-  { key = "dungeon", label = "Dungeons" }, { key = "kin", label = "Kin" }, { key = "battle", label = "Battles" },
-  { key = "letter", label = "Letters" }, { key = "note", label = "Your own pages" },
+  { key = "all", label = Loc["Everything"] }, { key = "place", label = "Places" }, { key = "milestone", label = "Milestones" },
+  { key = "dungeon", label = "Dungeons" }, { key = "kin", label = Loc["Kin"] }, { key = "battle", label = "Battles" },
+  { key = "letter", label = Loc["Letters"] }, { key = "note", label = "Your own pages" },
 }
 
 local W, H = 696, 466
@@ -25,8 +26,8 @@ local function Card(parent, w, h)
 end
 
 K:RegisterPage({
-  id = "chronicle", title = "Chronicle", heading = "Chronicle",
-  subtitle = "Your character's story, written as you play.",
+  id = "chronicle", title = Loc["Chronicle"], heading = Loc["Chronicle"],
+  subtitle = Loc["Your character's story, written as you play."],
 
   build = function(c)
     c.filter = "all"
@@ -35,14 +36,14 @@ K:RegisterPage({
     local leftCard, left, lw, lh = Card(c, LEFT_W, H)
     leftCard:SetPoint("TOPLEFT")
 
-    local title = UI.Text(left, "My Chronicle", "GameFontNormalLarge", "heading")
+    local title = UI.Text(left, Loc["My Chronicle"], "GameFontNormalLarge", "heading")
     title:SetPoint("TOPLEFT", 0, -3)
 
     c.filterBtn = UI.Button(left, "", 124, 24)
     c.filterBtn:SetPoint("TOPRIGHT", 0, 0)
     c.filterBtn:SetScript("OnClick", function(self)
       UI.Menu(self, function(root)
-        root:CreateTitle("Show")
+        root:CreateTitle(Loc["Show"])
         for _, f in ipairs(FILTERS) do
           root:CreateRadio(f.label, function() return c.filter == f.key end,
             function() c.filter = f.key; c.selected = nil; K.Journal:RefreshCurrent() end)
@@ -54,7 +55,7 @@ K:RegisterPage({
     div:SetPoint("TOPLEFT", 0, -34)
 
     c.list = UI.List(left, lw, lh - 82, 28,
-      "Your Chronicle is empty for now. It fills itself in as you explore, level up and travel with others.",
+      Loc["Your Chronicle is empty for now. It fills itself in as you explore, level up and travel with others."],
       function(row)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(22, 22)
@@ -69,11 +70,11 @@ K:RegisterPage({
       end, { bare = true, emptyIcon = K.Art("IconMilestone") })
     c.list:SetPoint("TOPLEFT", 0, -42)
 
-    local write = UI.Button(left, "Write a new page", 150, 24)
+    local write = UI.Button(left, Loc["Write a new page"], 150, 24)
     write:SetPoint("BOTTOMLEFT", 0, 0)
     c.writeBtn = write
     write:SetScript("OnClick", function() c:Edit(nil) end)
-    UI.Tooltip(write, "Write a new page", "Add a page to your Chronicle in your character's own words.")
+    UI.Tooltip(write, Loc["Write a new page"], Loc["Add a page to your Chronicle in your character's own words."])
     c.count = UI.Text(left, "", "GameFontHighlightSmall", "subtle")
     c.count:SetPoint("BOTTOMRIGHT", -2, 6)
 
@@ -96,10 +97,10 @@ K:RegisterPage({
     rdiv:SetPoint("TOPLEFT", 0, -50)
     read.body = UI.ReadArea(read, rw, rh - 96, "QuestFont", "text")
     read.body:SetPoint("TOPLEFT", 0, -62)
-    read.editBtn = UI.Button(read, "Write", 90, 24)
+    read.editBtn = UI.Button(read, Loc["Write"], 90, 24)
     read.editBtn:SetPoint("BOTTOMLEFT", 0, 0)
     read.editBtn:SetScript("OnClick", function() c:Edit(c.selected) end)
-    read.removeBtn = UI.Button(read, "Remove", 90, 24)
+    read.removeBtn = UI.Button(read, Loc["Remove"], 90, 24)
     read.removeBtn:SetPoint("LEFT", read.editBtn, "RIGHT", 8, 0)
     read.removeBtn:SetScript("OnClick", function()
       if c.selected then K:RemoveEntry(c.selected); c.selected = nil end
@@ -109,7 +110,7 @@ K:RegisterPage({
     read.emptyIcon:SetSize(64, 64)
     read.emptyIcon:SetPoint("CENTER", 0, 30)
     read.emptyIcon:SetAlpha(0.75)
-    read.empty = UI.Text(read, "Choose a moment from your Chronicle to read it here.", "QuestFont", "subtle", rw - 60)
+    read.empty = UI.Text(read, Loc["Choose a moment from your Chronicle to read it here."], "QuestFont", "subtle", rw - 60)
     read.empty:SetPoint("TOP", read.emptyIcon, "BOTTOM", 0, -12)
     read.empty:SetJustifyH("CENTER")
 
@@ -120,23 +121,23 @@ K:RegisterPage({
     c.edit = edit
     edit.heading = UI.Text(edit, "", "GameFontNormalLarge", "heading")
     edit.heading:SetPoint("TOPLEFT", 0, -2)
-    local tl = UI.Text(edit, "Title", "GameFontNormalSmall", "subtle")
+    local tl = UI.Text(edit, Loc["Title"], "GameFontNormalSmall", "subtle")
     tl:SetPoint("TOPLEFT", 1, -32)
     edit.titleBox = UI.Edit(edit, rw, 24, nil, 80)
     edit.titleBox:SetPoint("TOPLEFT", 0, -46)
-    local bl = UI.Text(edit, "In your character's words", "GameFontNormalSmall", "subtle")
+    local bl = UI.Text(edit, Loc["In your character's words"], "GameFontNormalSmall", "subtle")
     bl:SetPoint("TOPLEFT", 1, -82)
     edit.area = UI.TextArea(edit, rw, rh - 132, 3000)
     edit.area:SetPoint("TOPLEFT", 0, -96)
-    local save = UI.Button(edit, "Save", 90, 24)
+    local save = UI.Button(edit, Loc["Save"], 90, 24)
     save:SetPoint("BOTTOMLEFT", 0, 0)
-    local cancel = UI.Button(edit, "Cancel", 90, 24)
+    local cancel = UI.Button(edit, Loc["Cancel"], 90, 24)
     cancel:SetPoint("LEFT", save, "RIGHT", 8, 0)
     cancel:SetScript("OnClick", function() c.editing = false; K.Journal:RefreshCurrent() end)
     save:SetScript("OnClick", function()
       local t = strtrim(edit.titleBox:GetText() or "")
       local text = edit.area.edit:GetText() or ""
-      if t == "" then t = "A page from my journal" end
+      if t == "" then t = Loc["A page from my journal"] end
       if c.editEntry then
         c.editEntry.title, c.editEntry.text = t, text
         c.selected = c.editEntry
@@ -151,7 +152,7 @@ K:RegisterPage({
     function c:Edit(entry)
       self.editing, self.editEntry = true, entry
       K.Journal:RefreshCurrent()
-      edit.heading:SetText(entry and "Add your words" or "A new page")
+      edit.heading:SetText(entry and Loc["Add your words"] or Loc["A new page"])
       edit.titleBox:SetText(entry and entry.title or "")
       edit.area.edit:SetText(entry and entry.text or "")
       if entry then edit.area.edit:SetFocus() else edit.titleBox:SetFocus() end
@@ -159,16 +160,16 @@ K:RegisterPage({
   end,
 
   refresh = function(c)
-    local label = "Everything"
+    local label = Loc["Everything"]
     for _, f in ipairs(FILTERS) do if f.key == c.filter then label = f.label end end
-    c.filterBtn:SetText("Show: " .. label)
+    c.filterBtn:SetText(Loc["Show: "] .. label)
 
     local items, all = {}, K:Chronicle().entries
     for i = #all, 1, -1 do
       local e = all[i]
       if c.filter == "all" or e.kind == c.filter then items[#items + 1] = e end
     end
-    c.count:SetText(#all == 1 and "1 moment" or (#all .. " moments"))
+    c.count:SetText(#all == 1 and Loc["1 moment"] or (#all .. Loc[" moments"]))
     c.list:SetItems(items, function(row, e)
       row.icon:SetTexture((K.ENTRY[e.kind] or K.ENTRY.note).icon)
       row.title:SetText(e.title)
@@ -191,9 +192,9 @@ K:RegisterPage({
     if r.shown ~= e then r.shown = e; UI.FadeIn(r, 0.2) end
     r.icon:SetTexture((K.ENTRY[e.kind] or K.ENTRY.note).icon)
     r.title:SetText(e.title)
-    r.meta:SetText(("%s  ·  %s  ·  level %d"):format(K.FormatDate(e.t), e.place or "?", e.level or 0))
+    r.meta:SetText((Loc["%s  ·  %s  ·  level %d"]):format(K.FormatDate(e.t), e.place or "?", e.level or 0))
     r.body:SetText(e.text ~= "" and e.text or
-      "No words written for this moment yet.\n\nClick Write to add what your character thought or felt.")
-    r.editBtn:SetText(e.text ~= "" and "Edit" or "Write")
+      Loc["No words written for this moment yet.\n\nClick Write to add what your character thought or felt."])
+    r.editBtn:SetText(e.text ~= "" and Loc["Edit"] or Loc["Write"])
   end,
 })

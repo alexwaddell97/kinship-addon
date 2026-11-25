@@ -10,6 +10,7 @@
 -- answer, exactly as a design arrives with a traded item.
 
 local ADDON, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -185,13 +186,13 @@ local function Fill(tt, sender, name)
   tt:SetText(name, 0.37, 0.77, 0.72)
   local k = sender .. "\001" .. Key(name)
   if IL.missing and IL.missing[k] then
-    tt:AddLine(I.Short(sender) .. " no longer has this item.", 0.62, 0.62, 0.62, true)
+    tt:AddLine(I.Short(sender) .. Loc[" no longer has this item."], 0.62, 0.62, 0.62, true)
   elseif not K.Net:Ready() then
-    tt:AddLine("Its details haven't reached you.", 0.62, 0.62, 0.62, true)
+    tt:AddLine(Loc["Its details haven't reached you."], 0.62, 0.62, 0.62, true)
   else
     local at = IL:Ask(sender, name)
-    tt:AddLine(GetTime() - at < 8 and ("Asking " .. I.Short(sender) .. " about it…")
-      or (I.Short(sender) .. " hasn't answered. They may be away."), 0.62, 0.62, 0.62, true)
+    tt:AddLine(GetTime() - at < 8 and (Loc["Asking "] .. I.Short(sender) .. Loc[" about it…"])
+      or (I.Short(sender) .. Loc[" hasn't answered. They may be away."]), 0.62, 0.62, 0.62, true)
   end
 end
 

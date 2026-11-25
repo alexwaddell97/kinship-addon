@@ -14,6 +14,7 @@
 -- when Kinship runs on its own again.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local T = {}
@@ -21,17 +22,17 @@ K.TRP3 = T
 
 -- What you gain by keeping Kinship alongside Total RP 3
 T.GAINS = {
-  { "Quests you write", "Offer them to the players around you, with objectives that tick themselves." },
-  { "What you wear", "Roleplay items in a slot for every piece of gear, and outfits to change into." },
-  { "Your stage", "A backdrop, light and floor behind your character when someone opens your profile." },
-  { "Houses", "A crest, motto and shared history for the family name you carry." },
-  { "Warfront", "Your war stance, the rivals you've met and the battles you've fought, and Parley across the line." },
-  { "Items and letters", "Design items, write sealed letters, trade them and leave stashes in the world." },
-  { "And more", "Effects, gatherings on the calendar, dice, the satchel and a Roleplay tab on your character sheet." },
+  { Loc["Quests you write"], Loc["Offer them to the players around you, with objectives that tick themselves."] },
+  { Loc["What you wear"], Loc["Roleplay items in a slot for every piece of gear, and outfits to change into."] },
+  { Loc["Your stage"], Loc["A backdrop, light and floor behind your character when someone opens your profile."] },
+  { Loc["Houses"], Loc["A crest, motto and shared history for the family name you carry."] },
+  { Loc["Warfront"], Loc["Your war stance, the rivals you've met and the battles you've fought, and Parley across the line."] },
+  { Loc["Items and letters"], Loc["Design items, write sealed letters, trade them and leave stashes in the world."] },
+  { Loc["And more"], Loc["Effects, gatherings on the calendar, dice, the satchel and a Roleplay tab on your character sheet."] },
 }
 
 -- What Total RP 3 looks after while it runs
-T.KEEPS = "your profile, tooltips, nameplates, chat names, status and target bar"
+T.KEEPS = Loc["your profile, tooltips, nameplates, chat names, status and target bar"]
 
 ---------------------------------------------------------------------------
 -- Your details, from what Total RP 3 shares
@@ -108,8 +109,8 @@ function T:MoveToKinship()
   K.db.migration.moved = { n = n, t = time() }
   -- The game's own popup does the reload: a click of its button, which the game
   -- always allows, where a reload straight from here can be blocked.
-  StaticPopup_Show("KINSHIPRP_TOGETHER_RELOAD", ((n > 0 and ("%d %s came across. "):format(n, n == 1 and "profile" or "profiles"))
-    or "") .. "Total RP 3 and its add-ons switch off when you reload.\n\n(Or type /reload.)")
+  StaticPopup_Show("KINSHIPRP_TOGETHER_RELOAD", ((n > 0 and (Loc["%d %s came across. "]):format(n, n == 1 and "profile" or "profiles"))
+    or "") .. Loc["Total RP 3 and its add-ons switch off when you reload.\n\n(Or type /reload.)"])
 end
 
 -- Back to your own Kinship profile when Total RP 3 isn't running.
@@ -130,9 +131,9 @@ local function ComeBack()
   if moved then
     K.db.migration.moved = nil
     C_Timer.After(3, function()
-      K:Print(((moved.n or 0) > 0 and ("Welcome to Kinship. %d %s came across from Total RP 3, "):format(moved.n,
-        moved.n == 1 and "profile" or "profiles") or "Welcome to Kinship. ")
-        .. "Total RP 3 is off, with its saved data untouched: switch it back on in the AddOns list any time. Open your journal with /kin.")
+      K:Print(((moved.n or 0) > 0 and (Loc["Welcome to Kinship. %d %s came across from Total RP 3, "]):format(moved.n,
+        moved.n == 1 and "profile" or "profiles") or Loc["Welcome to Kinship. "])
+        .. Loc["Total RP 3 is off, with its saved data untouched: switch it back on in the AddOns list any time. Open your journal with /kin."])
     end)
   end
 end
@@ -146,7 +147,7 @@ function K:OpenProfileEditor()
       api.navigation.openMainFrame()
       api.navigation.menu.selectMenu("main_12_player_character")
     end)
-    if not ok then K:Print("Your profile is in Total RP 3: open it from its button or with /trp3.") end
+    if not ok then K:Print(Loc["Your profile is in Total RP 3: open it from its button or with /trp3."]) end
   else
     K.Journal:Open("profile")
   end
@@ -201,14 +202,14 @@ local function HookTargetBar()
     local enums = rawget(_G, "AddOn_TotalRP3") and AddOn_TotalRP3.Enums
     pcall(api.target.registerButton, {
       id = "zz_kinship",
-      configText = "Kinship: what they wear, their house and their stage",
+      configText = Loc["Kinship: what they wear, their house and their stage"],
       onlyForType = enums and enums.UNIT_TYPE and enums.UNIT_TYPE.CHARACTER or nil,
       condition = function() return K:Compat() end,
       onClick = function(unitID)
         if UnitExists("target") and UnitIsPlayer("target") then K.Viewer:ShowUnit("target") else K.Viewer:ShowName(unitID) end
       end,
       tooltip = "Kinship",
-      tooltipSub = "Click to see what they wear, their house and their stage.",
+      tooltipSub = Loc["Click to see what they wear, their house and their stage."],
       icon = "INV_Misc_Lantern_01",
     })
   end)
@@ -239,7 +240,7 @@ end
 StaticPopupDialogs["KINSHIPRP_TOGETHER_RELOAD"] = {
   text = "%s",
   showAlert = true,
-  button1 = "Reload now", button2 = "Later",
+  button1 = Loc["Reload now"], button2 = Loc["Later"],
   OnAccept = function() ReloadUI() end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
@@ -255,11 +256,11 @@ function T:ApplyExtended(who, switchOff)
   local reload = {}
   if was == "extended" then
     for _, m in ipairs(T.EXT_SHARED) do K:SetExt(m, true) end
-    reload[#reload + 1] = "Kinship's items, documents and effects come back"
+    reload[#reload + 1] = Loc["Kinship's items, documents and effects come back"]
   end
   if switchOff and K:ExtendedLoaded() and K.Import then
     K.Import:DisableOther("totalRP3_Extended")
-    reload[#reload + 1] = "Total RP 3: Extended switches off (its saved data stays)"
+    reload[#reload + 1] = Loc["Total RP 3: Extended switches off (its saved data stays)"]
   end
   return #reload > 0 and (table.concat(reload, ", and ") .. " when you reload.") or nil
 end
@@ -269,7 +270,7 @@ local function ExtendedGone()
   if K.db.settings.trp3Ext ~= "extended" or K:ExtendedLoaded() then return end
   for _, m in ipairs(T.EXT_SHARED) do K:SetExt(m, true) end
   K.db.settings.trp3Ext = nil
-  K:Print("Total RP 3: Extended isn't running, so Kinship's items, documents and effects are back on from your next reload.")
+  K:Print(Loc["Total RP 3: Extended isn't running, so Kinship's items, documents and effects are back on from your next reload."])
 end
 
 ---------------------------------------------------------------------------
@@ -279,7 +280,7 @@ local W, H, EXT_H = 560, 516, 206
 
 function T:Build()
   if self.frame then return self.frame end
-  local f = UI.Window("KinshipRPTogether", "Kinship and Total RP 3", W, H)
+  local f = UI.Window("KinshipRPTogether", Loc["Kinship and Total RP 3"], W, H)
   f:SetFrameStrata("DIALOG")
   self.frame = f
   local desk = UI.Desk(f)
@@ -290,9 +291,9 @@ function T:Build()
   mono:SetTexture(K.MONOGRAM)
   mono:SetSize(64, 64)
   mono:SetPoint("TOPLEFT", 18, -48)
-  f.title = UI.Text(f, "Total RP 3 is running too", "Huge", "deskHeading", W - 130)
+  f.title = UI.Text(f, Loc["Total RP 3 is running too"], "Huge", "deskHeading", W - 130)
   f.title:SetPoint("TOPLEFT", mono, "TOPRIGHT", 14, -8)
-  f.sub = UI.Text(f, "Kinship can work alongside it, or take over from it. You can change your mind later in Settings > General.",
+  f.sub = UI.Text(f, Loc["Kinship can work alongside it, or take over from it. You can change your mind later in Settings > General."],
     "Small", "deskSubtle", W - 130)
   f.sub:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 0, -6)
   f.sub:SetSpacing(2)
@@ -301,9 +302,9 @@ function T:Build()
   card:SetPoint("TOPLEFT", 18, -132)
   card:SetPoint("BOTTOMRIGHT", -18, 60)
   f.card = card
-  local head = UI.Section(card, "Keeping both")
+  local head = UI.Section(card, Loc["Keeping both"])
   head:SetPoint("TOPLEFT", 21, -15)
-  f.intro = UI.Text(card, ("Total RP 3 looks after %s. Kinship hides its own and adds what Total RP 3 doesn't have:"):format(T.KEEPS),
+  f.intro = UI.Text(card, (Loc["Total RP 3 looks after %s. Kinship hides its own and adds what Total RP 3 doesn't have:"]):format(T.KEEPS),
     "Small", "text", W - 76)
   f.intro:SetPoint("TOPLEFT", 16, -40)
   f.intro:SetSpacing(3)
@@ -321,9 +322,9 @@ function T:Build()
   ext:SetPoint("BOTTOMRIGHT", -18, 60)
   ext:SetHeight(EXT_H - 12)
   f.ext = ext
-  local eh = UI.Section(ext, "Total RP 3: Extended is running too")
+  local eh = UI.Section(ext, Loc["Total RP 3: Extended is running too"])
   eh:SetPoint("TOPLEFT", 21, -15)
-  local ask = UI.Text(ext, "Who looks after items, documents and effects?", "Small", "text", W - 76)
+  local ask = UI.Text(ext, Loc["Who looks after items, documents and effects?"], "Small", "text", W - 76)
   ask:SetPoint("TOPLEFT", 16, -40)
   f.extPick = UI.Segments(ext, { { key = "kinship", label = "Kinship" }, { key = "extended", label = "Total RP 3: Extended" } },
     120, function(key) f.extWho = key; T:PaintExtended() end)
@@ -332,32 +333,32 @@ function T:Build()
   f.extWhy = UI.Text(ext, "", "Small", "subtle", W - 76)
   f.extWhy:SetPoint("TOPLEFT", 16, -92)
   f.extWhy:SetSpacing(2)
-  f.extOff = UI.Toggle(ext, "Switch Total RP 3: Extended off",
-    "After a reload. Its saved data stays, so you can switch it back on.",
+  f.extOff = UI.Toggle(ext, Loc["Switch Total RP 3: Extended off"],
+    Loc["After a reload. Its saved data stays, so you can switch it back on."],
     function() return f.extSwitchOff end, function(v) f.extSwitchOff = v end, W - 76, true)
   f.extOff:SetPoint("BOTTOMLEFT", 16, 10)
 
-  f.keep = UI.Button(f, "Keep both", 120, 28)
+  f.keep = UI.Button(f, Loc["Keep both"], 120, 28)
   f.keep:SetPoint("BOTTOMRIGHT", -18, 18)
   f.keep:SetScript("OnClick", function()
     K.db.settings.trp3Mode = "together"
     local reload = f.ext:IsShown() and T:ApplyExtended(f.extWho, f.extWho == "kinship" and f.extSwitchOff) or nil
     f:Hide()
-    K:Print(("Kinship is working alongside Total RP 3. Total RP 3 keeps %s; the rest is in your journal (/kin)."):format(T.KEEPS))
+    K:Print((Loc["Kinship is working alongside Total RP 3. Total RP 3 keeps %s; the rest is in your journal (/kin)."]):format(T.KEEPS))
     if f.ext:IsShown() and f.extWho == "extended" then
-      K:Print("Total RP 3: Extended looks after items, documents and effects. Kinship's are off; quests, houses, Warfront and the rest stay.")
+      K:Print(Loc["Total RP 3: Extended looks after items, documents and effects. Kinship's are off; quests, houses, Warfront and the rest stay."])
     end
     if reload then StaticPopup_Show("KINSHIPRP_TOGETHER_RELOAD", reload) end
   end)
-  f.move = UI.Button(f, "Move to Kinship", 140, 28)
+  f.move = UI.Button(f, Loc["Move to Kinship"], 140, 28)
   f.move:SetPoint("RIGHT", f.keep, "LEFT", -8, 0)
   f.move:SetScript("OnClick", function()
     f:Hide()
     T:MoveToKinship()
   end)
-  UI.Tooltip(f.move, "Move to Kinship", "Brings your Total RP 3 profiles across, switches Total RP 3 and its add-ons off, "
+  UI.Tooltip(f.move, Loc["Move to Kinship"], "Brings your Total RP 3 profiles across, switches Total RP 3 and its add-ons off, "
     .. "and reloads the game.")
-  f.later = UI.Button(f, "Decide later", 110, 28)
+  f.later = UI.Button(f, Loc["Decide later"], 110, 28)
   f.later:SetPoint("BOTTOMLEFT", 18, 18)
   f.later:SetScript("OnClick", function() f:Hide() end)
   return f

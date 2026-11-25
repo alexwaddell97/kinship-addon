@@ -17,6 +17,7 @@
 -- aside quietly instead of breaking them.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local T = {}
@@ -136,7 +137,7 @@ end
 -- game's tracker or asked to redraw it: anything an addon does inside the
 -- tracker's update spreads to the game's own sections (a scenario's aura
 -- check, say) and the game then blocks them.
-local TITLE = "Roleplay Quests"
+local TITLE = Loc["Roleplay Quests"]
 local WIDTH, HEADER_H, GAP = 248, 26, 10
 
 local function Font(names, fallback)
@@ -187,15 +188,15 @@ local function OnBlockClick(block, mouseButton)
   if mouseButton == "RightButton" then
     UI.Menu(block, function(root)
       local e = K.Quests:Log()[id]
-      root:CreateTitle(e and e.title or "Quest")
-      root:CreateButton("Open in your journal", function() K.Quests:Open(id) end)
+      root:CreateTitle(e and e.title or Loc["Quest"])
+      root:CreateButton(Loc["Open in your journal"], function() K.Quests:Open(id) end)
       local QA = K.QuestAuto
       for i in ipairs(e and e.objectives or {}) do
         local label, fn, menuText = nil, nil, nil
         if QA then label, fn, menuText = QA.Action(e, i) end
         if label then root:CreateButton(menuText or label, fn) end
       end
-      root:CreateButton("Stop tracking", function() K.Quests:Track(id, false) end)
+      root:CreateButton(Loc["Stop tracking"], function() K.Quests:Track(id, false) end)
     end)
   else
     K.Quests:Open(id)
@@ -207,9 +208,9 @@ local function OnBlockEnter(block)
   if not e then return end
   GameTooltip:SetOwner(block, "ANCHOR_LEFT")
   GameTooltip:SetText(("|T%s:16:16:0:0:64:64:5:59:5:59|t  %s"):format(tostring(e.icon or DEFAULT_ICON), UI.Escape(e.title or "")), 1, 0.82, 0)
-  if e.giver and e.giver ~= "" then GameTooltip:AddLine("From " .. UI.Escape(e.giver), 0.8, 0.8, 0.8) end
+  if e.giver and e.giver ~= "" then GameTooltip:AddLine(Loc["From "] .. UI.Escape(e.giver), 0.8, 0.8, 0.8) end
   local done, total = K.Quests.Progress(e)
-  if total > 0 then GameTooltip:AddLine(("%d/%d done"):format(done, total), 0.55, 0.80, 1) end
+  if total > 0 then GameTooltip:AddLine((Loc["%d/%d done"]):format(done, total), 0.55, 0.80, 1) end
   -- How far the pins are
   local QM, QA = K.QuestMarkers, K.QuestAuto
   if QM then
@@ -217,14 +218,14 @@ local function OnBlockEnter(block)
       local d = QM.Distance(mk)
       return d and QM.DistText(d) or QM.Label(mk) or "?"
     end
-    if e.marker then GameTooltip:AddDoubleLine("The quest", Far(e.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72) end
+    if e.marker then GameTooltip:AddDoubleLine(Loc["The quest"], Far(e.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72) end
     for i, o in ipairs(e.objectives or {}) do
       if o.marker and not o.done and (not QA or (QA.Visible(e, i) and QA.Open(e, i))) then
         GameTooltip:AddDoubleLine(UI.Escape(o.text), Far(o.marker), 0.8, 0.8, 0.8, 0.60, 0.72, 0.72)
       end
     end
   end
-  GameTooltip:AddLine("Click to open. Right-click for more.", 0.62, 0.62, 0.62)
+  GameTooltip:AddLine(Loc["Click to open. Right-click for more."], 0.62, 0.62, 0.62)
   GameTooltip:Show()
 end
 
@@ -281,10 +282,10 @@ local function PaintBlock(b, e)
     -- Hidden ones appear once done; in order, the ones not yet open wait.
     if not QA or (QA.Visible(e, i) and (o.done or QA.Open(e, i))) then
       local text = (QA and QA.CounterPrefix(e, i) or "") .. o.text
-      if o.opt then text = text .. "  |cff9ab8b8(optional)|r" end
-      if QA and QA.Standby(e, i) then text = text .. "  |cff9ab8b8(backup)|r" end
+      if o.opt then text = text .. Loc["  |cff9ab8b8(optional)|r"] end
+      if QA and QA.Standby(e, i) then text = text .. Loc["  |cff9ab8b8(backup)|r"] end
       if o.failed and not o.done then
-        text = text .. "  |cffc0473a(" .. (QA and QA.FailText(o) or "failed"):lower() .. ")|r"
+        text = text .. "  |cffc0473a(" .. (QA and QA.FailText(o) or Loc["failed"]):lower() .. ")|r"
       else
         local progress = QA and not o.done and QA.ProgressText(e, i)
         if progress then text = text .. "  |cff9ab8b8" .. progress .. "|r" end
@@ -294,7 +295,7 @@ local function PaintBlock(b, e)
       rows[#rows + 1] = { text = "- " .. text, done = o.done }
     end
   end
-  if #rows == 0 then rows[1] = { text = (e.giver or "") ~= "" and ("From " .. e.giver) or "No objectives" } end
+  if #rows == 0 then rows[1] = { text = (e.giver or "") ~= "" and (Loc["From "] .. e.giver) or Loc["No objectives"] } end
 
   local y = -(math.ceil(b.HeaderText:GetStringHeight()) + 3)
   local tc = _G.OBJECTIVE_TRACKER_COLOR
@@ -445,12 +446,12 @@ function BuildPane(qmf)
   if W < 120 then W = 280 end
   if H < 300 then H = 420 end
 
-  local pill = UI.Section(p, "Roleplay quests")
+  local pill = UI.Section(p, Loc["Roleplay quests"])
   pill:SetPoint("TOPLEFT", 14, -12)
   p.count = UI.Text(p, "", "Label", "subtle")
   p.count:SetPoint("TOPRIGHT", -14, -14)
 
-  p.list = UI.List(p, W - 16, math.max(80, H - 36 - 44 - 160), 46, "No roleplay quests yet. Take one from someone, or write your own in the Kinship journal.",
+  p.list = UI.List(p, W - 16, math.max(80, H - 36 - 44 - 160), 46, Loc["No roleplay quests yet. Take one from someone, or write your own in the Kinship journal."],
     function(row)
       row.icon = row:CreateTexture(nil, "ARTWORK")
       row.icon:SetSize(30, 30)
@@ -479,7 +480,7 @@ function BuildPane(qmf)
         local e = self:GetParent().item
         if e then K.Quests:Track(e.id, not e.tracked) end
       end)
-      UI.Tooltip(row.track, "Track", "Show it in your objective tracker.")
+      UI.Tooltip(row.track, Loc["Track"], Loc["Show it in your objective tracker."])
       row:SetScript("OnClick", function(self)
         p.selected = self.item and self.item.id
         T:RefreshLog()
@@ -514,16 +515,16 @@ function BuildPane(qmf)
 
   -- A narrow log (retail's) gets shorter buttons, so the three fit in a row.
   local narrow = W < 380
-  p.open = UI.Button(p, narrow and "Journal" or "Open in journal", narrow and 80 or 120, 24)
+  p.open = UI.Button(p, narrow and Loc["Journal"] or Loc["Open in journal"], narrow and 80 or 120, 24)
   p.open:SetPoint("BOTTOMRIGHT", -12, 12)
   p.open:SetScript("OnClick", function() if p.selected then K.Quests:Open(p.selected) end end)
-  p.trackBtn = UI.Button(p, "Track", narrow and 80 or 90, 24)
+  p.trackBtn = UI.Button(p, Loc["Track"], narrow and 80 or 90, 24)
   p.trackBtn:SetPoint("RIGHT", p.open, "LEFT", -6, 0)
   p.trackBtn:SetScript("OnClick", function()
     local e = p.selected and K.Quests:Log()[p.selected]
     if e then K.Quests:Track(e.id, not e.tracked) end
   end)
-  p.write = UI.Button(p, "Write a quest", 110, 24)
+  p.write = UI.Button(p, Loc["Write a quest"], 110, 24)
   p.write:SetPoint("BOTTOMLEFT", 12, 12)
   p.write:SetScript("OnClick", function() K.Quests:Open(nil, 2) end)
 
@@ -542,7 +543,7 @@ local function BuildTab()
   if not ok or not t then ok, t = pcall(CreateFrame, "Frame", "KinshipRPQuestLogTab", qmf, "LargeSideTabButtonTemplate") end
   if not ok or not t then Debug("couldn't make a quest log tab") return end
   tab = t
-  tab.tooltipText = "Roleplay quests"
+  tab.tooltipText = Loc["Roleplay quests"]
   if tab.Icon then
     -- Retail's tabs size their icon from an atlas, and put the atlas back each
     -- time the selected tab changes: give ours a size, and paint it again.
@@ -567,7 +568,7 @@ local function BuildTab()
   if not tab.SetCustomOnMouseUpHandler and tab.HookScript then
     tab:HookScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText("Roleplay quests", 1, 0.82, 0)
+      GameTooltip:SetText(Loc["Roleplay quests"], 1, 0.82, 0)
       GameTooltip:Show()
     end)
     tab:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -593,7 +594,7 @@ function T:RefreshLog()
   local list = Quests(false)
   local sel = pane.selected and K.Quests:Log()[pane.selected]
   if not sel or sel.state ~= "active" then sel = list[1]; pane.selected = sel and sel.id end
-  pane.count:SetText(#list == 1 and "1 quest" or (#list .. " quests"))
+  pane.count:SetText(#list == 1 and Loc["1 quest"] or (#list .. Loc[" quests"]))
   pane.list:SetItems(list, function(row, e)
     row.icon:SetTexture(e.icon or DEFAULT_ICON)
     row.title:SetText(UI.Escape(e.title or ""))
@@ -601,10 +602,10 @@ function T:RefreshLog()
     local bits = {}
     local QM = K.QuestMarkers
     local lvl = QM and QM.LevelText(e)
-    if lvl then bits[#bits + 1] = ("|cff%sLevel %s|r"):format(QM.LevelHex(e, true) or "000000", lvl) end
+    if lvl then bits[#bits + 1] = (Loc["|cff%sLevel %s|r"]):format(QM.LevelHex(e, true) or "000000", lvl) end
     if total > 0 then bits[#bits + 1] = ("%d / %d"):format(done, total) end
     if e.campaign and e.campaign ~= "" then bits[#bits + 1] = UI.Escape(e.campaign)
-    elseif e.giver and e.giver ~= "" then bits[#bits + 1] = "From " .. UI.Escape(e.giver) end
+    elseif e.giver and e.giver ~= "" then bits[#bits + 1] = Loc["From "] .. UI.Escape(e.giver) end
     row.sub:SetText(table.concat(bits, "  ·  "))
     row.track.check:SetShown(e.tracked and true or false)
     row.sel:SetShown(e.id == pane.selected)
@@ -615,7 +616,7 @@ function T:RefreshLog()
   pane.trackBtn:SetShown(sel ~= nil)
   if not sel then return end
   d.title:SetText(UI.Escape(sel.title or ""))
-  d.giver:SetText(sel.giver ~= "" and ("From " .. UI.Escape(sel.giver)) or "")
+  d.giver:SetText(sel.giver ~= "" and (Loc["From "] .. UI.Escape(sel.giver)) or "")
   local lines = {}
   local doneHex = UI.CardHex({ 0.40, 0.80, 0.48 })
   local subHex = UI.Hex(K:Theme().subtle)
@@ -633,12 +634,12 @@ function T:RefreshLog()
         local dist = QM.Distance(o.marker)
         line = line .. ("  |cff%s(%s)|r"):format(subHex, dist and QM.DistText(dist) or QM.Label(o.marker))
       end
-      if o.opt then line = line .. ("  |cff%s(optional)|r"):format(subHex) end
+      if o.opt then line = line .. (Loc["  |cff%s(optional)|r"]):format(subHex) end
       lines[#lines + 1] = line
     end
   end
   d.objectives:SetText(#lines > 0 and table.concat(lines, "\n") or UI.Escape(sel.description or ""))
-  pane.trackBtn:SetText(sel.tracked and "Untrack" or "Track")
+  pane.trackBtn:SetText(sel.tracked and Loc["Untrack"] or Loc["Track"])
 end
 
 ---------------------------------------------------------------------------

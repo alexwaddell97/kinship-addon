@@ -2,6 +2,7 @@
 -- error log, extension points, your profiles, Chronicle and Kin, and /kin.
 
 local ADDON, ns = ...
+local Loc = ns.L
 local K = {}
 ns.K = K
 _G.KinshipRP = K
@@ -400,39 +401,39 @@ function K.FormatDate(t) return date("%d %b %Y", t or time()) end
 -- Profiles
 ---------------------------------------------------------------------------
 K.STATUS = {
-  ic   = { label = "In Character",     short = "IC",   color = { 0.35, 0.85, 0.45 } },
-  ooc  = { label = "Out of Character", short = "OOC",  color = { 0.60, 0.65, 0.72 } },
-  lfrp = { label = "Looking for RP",   short = "LFRP", color = { 0.95, 0.78, 0.30 } },
+  ic   = { label = Loc["In Character"],     short = Loc["IC"],   color = { 0.35, 0.85, 0.45 } },
+  ooc  = { label = Loc["Out of Character"], short = Loc["OOC"],  color = { 0.60, 0.65, 0.72 } },
+  lfrp = { label = Loc["Looking for RP"],   short = Loc["LFRP"], color = { 0.95, 0.78, 0.30 } },
 }
 K.STATUS_ORDER = { "ic", "lfrp", "ooc" }
 
 -- Warfront: how you approach fights, and what your character can go through.
 K.STANCES = {
-  open = { label = "Open war", short = "Open war", icon = "Interface\\Icons\\Ability_DualWield",
+  open = { label = Loc["Open war"], short = Loc["Open war"], icon = "Interface\\Icons\\Ability_DualWield",
            color = { 0.90, 0.36, 0.30 },
-           desc = "Any fight, any time. If our banners differ, attacking on sight is fair game." },
-  duel = { label = "Honour first", short = "Honour", icon = "Interface\\Icons\\Ability_Warrior_BattleShout",
+           desc = Loc["Any fight, any time. If our banners differ, attacking on sight is fair game."] },
+  duel = { label = Loc["Honour first"], short = Loc["Honour"], icon = "Interface\\Icons\\Ability_Warrior_BattleShout",
            color = { 0.95, 0.76, 0.36 },
-           desc = "Fights are welcome, but challenge or emote first. No ambushes, no corpse camping." },
-  none = { label = "Non-combatant", short = "Non-combatant", icon = "Interface\\Icons\\Spell_Holy_SealOfProtection",
+           desc = Loc["Fights are welcome, but challenge or emote first. No ambushes, no corpse camping."] },
+  none = { label = Loc["Non-combatant"], short = Loc["Non-combatant"], icon = "Interface\\Icons\\Spell_Holy_SealOfProtection",
            color = { 0.55, 0.74, 0.86 },
-           desc = "Prefers to stay out of PvP stories. Will yield or flee rather than fight." },
+           desc = Loc["Prefers to stay out of PvP stories. Will yield or flee rather than fight."] },
 }
 K.STANCE_ORDER = { "open", "duel", "none" }
 
 -- Consent uses the standard MSP fields, so other RP addons understand it.
 -- Values (as every MSP addon sends them): "1" yes, "2" no, "3" ask first.
 K.CONSENT = {
-  { key = "RI", label = "Injury",          desc = "Wounds, scars and lasting harm" },
-  { key = "RD", label = "Death",           desc = "Your character dying in a story" },
-  { key = "RO", label = "Capture",         desc = "Being captured, bound or controlled" },
-  { key = "RM", label = "Crime & theft",   desc = "Robbery, threats and other crimes" },
-  { key = "RR", label = "Romance",         desc = "Romantic storylines" },
+  { key = "RI", label = Loc["Injury"],          desc = Loc["Wounds, scars and lasting harm"] },
+  { key = "RD", label = Loc["Death"],           desc = Loc["Your character dying in a story"] },
+  { key = "RO", label = Loc["Capture"],         desc = Loc["Being captured, bound or controlled"] },
+  { key = "RM", label = Loc["Crime & theft"],   desc = Loc["Robbery, threats and other crimes"] },
+  { key = "RR", label = Loc["Romance"],         desc = Loc["Romantic storylines"] },
 }
 K.CONSENT_VALUES = {
-  { key = "1", label = "Yes", color = { 0.40, 0.80, 0.48 } },
-  { key = "3", label = "Ask", color = { 0.95, 0.76, 0.36 } },
-  { key = "2", label = "No",  color = { 0.90, 0.36, 0.30 } },
+  { key = "1", label = Loc["Yes"], color = { 0.40, 0.80, 0.48 } },
+  { key = "3", label = Loc["Ask"], color = { 0.95, 0.76, 0.36 } },
+  { key = "2", label = Loc["No"],  color = { 0.90, 0.36, 0.30 } },
 }
 
 local function NewProfile()
@@ -638,10 +639,10 @@ K.ENTRY = {
   place     = { label = "Places",     icon = K.Art("IconPlace") },
   milestone = { label = "Milestones", icon = K.Art("IconMilestone") },
   dungeon   = { label = "Dungeons",   icon = K.Art("IconDungeon") },
-  kin       = { label = "Kin",        icon = K.Art("IconKin") },
-  note      = { label = "Notes",      icon = K.Art("IconNote") },
+  kin       = { label = Loc["Kin"],        icon = K.Art("IconKin") },
+  note      = { label = Loc["Notes"],      icon = K.Art("IconNote") },
   battle    = { label = "Battles",    icon = K.Art("IconDungeon") },
-  letter    = { label = "Letters",    icon = K.Art("IconNote") },
+  letter    = { label = Loc["Letters"],    icon = K.Art("IconNote") },
 }
 
 function K:Chronicle()
@@ -676,15 +677,15 @@ end
 -- Kin (companions)
 ---------------------------------------------------------------------------
 K.RELATIONS = {
-  { key = "",          label = "Companion" },
-  { key = "friend",    label = "Friend" },
-  { key = "family",    label = "Family" },
-  { key = "mentor",    label = "Mentor" },
-  { key = "rival",     label = "Rival" },
+  { key = "",          label = Loc["Companion"] },
+  { key = "friend",    label = Loc["Friend"] },
+  { key = "family",    label = Loc["Family"] },
+  { key = "mentor",    label = Loc["Mentor"] },
+  { key = "rival",     label = Loc["Rival"] },
 }
 function K.RelationLabel(key)
   for _, r in ipairs(K.RELATIONS) do if r.key == (key or "") then return r.label end end
-  return "Companion"
+  return Loc["Companion"]
 end
 
 function K:KinList()
@@ -712,9 +713,9 @@ end
 -- Kin page keeps who you met, where and when).
 ---------------------------------------------------------------------------
 local BOND_WORDS = {
-  friend = "Became friends with %s", family = "Welcomed %s as family", love = "Grew close to %s",
-  ally = "Made an ally of %s", mentor = "Began a mentor's bond with %s", business = "Struck a deal with %s",
-  unfriendly = "Fell out with %s", rival = "Made a rival of %s", enemy = "Made an enemy of %s",
+  friend = Loc["Became friends with %s"], family = Loc["Welcomed %s as family"], love = Loc["Grew close to %s"],
+  ally = Loc["Made an ally of %s"], mentor = Loc["Began a mentor's bond with %s"], business = Loc["Struck a deal with %s"],
+  unfriendly = Loc["Fell out with %s"], rival = Loc["Made a rival of %s"], enemy = Loc["Made an enemy of %s"],
 }
 local BOND_REDO = 600   -- a change of mind within this long rewrites the entry
 
@@ -861,14 +862,14 @@ local function OnZone()
     local name = GetInstanceInfo()
     if K.Safe(name) and name and not c.instances[name] then
       c.instances[name] = time()
-      K:AddEntry("dungeon", "Entered " .. name, nil, name)
+      K:AddEntry("dungeon", Loc["Entered "] .. name, nil, name)
     end
   end
 end
 
 local function OnLevel(level)
   if level and (level % 5 == 0 or level == 60) then
-    K:AddEntry("milestone", ("Reached level %d"):format(level))
+    K:AddEntry("milestone", (Loc["Reached level %d"]):format(level))
   end
 end
 
@@ -995,14 +996,14 @@ SlashCmdList.KINSHIPRP = function(input)
       or cmd == "persona" or cmd == "companions" or cmd == "quests" or cmd == "inventory" then
     K.Journal:Open(cmd)
   elseif (cmd == "effects" or cmd == "auras") and K.Auras then
-    if K:ExtOn("auras") then K.Auras:OpenJournal() else K:Print("Effects are switched off (Settings > Extended features).") end
+    if K:ExtOn("auras") then K.Auras:OpenJournal() else K:Print(Loc["Effects are switched off (Settings > Extended features)."]) end
   elseif (cmd == "look" or cmd == "listen" or cmd == "talk" or cmd == "interact") and K.ExtCampaign then
     K.ExtCampaign:Act(cmd == "interact" and "ACTION" or cmd:upper())
   elseif cmd == "satchel" and K.Satchel then
     K.Satchel:Toggle()
   elseif (cmd == "outfit" or cmd == "wear") and K.Worn then
     if not K:ExtOn("inventory") then
-      K:Print("Items are switched off (Settings > Extended features).")
+      K:Print(Loc["Items are switched off (Settings > Extended features)."])
     elseif rest == "" then
       K.Journal:Open("inventory")
       local c = K.Journal.content[K.Journal:Index("inventory")]
@@ -1014,7 +1015,7 @@ SlashCmdList.KINSHIPRP = function(input)
       end
     else
       local o = K.Worn:FindOutfit(rest)
-      if o then K.Worn:ChangeInto(o) else K:Print(("You have no outfit called \"%s\"."):format(K.UI.Escape(rest))) end
+      if o then K.Worn:ChangeInto(o) else K:Print((Loc["You have no outfit called \"%s\"."]):format(K.UI.Escape(rest))) end
     end
   elseif cmd == "bags" or cmd == "items" then
     K.Journal:Open("inventory")
@@ -1032,11 +1033,11 @@ SlashCmdList.KINSHIPRP = function(input)
       local n = GetUnitName("target", true)
       if K.Safe(n) then who = n end
     end
-    if who then K.Safety:ConfirmIgnore(who) else K:Print("Ignore whom? Target them, or type /kin ignore Name.") end
+    if who then K.Safety:ConfirmIgnore(who) else K:Print(Loc["Ignore whom? Target them, or type /kin ignore Name."]) end
   elseif cmd == "bar" then
     K.db.settings.targetBar = K.db.settings.targetBar == false
     if K.TargetBar then K.TargetBar:Update() end
-    K:Print("Target bar " .. (K.db.settings.targetBar and "on" or "off"))
+    K:Print(Loc["Target bar "] .. (K.db.settings.targetBar and "on" or "off"))
   elseif cmd == "parley" then
     K.Parley:Toggle()
   elseif cmd == "letter" or cmd == "write" then
@@ -1057,37 +1058,37 @@ SlashCmdList.KINSHIPRP = function(input)
   elseif cmd == "view" then
     K:ViewUnitProfile("target")
   elseif cmd == "status" and K:Compat() then
-    K:Print("Your status is set in Total RP 3 while it runs.")
+    K:Print(Loc["Your status is set in Total RP 3 while it runs."])
   elseif cmd == "status" then
     local s = rest:lower()
     if s == "lf" then s = "lfrp" end
     if K.STATUS[s] then K:SetStatus(s) else K:CycleStatus() end
-    K:Print("Status: " .. K.STATUS[K:Profile().status].label)
+    K:Print(Loc["Status: "] .. K.STATUS[K:Profile().status].label)
   elseif cmd == "button" then
     K.db.statusButton.shown = not K.db.statusButton.shown
     K.StatusButton:Update()
   else
     for _, line in ipairs({
-      "/kin - open your Kinship journal",
-      "/kin kofi - a link to support Kinship on Ko-fi",
-      "/kin satchel - open your roleplay satchel",
-      "/kin outfit [name] - change into a saved outfit (or open your outfits)",
-      "/kin profile | persona | companions | directory | kin | house | letters - open a page",
-      "/kin chronicle | quests | gatherings | warfront | inventory | settings - open a page",
-      "/kin effects - wounds, boons and states on your character",
-      "/kin roll [2d6+3] - roll dice (or open the dice tray)",
-      "/kin scan - find roleplayers nearby on the map",
-      "/kin plates - preview nameplates with your settings, and what their marks mean",
-      "/kin share | import - share a profile as text, or bring one in",
-      "/kin ignore [name] - hide someone everywhere in Kinship",
-      "/kin bar - show or hide the target bar",
-      "/kin parley - open the Parley wheel (bind a key for hold-and-release)",
-      "/kin letter [name] - write a letter to someone (or your target)",
-      "/kin view - view your target's profile (or your own)",
-      "/kin status [ic|lf|ooc] - set or cycle your status",
-      "/kin button - show or hide the status button",
-      "/kin backup [restore] - back up all of Kinship's saved data as text, or restore it",
-      "/kin bug - details to copy into a bug report",
+      Loc["/kin - open your Kinship journal"],
+      Loc["/kin kofi - a link to support Kinship on Ko-fi"],
+      Loc["/kin satchel - open your roleplay satchel"],
+      Loc["/kin outfit [name] - change into a saved outfit (or open your outfits)"],
+      Loc["/kin profile | persona | companions | directory | kin | house | letters - open a page"],
+      Loc["/kin chronicle | quests | gatherings | warfront | inventory | settings - open a page"],
+      Loc["/kin effects - wounds, boons and states on your character"],
+      Loc["/kin roll [2d6+3] - roll dice (or open the dice tray)"],
+      Loc["/kin scan - find roleplayers nearby on the map"],
+      Loc["/kin plates - preview nameplates with your settings, and what their marks mean"],
+      Loc["/kin share | import - share a profile as text, or bring one in"],
+      Loc["/kin ignore [name] - hide someone everywhere in Kinship"],
+      Loc["/kin bar - show or hide the target bar"],
+      Loc["/kin parley - open the Parley wheel (bind a key for hold-and-release)"],
+      Loc["/kin letter [name] - write a letter to someone (or your target)"],
+      Loc["/kin view - view your target's profile (or your own)"],
+      Loc["/kin status [ic|lf|ooc] - set or cycle your status"],
+      Loc["/kin button - show or hide the status button"],
+      Loc["/kin backup [restore] - back up all of Kinship's saved data as text, or restore it"],
+      Loc["/kin bug - details to copy into a bug report"],
     }) do K:Print(line) end
   end
 end

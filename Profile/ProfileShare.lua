@@ -12,6 +12,7 @@
 -- Imported text is cleaned (no links or textures) and limited in size.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local S = {}
@@ -161,7 +162,7 @@ function S:Encode(profile, name)
   local budget = { n = 0 }
   local data = Clean(profile, 1, budget, false) or {}
   data.source = nil
-  local payload = { v = 1, name = tostring(name or "Profile"), by = K.VERSION, t = time(), profile = data }
+  local payload = { v = 1, name = tostring(name or Loc["Profile"]), by = K.VERSION, t = time(), profile = data }
   local text = Serialize(payload)
   if not text then return nil end
   local sum, flag, body = Adler(text), "p", text
@@ -257,14 +258,14 @@ function S:Decode(code)
   if not K.STATUS[p.status] then p.status = "ooc" end
   if not K.STANCES[p.stance] then p.stance = "duel" end
   local name = type(t.name) == "string" and strtrim((UI.Clean(t.name):gsub("|", ""))) or ""
-  if name == "" then name = "Imported" end
+  if name == "" then name = Loc["Imported"] end
   return { name = name:sub(1, 24), profile = p, by = type(t.by) == "string" and t.by or nil,
            t = type(t.t) == "number" and t.t or nil }
 end
 
 local function UniqueName(list, name)
   name = strtrim(name or "")
-  if name == "" then name = "Imported" end
+  if name == "" then name = Loc["Imported"] end
   if not list[name] then return name end
   local n = 2
   while list[name .. " " .. n] do n = n + 1 end
@@ -274,7 +275,7 @@ end
 -- "Appearance, History, 3 glances" and the like.
 local function Summary(p)
   local parts = {}
-  for _, s in ipairs({ { "appearance", "Appearance" }, { "personality", "Personality" }, { "history", "History" } }) do
+  for _, s in ipairs({ { "appearance", Loc["Appearance"] }, { "personality", Loc["Personality"] }, { "history", Loc["History"] } }) do
     local v = p[s[1]]
     if type(v) == "string" and strtrim(v) ~= "" then parts[#parts + 1] = s[2] end
   end
@@ -284,12 +285,12 @@ local function Summary(p)
   if type(p.traits) == "table" and #p.traits > 0 then
     parts[#parts + 1] = #p.traits .. (#p.traits == 1 and " trait" or " traits")
   end
-  return #parts > 0 and table.concat(parts, "  ·  ") or "No longer writing yet"
+  return #parts > 0 and table.concat(parts, "  ·  ") or Loc["No longer writing yet"]
 end
 
 local function Size(n)
-  if n < 1024 then return n .. " bytes" end
-  return ("%.1f KB"):format(n / 1024)
+  if n < 1024 then return n .. Loc[" bytes"] end
+  return (Loc["%.1f KB"]):format(n / 1024)
 end
 
 ---------------------------------------------------------------------------
@@ -331,10 +332,10 @@ local function BuildExport(pg)
     if user and S.code and self:GetText() ~= S.code then self:SetText(S.code); self:HighlightText() end
   end)
 
-  pg.done = UI.Button(pg, "Done", 100, 28)
+  pg.done = UI.Button(pg, Loc["Done"], 100, 28)
   pg.done:SetPoint("BOTTOMRIGHT", -16, 14)
   pg.done:SetScript("OnClick", function() S.frame:Hide() end)
-  pg.select = UI.Button(pg, "Select all", 110, 28)
+  pg.select = UI.Button(pg, Loc["Select all"], 110, 28)
   pg.select:SetPoint("RIGHT", pg.done, "LEFT", -8, 0)
   pg.select:SetScript("OnClick", function()
     pg.area.edit:SetFocus()
@@ -343,7 +344,7 @@ local function BuildExport(pg)
 end
 
 local function BuildImport(pg)
-  local hint = UI.Text(pg, "Paste a profile code below (Ctrl+V). Codes start with KINSHIP1.", "Small", "deskSubtle", PW)
+  local hint = UI.Text(pg, Loc["Paste a profile code below (Ctrl+V). Codes start with KINSHIP1."], "Small", "deskSubtle", PW)
   hint:SetPoint("TOPLEFT", 17, -10)
 
   pg.area = UI.TextArea(pg, PW, 104, 0, function() S:QueueValidate() end, "desk")
@@ -388,20 +389,20 @@ local function BuildImport(pg)
   art:SetSize(48, 48)
   art:SetPoint("LEFT", 24, 0)
   art:SetAlpha(0.75)
-  local et = UI.Text(empty, "A preview of the profile appears here once you paste a code.", "Body", "subtle", PW - 110)
+  local et = UI.Text(empty, Loc["A preview of the profile appears here once you paste a code."], "Body", "subtle", PW - 110)
   et:SetPoint("LEFT", art, "RIGHT", 16, 0)
 
-  pg.saveAs = UI.Field(pg, "Save as", 240, 24, nil, "desk")
+  pg.saveAs = UI.Field(pg, Loc["Save as"], 240, 24, nil, "desk")
   pg.saveAs:SetPoint("TOPLEFT", 16, -296)
   S.switchTo = true
-  pg.switch = UI.Toggle(pg, "Switch to it now", "Make it your active profile straight away.",
+  pg.switch = UI.Toggle(pg, Loc["Switch to it now"], Loc["Make it your active profile straight away."],
     function() return S.switchTo end, function(v) S.switchTo = v end, 250)
   pg.switch:SetPoint("TOPLEFT", 280, -308)
 
-  pg.go = UI.Button(pg, "Import as new profile", 170, 28)
+  pg.go = UI.Button(pg, Loc["Import as new profile"], 170, 28)
   pg.go:SetPoint("BOTTOMRIGHT", -16, 14)
   pg.go:SetScript("OnClick", function() S:DoImport() end)
-  pg.clear = UI.Button(pg, "Clear", 90, 28)
+  pg.clear = UI.Button(pg, Loc["Clear"], 90, 28)
   pg.clear:SetPoint("RIGHT", pg.go, "LEFT", -8, 0)
   pg.clear:SetScript("OnClick", function()
     pg.area.edit:SetText("")
@@ -411,13 +412,13 @@ end
 
 function S:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPShare", "Share a profile", W, H)
+  local f = UI.Window("KinshipRPShare", Loc["Share a profile"], W, H)
   f:SetFrameStrata("DIALOG")
   self.frame = f
   local desk = UI.Desk(f)
   desk:SetPoint("TOPLEFT", 1, -35)
   desk:SetPoint("BOTTOMRIGHT", -1, 1)
-  f.tabs = UI.TabBar(f, { "Export", "Import" }, function(i) S:ShowTab(i) end, true)
+  f.tabs = UI.TabBar(f, { Loc["Export"], Loc["Import"] }, function(i) S:ShowTab(i) end, true)
   f.tabs:SetPoint("TOPLEFT", 6, -42)
   f.pages = {}
   for i = 1, 2 do
@@ -456,7 +457,7 @@ function S:RefreshExport()
   pg.card.name:SetText(K:DisplayName(p))
   SetPortraitTexture(pg.card.face, "player")
   if code then
-    pg.card.sub:SetText(("Profile \"%s\"  ·  %s"):format(active, Summary(p))
+    pg.card.sub:SetText((Loc["Profile \"%s\"  ·  %s"]):format(active, Summary(p))
       .. ((cut or 0) > 0 and ("  ·  |cffe8735a%d long %s cut short|r"):format(cut, cut == 1 and "text was" or "texts were") or ""))
     pg.card.size:Set(Size(#code), K:Theme().accent)
     pg.area.edit:SetText(code)
@@ -464,7 +465,7 @@ function S:RefreshExport()
     pg.area.edit:SetFocus()
     pg.area.edit:HighlightText()
   else
-    pg.card.sub:SetText("This profile couldn't be packed into a code.")
+    pg.card.sub:SetText(Loc["This profile couldn't be packed into a code."])
     pg.card.size:Set(nil)
     pg.area.edit:SetText("")
   end
@@ -502,28 +503,28 @@ function S:Validate()
   card.empty:SetShown(data == nil)
   pg.go:SetEnabled(data ~= nil)
   if not data then
-    if err then SetStatus(pg, err, BAD) else SetStatus(pg, "Waiting for a code.") end
+    if err then SetStatus(pg, err, BAD) else SetStatus(pg, Loc["Waiting for a code."]) end
     return
   end
   local p = data.profile
   local rp = strtrim(p.rpName or "")
   local prefix = strtrim(p.prefix or "")
-  if rp == "" then rp = "Unnamed character" end
+  if rp == "" then rp = Loc["Unnamed character"] end
   card.name:SetText(K.Titled(prefix, rp))
   card.epithet:SetText(strtrim(p.epithet or "") ~= "" and p.epithet or " ")
   local facts = {}
   for _, k in ipairs({ "race", "class", "age", "home" }) do
     if strtrim(p[k] or "") ~= "" then facts[#facts + 1] = strtrim(p[k]) end
   end
-  if strtrim(p.house or "") ~= "" then facts[#facts + 1] = "House " .. strtrim(p.house) end
-  card.facts:SetText(#facts > 0 and table.concat(facts, "  ·  ") or "No details filled in")
+  if strtrim(p.house or "") ~= "" then facts[#facts + 1] = Loc["House "] .. strtrim(p.house) end
+  card.facts:SetText(#facts > 0 and table.concat(facts, "  ·  ") or Loc["No details filled in"])
   card.written:SetText(Summary(p))
   local s = K.STATUS[p.status]
   card.status:Set(s and s.short, s and s.color)
   card.seal:SetSeal("teal", K.Art("IconKin"))
   UI.FadeIn(card.filled, 0.2)
-  SetStatus(pg, ("A valid profile%s%s."):format(data.by and (" from Kinship " .. data.by) or "",
-    data.t and (", made " .. K.FormatDate(data.t)) or ""), GOOD)
+  SetStatus(pg, (Loc["A valid profile%s%s."]):format(data.by and (Loc[" from Kinship "] .. data.by) or "",
+    data.t and (Loc[", made "] .. K.FormatDate(data.t)) or ""), GOOD)
   if not pg.saveAs.edit:HasFocus() then
     pg.saveAs.edit:SetText(UniqueName(K:MyProfiles().list, data.name))
   end
@@ -539,19 +540,19 @@ function S:DoImport()
   if self.switchTo then K:SwitchProfile(name) else K:Fire("PROFILE") end
   self.pending = nil
   pg.go:SetEnabled(false)
-  SetStatus(pg, ("Imported as \"%s\"%s."):format(name, self.switchTo and ", and it's now your active profile" or ""), GOOD)
-  UI.Toast({ icon = K.Art("IconKin"), title = "Profile imported",
-    text = ("\"%s\" is ready on your Profile page."):format(name), duration = 5,
+  SetStatus(pg, (Loc["Imported as \"%s\"%s."]):format(name, self.switchTo and Loc[", and it's now your active profile"] or ""), GOOD)
+  UI.Toast({ icon = K.Art("IconKin"), title = Loc["Profile imported"],
+    text = (Loc["\"%s\" is ready on your Profile page."]):format(name), duration = 5,
     onClick = function() K.Journal:Open("profile") end })
 end
 
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
-K:RegisterSettings({ id = "profiles", trp3 = "hide", title = "Profiles", order = 5, build = function(card)
-  card:Note("Export a profile as text to back it up, use it on another character or share it.")
-  local ex = card:Button("Export current profile", function() S:Open("export") end, 180)
-  local im = UI.Button(card, "Import a profile", 160, 26)
+K:RegisterSettings({ id = "profiles", trp3 = "hide", title = Loc["Profiles"], order = 5, build = function(card)
+  card:Note(Loc["Export a profile as text to back it up, use it on another character or share it."])
+  local ex = card:Button(Loc["Export current profile"], function() S:Open("export") end, 180)
+  local im = UI.Button(card, Loc["Import a profile"], 160, 26)
   im:SetPoint("LEFT", ex, "RIGHT", 8, 0)
   im:SetScript("OnClick", function() S:Open("import") end)
 end })

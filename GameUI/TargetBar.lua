@@ -6,6 +6,7 @@
 -- Drag it to move it (unless locked); it steps aside in combat if you like.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -120,7 +121,7 @@ function B:Build()
   f.portrait:SetScript("OnClick", function() B:OpenProfile() end)
   f.portrait:HookScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("View profile", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["View profile"], 1, 0.82, 0)
     GameTooltip:Show()
   end)
   f.portrait:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -205,7 +206,7 @@ function B.MoreButton(f)
   b.dots:SetText("...")
   b:HookScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("More", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["More"], 1, 0.82, 0)
     for _, def in ipairs(self.defs or {}) do GameTooltip:AddLine(def.label or "", 1, 1, 1) end
     GameTooltip:Show()
   end)
@@ -319,7 +320,7 @@ function B:Update()
   -- Status and relationship on the line below
   local bits = {}
   if ignored then
-    bits[1] = "Ignored"
+    bits[1] = Loc["Ignored"]
   elseif p then
     local epithet = K.Epithet(p, strtrim(C(p.epithet)))
     if epithet ~= "" then bits[#bits + 1] = epithet end
@@ -329,7 +330,7 @@ function B:Update()
     local lv = K.Experience and K.Experience.Notable(p)
     if lv then bits[#bits + 1] = ("|cff%s%s|r"):format(Hex(lv.color), lv.short) end
   else
-    bits[1] = "No roleplay profile"
+    bits[1] = Loc["No roleplay profile"]
   end
   if not me and K.RelationOf then
     local d = K:RelationOf(name)
@@ -448,18 +449,18 @@ local function Other(_, name)
 end
 
 K:RegisterTargetButton({
-  id = "profile", order = 10, label = "View profile", icon = "Interface\\Icons\\INV_Misc_Book_09",
+  id = "profile", order = 10, label = Loc["View profile"], icon = "Interface\\Icons\\INV_Misc_Book_09",
   onClick = function() B:OpenProfile() end,
 })
 
 K:RegisterTargetButton({
-  id = "letter", order = 20, label = "Write a letter", icon = "Interface\\Icons\\INV_Letter_15",
+  id = "letter", order = 20, label = Loc["Write a letter"], icon = "Interface\\Icons\\INV_Letter_15",
   shown = function(unit, name) return Other(unit, name) and K.Letters ~= nil end,
   onClick = function(_, name) K.Letters:Compose(name) end,
 })
 
 K:RegisterTargetButton({
-  id = "music", order = 40, label = "Play their theme", icon = "Interface\\Icons\\INV_Misc_Drum_01",
+  id = "music", order = 40, label = Loc["Play their theme"], icon = "Interface\\Icons\\INV_Misc_Drum_01",
   shown = function(_, name)
     local P = K.Persona
     if not P or not name or K:IsIgnored(name) then return false end
@@ -511,16 +512,16 @@ K:On("LOGIN", function()
   Queue()
 end)
 
-K:RegisterSettings({ id = "targetbar", trp3 = "hide", title = "Target bar", order = 14, build = function(card)
-  card:Toggle("Show the target bar", "Shows a bar with a player's roleplay name, glances and actions when you target them.",
+K:RegisterSettings({ id = "targetbar", trp3 = "hide", title = Loc["Target bar"], order = 14, build = function(card)
+  card:Toggle(Loc["Show the target bar"], Loc["Shows a bar with a player's roleplay name, glances and actions when you target them."],
     { get = function() return S().targetBar ~= false end, set = function(v) K.db.settings.targetBar = v; Queue() end })
-  card:Toggle("Hide it in combat", "Hides the bar during combat.",
+  card:Toggle(Loc["Hide it in combat"], Loc["Hides the bar during combat."],
     { get = function() return S().targetBarCombat ~= false end, set = function(v) K.db.settings.targetBarCombat = v; Queue() end })
-  card:Toggle("Players without a profile", "Shows the bar for players who don't use a roleplay addon too.",
+  card:Toggle(Loc["Players without a profile"], Loc["Shows the bar for players who don't use a roleplay addon too."],
     { get = function() return S().targetBarAll end, set = function(v) K.db.settings.targetBarAll = v; Queue() end })
-  card:Toggle("Lock its position", "Stops the bar from being dragged.",
+  card:Toggle(Loc["Lock its position"], Loc["Stops the bar from being dragged."],
     { get = function() return S().targetBarLock end, set = function(v) K.db.settings.targetBarLock = v end })
-  card:Button("Reset its position", function()
+  card:Button(Loc["Reset its position"], function()
     K.db.settings.targetBarPos = nil
     if B.frame then Place(B.frame) end
   end, 160)

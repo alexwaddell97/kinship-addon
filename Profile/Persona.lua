@@ -5,6 +5,7 @@
 -- players on either side see each other's.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -50,20 +51,20 @@ P.NAME_COLORS = {
 -- Well-known game music, checked against LibRPMedia's data for this client
 -- (Total RP 3's music list). Entries the client doesn't have are dropped at login.
 P.MUSIC = {
-  { id = 53221, name = "Lament of the Highborne", time = 172 },
-  { id = 53202, name = "Stormwind",               time = 55 },
-  { id = 53198, name = "Orgrimmar",               time = 69 },
-  { id = 53192, name = "Ironforge",               time = 124 },
-  { id = 53213, name = "Thunder Bluff",           time = 118 },
-  { id = 53216, name = "Undercity",               time = 76 },
-  { id = 53183, name = "Darnassus",               time = 40 },
-  { id = 53737, name = "Alliance tavern",         time = 48 },
-  { id = 53744, name = "Horde tavern",            time = 49 },
-  { id = 53748, name = "Human tavern",            time = 93 },
-  { id = 53453, name = "Enchanted forest",        time = 50 },
-  { id = 53486, name = "Haunted woods",           time = 71 },
-  { id = 53240, name = "Mystery",                 time = 61 },
-  { id = 53224, name = "Angelic",                 time = 48 },
+  { id = 53221, name = Loc["Lament of the Highborne"], time = 172 },
+  { id = 53202, name = Loc["Stormwind"],               time = 55 },
+  { id = 53198, name = Loc["Orgrimmar"],               time = 69 },
+  { id = 53192, name = Loc["Ironforge"],               time = 124 },
+  { id = 53213, name = Loc["Thunder Bluff"],           time = 118 },
+  { id = 53216, name = Loc["Undercity"],               time = 76 },
+  { id = 53183, name = Loc["Darnassus"],               time = 40 },
+  { id = 53737, name = Loc["Alliance tavern"],         time = 48 },
+  { id = 53744, name = Loc["Horde tavern"],            time = 49 },
+  { id = 53748, name = Loc["Human tavern"],            time = 93 },
+  { id = 53453, name = Loc["Enchanted forest"],        time = 50 },
+  { id = 53486, name = Loc["Haunted woods"],           time = 71 },
+  { id = 53240, name = Loc["Mystery"],                 time = 61 },
+  { id = 53224, name = Loc["Angelic"],                 time = 48 },
 }
 
 ---------------------------------------------------------------------------
@@ -188,7 +189,7 @@ function P.RightColor(t) return ValidColor(t and t.rightColor) and t.rightColor 
 -- "75% Chaotic", "Balanced"
 function P.TraitHint(t)
   local v = P.TraitValue(t)
-  if v == 10 then return "Balanced" end
+  if v == 10 then return Loc["Balanced"] end
   if v > 10 then return ("%d%% %s"):format(v * 5, Trim(t.left)) end
   return ("%d%% %s"):format((20 - v) * 5, Trim(t.right))
 end
@@ -259,7 +260,7 @@ function P.MusicLabel(id)
   if not id then return nil end
   for _, m in ipairs(P.MUSIC) do if m.id == id then return m.name end end
   for _, m in ipairs(P.MusicLibrary()) do if m.id == id then return m.name end end
-  return ("Music file %d"):format(id)
+  return (Loc["Music file %d"]):format(id)
 end
 
 -- A rich tooltip for one glance: icon and title, then the text.
@@ -267,7 +268,7 @@ function P.GlanceTooltip(owner, g, other, anchor)
   if not g then return end
   local function C(s) return other and UI.Clean(s) or (s or "") end
   local title = strtrim(C(g.title))
-  if title == "" then title = "At first glance" end
+  if title == "" then title = Loc["At first glance"] end
   GameTooltip:SetOwner(owner, anchor or "ANCHOR_NONE")
   if not anchor then
     GameTooltip:ClearAllPoints()

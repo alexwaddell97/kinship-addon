@@ -10,6 +10,7 @@
 -- (the same shape as Extended's quest log, so its workflows read it as they expect).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local E = K.Ext
@@ -281,7 +282,7 @@ function P:Started(c) return self:Log(c) ~= nil end
 -- Something in a campaign that isn't playing wants to move it on: ask first.
 local pending
 StaticPopupDialogs["KINSHIPRP_EXT_RESUME"] = {
-  text = "%s isn't playing. Play it now?", button1 = YES or "Yes", button2 = NO or "No",
+  text = "%s isn't playing. Play it now?", button1 = YES or Loc["Yes"], button2 = NO or Loc["No"],
   OnAccept = function()
     local p = pending
     pending = nil
@@ -328,7 +329,7 @@ function P:StartQuest(c, q)
     end
     local e = P:Mirror(c, q)
     if e then
-      UI.Toast({ icon = e.icon, round = true, title = "New quest", text = UI.Clean(e.title),
+      UI.Toast({ icon = e.icon, round = true, title = Loc["New quest"], text = UI.Clean(e.title),
                  sound = "IG_QUEST_LIST_OPEN", duration = 6, onClick = function() K.Quests:Open(e.id) end })
     end
     P:Rebuild()
@@ -617,7 +618,7 @@ local function BuildBar()
     if button == "RightButton" then
       UI.Menu(hit, function(root)
         local c = P:Current()
-        root:CreateTitle(c and Name(E:Get(c)) or "Campaign")
+        root:CreateTitle(c and Name(E:Get(c)) or Loc["Campaign"])
         root:CreateButton("Open the quest journal", function() K.Journal:Open("quests") end)
         root:CreateButton("Pause the campaign", function() P:Pause() end)
       end)
@@ -628,7 +629,7 @@ local function BuildBar()
   hit:SetScript("OnEnter", function(self)
     local c = P:Current()
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText(c and Name(E:Get(c)) or "Campaign", 1, 0.82, 0)
+    GameTooltip:SetText(c and Name(E:Get(c)) or Loc["Campaign"], 1, 0.82, 0)
     GameTooltip:AddLine("Playing now. Click for your quest journal; right-click to pause it.", 1, 1, 1, true)
     GameTooltip:Show()
   end)

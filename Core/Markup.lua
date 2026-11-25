@@ -18,6 +18,7 @@
 -- on dark panels.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local M = {}
@@ -34,15 +35,15 @@ local LETTERS = { r = "ff0000", g = "00ff00", b = "0000ff", y = "ffff00", p = "f
 
 -- Toolbar palette: mid tones that read well on cream and on dark panels.
 M.PALETTE = {
-  { label = "Crimson", hex = "b8323a" },
-  { label = "Ember",   hex = "d2742c" },
-  { label = "Gold",    hex = "c99a2e" },
-  { label = "Forest",  hex = "3f8f4f" },
-  { label = "Teal",    hex = "1f8c88" },
-  { label = "Sky",     hex = "3f7fc4" },
-  { label = "Violet",  hex = "8a54b8" },
-  { label = "Rose",    hex = "c4588a" },
-  { label = "Stone",   hex = "7d7d7d" },
+  { label = Loc["Crimson"], hex = "b8323a" },
+  { label = Loc["Ember"],   hex = "d2742c" },
+  { label = Loc["Gold"],    hex = "c99a2e" },
+  { label = Loc["Forest"],  hex = "3f8f4f" },
+  { label = Loc["Teal"],    hex = "1f8c88" },
+  { label = Loc["Sky"],     hex = "3f7fc4" },
+  { label = Loc["Violet"],  hex = "8a54b8" },
+  { label = Loc["Rose"],    hex = "c4588a" },
+  { label = Loc["Stone"],   hex = "7d7d7d" },
 }
 
 ---------------------------------------------------------------------------
@@ -335,15 +336,15 @@ end
 function M:Help(accentHex)
   local a = "|cff" .. (accentHex or "5fc4b8")
   return table.concat({
-    a .. "# Heading|r   a title for a section",
-    a .. "## Subheading|r   a smaller title",
-    a .. "---|r   a divider line across the page",
-    a .. "*words*|r   emphasis, in the accent colour",
-    a .. "{col:c94f4f}words{/col}|r   coloured words",
-    a .. "{icon:INV_Misc_Note_01:18}|r   an icon, 8 to 64 pixels",
+    a .. Loc["# Heading|r   a title for a section"],
+    a .. Loc["## Subheading|r   a smaller title"],
+    a .. Loc["---|r   a divider line across the page"],
+    a .. Loc["*words*|r   emphasis, in the accent colour"],
+    a .. Loc["{col:c94f4f}words{/col}|r   coloured words"],
+    a .. Loc["{icon:INV_Misc_Note_01:18}|r   an icon, 8 to 64 pixels"],
     a .. "{img:Interface\\Path:width:height}|r   an image from the game",
     " ",
-    "Total RP 3 tags such as {h1}, {p:c} and {col:r} work too.",
+    Loc["Total RP 3 tags such as {h1}, {p:c} and {col:r} work too."],
   }, "\n")
 end
 
@@ -414,14 +415,14 @@ end
 
 local function ColourMenu(owner, eb)
   UI.Menu(owner, function(root)
-    root:CreateTitle("Colour the next words")
+    root:CreateTitle(Loc["Colour the next words"])
     for _, c in ipairs(M.PALETTE) do
       root:CreateButton(M.Swatch(c.hex, 10) .. "  " .. c.label, function() Wrap(eb, ("{col:%s}"):format(c.hex), "{/col}") end)
     end
     local CPF = rawget(_G, "ColorPickerFrame")
     if CPF and type(CPF.SetupColorPickerAndShow) == "function" then
       root:CreateDivider()
-      root:CreateButton("Any colour...", function() CustomColour(eb) end)
+      root:CreateButton(Loc["Any colour..."], function() CustomColour(eb) end)
     end
   end)
 end
@@ -435,7 +436,7 @@ local PICK_W, PICK_H, COLS, CELL = 372, 432, 8, 41
 function M:BuildPicker()
   if self.picker then return self.picker end
   -- Its own global name: IconPicker.lua's window is KinshipRPIconPicker.
-  local f = UI.Window("KinshipRPMarkupIconPicker", "Choose an icon", PICK_W, PICK_H)
+  local f = UI.Window("KinshipRPMarkupIconPicker", Loc["Choose an icon"], PICK_W, PICK_H)
   f:SetFrameStrata("DIALOG")
   self.picker = f
   local desk = UI.Desk(f)
@@ -443,15 +444,15 @@ function M:BuildPicker()
   desk:SetPoint("BOTTOMRIGHT", -1, 1)
 
   f.size = 18
-  f.sizes = UI.Segments(f, { { key = 14, label = "Small" }, { key = 18, label = "Med" },
-    { key = 24, label = "Large" }, { key = 32, label = "Huge" } }, 48, function(k) f.size = k end)
+  f.sizes = UI.Segments(f, { { key = 14, label = Loc["Small"] }, { key = 18, label = Loc["Med"] },
+    { key = 24, label = Loc["Large"] }, { key = 32, label = Loc["Huge"] } }, 48, function(k) f.size = k end)
   f.sizes:SetPoint("TOPLEFT", 16, -46)
   f.sizes:Select(18)
-  UI.Tooltip(f.sizes, "Icon size", "How large the icon sits in your text.")
+  UI.Tooltip(f.sizes, Loc["Icon size"], Loc["How large the icon sits in your text."])
 
   f.name = UI.Edit(f, 136, 24, "desk", 80)
   f.name:SetPoint("TOPRIGHT", -16, -46)
-  f.name.hint = UI.Text(f.name, "Search or icon name", "Small", "deskSubtle")
+  f.name.hint = UI.Text(f.name, Loc["Search or icon name"], "Small", "deskSubtle")
   f.name.hint:SetPoint("LEFT", 8, 0)
   f.name:SetScript("OnTextChanged", function(self)
     self.hint:SetShown((self:GetText() or "") == "")
@@ -467,10 +468,10 @@ function M:BuildPicker()
     elseif f.found and f.found[1] ~= nil then
       f.Choose(f.found[1])
     else
-      f.status:SetText("|cffe6705aNo icon by that name. Try a shorter word, like \"sword\".|r")
+      f.status:SetText(Loc["|cffe6705aNo icon by that name. Try a shorter word, like \"sword\".|r"])
     end
   end)
-  UI.Tooltip(f.name, "Find an icon", "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
+  UI.Tooltip(f.name, Loc["Find an icon"], "Type part of a name, like " .. '"sword" or "fire bolt"' .. ", to narrow the grid. "
     .. "Enter takes the first one, or the icon you named in full.")
   f.status = UI.Text(f, "", "Small", "deskSubtle", PICK_W - 32)
   f.status:SetPoint("TOPLEFT", 17, -78)
@@ -481,7 +482,7 @@ function M:BuildPicker()
     if fn then K.Try("icon picker", fn, tostring(spec), f.size) end
   end
 
-  f.list = UI.List(f, PICK_W - 32, PICK_H - 112, CELL, "No icons are available on this client.", function(row)
+  f.list = UI.List(f, PICK_W - 32, PICK_H - 112, CELL, Loc["No icons are available on this client."], function(row)
     row:EnableMouse(false)
     row.cells = {}
     for i = 1, COLS do
@@ -523,7 +524,7 @@ function M:FillPicker(f)
   end
   if icons == f.shown then return end
   f.shown = icons
-  f.list.empty:SetText(f.found and "No icons match that. Try a shorter word." or "No icons are available on this client.")
+  f.list.empty:SetText(f.found and Loc["No icons match that. Try a shorter word."] or Loc["No icons are available on this client."])
   if f.list.scroll then f.list.scroll:SetVerticalScroll(0) end
   local rows = {}
   for i, icon in ipairs(icons) do
@@ -602,15 +603,15 @@ function M:BuildImagePicker()
   desk:SetPoint("BOTTOMRIGHT", -1, 1)
 
   f.scale = 1
-  f.sizes = UI.Segments(f, { { key = 0.33, label = "Small" }, { key = 0.5, label = "Medium" },
-    { key = 1, label = "Large" } }, 56, function(k) f.scale = k end)
+  f.sizes = UI.Segments(f, { { key = 0.33, label = Loc["Small"] }, { key = 0.5, label = "Medium" },
+    { key = 1, label = Loc["Large"] } }, 56, function(k) f.scale = k end)
   f.sizes:SetPoint("TOPLEFT", 16, -46)
   f.sizes:Select(1)
   UI.Tooltip(f.sizes, "Image size", "How large the image is in your text. Large images are still made to fit the page.")
 
   f.name = UI.Edit(f, 136, 24, "desk", 80)
   f.name:SetPoint("TOPRIGHT", -16, -46)
-  f.name.hint = UI.Text(f.name, "Search", "Small", "deskSubtle")
+  f.name.hint = UI.Text(f.name, Loc["Search"], "Small", "deskSubtle")
   f.name.hint:SetPoint("LEFT", 8, 0)
   f.name:SetScript("OnTextChanged", function(self)
     self.hint:SetShown((self:GetText() or "") == "")
@@ -731,11 +732,11 @@ function M:Toolbar(parent, editBox)
     UI.Tooltip(b, title, body)
     return b
   end
-  Add("H1", 30, "Heading", "Starts a line as a section title:\n# A title", function() InsertLine(editBox, "# ") end)
-  Add("H2", 30, "Subheading", "A smaller title:\n## A subtitle", function() InsertLine(editBox, "## ") end)
-  Add("Em", 32, "Emphasis", "Words between *stars* show in the accent colour.", function() Wrap(editBox, "*", "*") end)
+  Add(Loc["H1"], 30, Loc["Heading"], Loc["Starts a line as a section title:\n# A title"], function() InsertLine(editBox, "# ") end)
+  Add(Loc["H2"], 30, Loc["Subheading"], Loc["A smaller title:\n## A subtitle"], function() InsertLine(editBox, "## ") end)
+  Add(Loc["Em"], 32, Loc["Emphasis"], Loc["Words between *stars* show in the accent colour."], function() Wrap(editBox, "*", "*") end)
 
-  local col = Add("", 30, "Colour", "Colour the words you type next.", function(self) ColourMenu(self, editBox) end)
+  local col = Add("", 30, Loc["Colour"], Loc["Colour the words you type next."], function(self) ColourMenu(self, editBox) end)
   for i, hex in ipairs({ "b8323a", "c99a2e", "1f8c88" }) do
     local s = col:CreateTexture(nil, "ARTWORK")
     s:SetTexture(WHITE)
@@ -744,7 +745,7 @@ function M:Toolbar(parent, editBox)
     s:SetVertexColor(tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255, tonumber(hex:sub(5, 6), 16) / 255, 1)
   end
 
-  Add("Icon", 40, "Icon", "Pick an icon to place in your text.", function()
+  Add(Loc["Icon"], 40, Loc["Icon"], Loc["Pick an icon to place in your text."], function()
     M:PickIcon(function(spec, size) InsertText(editBox, ("{icon:%s:%d}"):format(spec, size)) end)
   end)
   local pic = Add("", 28, "Image", "Pick an image from the game. It sits on its own line in your text.", function()
@@ -755,8 +756,8 @@ function M:Toolbar(parent, editBox)
   pic.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   pic.icon:SetSize(16, 16)
   pic.icon:SetPoint("CENTER")
-  Add("Line", 38, "Divider", "A line across the page:\n---", function() InsertBlock(editBox, "---") end)
-  Add("?", 22, "Formatting", M:Help(), function() end)
+  Add(Loc["Line"], 38, Loc["Divider"], Loc["A line across the page:\n---"], function() InsertBlock(editBox, "---") end)
+  Add("?", 22, Loc["Formatting"], M:Help(), function() end)
   bar:SetWidth(math.max(1, x - 4))
   return bar
 end

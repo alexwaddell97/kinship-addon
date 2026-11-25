@@ -15,6 +15,7 @@
 -- Core.lua then bring an older backup up to date.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local B = {}
@@ -90,20 +91,20 @@ local function Summary(db)
   Add(Count(db.itemDefs), "item design", "item designs")
   Add(Count(db.documents), "document", "documents")
   Add(Count(db.registry), "player in your directory", "players in your directory")
-  return #parts > 0 and table.concat(parts, "  ·  ") or "Nothing saved yet"
+  return #parts > 0 and table.concat(parts, "  ·  ") or Loc["Nothing saved yet"]
 end
 B.Summary = Summary
 
 local function Size(n)
-  if n < 1024 then return n .. " bytes" end
-  if n < 1048576 then return ("%.0f KB"):format(n / 1024) end
-  return ("%.1f MB"):format(n / 1048576)
+  if n < 1024 then return n .. Loc[" bytes"] end
+  if n < 1048576 then return (Loc["%.0f KB"]):format(n / 1024) end
+  return (Loc["%.1f MB"]):format(n / 1048576)
 end
 
 -- Returns the code, or nil and a reason.
 function B:Encode(withOthers)
   local C = Codec()
-  if not C then return nil, "The profile code builder isn't loaded." end
+  if not C then return nil, Loc["The profile code builder isn't loaded."] end
   local data = {}
   for k, v in pairs(KinshipRPDB or {}) do
     if type(k) == "string" and not SKIP[k] and (withOthers or not OTHERS[k]) then
@@ -114,7 +115,7 @@ function B:Encode(withOthers)
   local payload = { kind = "backup", v = 1, by = K.VERSION, schema = tonumber(K.db.schema) or 0, t = time(),
                     who = K:PlayerName(), data = data }
   local text = C.Serialize(payload)
-  if not text then return nil, "Your saved data couldn't be packed into a code." end
+  if not text then return nil, Loc["Your saved data couldn't be packed into a code."] end
   local sum, flag, body = C.Adler(text), "p", text
   local z = C.Deflate(text)
   if z and #z < #text then flag, body = "z", z end
@@ -128,36 +129,36 @@ end
 function B:Decode(code)
   local C = Codec()
   if type(code) ~= "string" or strtrim(code) == "" then return nil, nil end
-  if not C then return nil, "The profile code reader isn't loaded." end
-  if #code > MAX_CODE then return nil, "That's far too long to be a Kinship backup." end
+  if not C then return nil, Loc["The profile code reader isn't loaded."] end
+  if #code > MAX_CODE then return nil, Loc["That's far too long to be a Kinship backup."] end
   local flat = code:gsub("%s+", "")
   local flag, sum, body = flat:match("^KINSHIPBAK1:([pz])(%x%x%x%x%x%x%x%x):([%w%+/=]+)$")
   if not flag then
     if flat:find("KINSHIPBAK%d") and not flat:find("KINSHIPBAK1:") then
-      return nil, "This backup comes from a newer version of Kinship. Update to restore it."
+      return nil, Loc["This backup comes from a newer version of Kinship. Update to restore it."]
     end
-    if flat:find("KINSHIPBAK1:") then return nil, "The backup is incomplete. Copy all of it, from KINSHIPBAK1 to the end." end
-    if flat:find("KINSHIP1:") then return nil, "That's a profile code. Import it under Settings > Profiles instead." end
-    return nil, "That doesn't look like a Kinship backup."
+    if flat:find("KINSHIPBAK1:") then return nil, Loc["The backup is incomplete. Copy all of it, from KINSHIPBAK1 to the end."] end
+    if flat:find("KINSHIP1:") then return nil, Loc["That's a profile code. Import it under Settings > Profiles instead."] end
+    return nil, Loc["That doesn't look like a Kinship backup."]
   end
   local raw = C.Decode64(body)
-  if not raw then return nil, "The backup is damaged: some characters are missing or changed." end
+  if not raw then return nil, Loc["The backup is damaged: some characters are missing or changed."] end
   if flag == "z" then
     raw = C.Inflate(raw)
-    if not raw then return nil, "This backup is compressed, and this game client can't open it." end
+    if not raw then return nil, Loc["This backup is compressed, and this game client can't open it."] end
   end
-  if C.Adler(raw) ~= sum:lower() then return nil, "The backup is damaged or cut short. Copy all of it and try again." end
+  if C.Adler(raw) ~= sum:lower() then return nil, Loc["The backup is damaged or cut short. Copy all of it and try again."] end
   local t = C.Deserialize(raw)
   if type(t) ~= "table" or t.kind ~= "backup" or type(t.data) ~= "table" then
-    return nil, "The code doesn't hold a Kinship backup."
+    return nil, Loc["The code doesn't hold a Kinship backup."]
   end
   local schema = tonumber(t.schema) or 0
   if schema > K.SCHEMA then
-    return nil, "This backup comes from a newer version of Kinship. Update to restore it."
+    return nil, Loc["This backup comes from a newer version of Kinship. Update to restore it."]
   end
   local data = Plain(t.data, 1, {}) or {}
   for k in pairs(SKIP) do data[k] = nil end
-  if type(data.profiles) ~= "table" then return nil, "The backup has no profiles in it, so it can't be right." end
+  if type(data.profiles) ~= "table" then return nil, Loc["The backup has no profiles in it, so it can't be right."] end
   return { data = data, schema = schema, by = type(t.by) == "string" and t.by or nil,
            t = type(t.t) == "number" and t.t or nil, who = type(t.who) == "string" and UI.Clean(t.who) or nil }
 end
@@ -201,7 +202,7 @@ local function BuildBackup(pg)
   card.seal = UI.Seal(card, 44)
   card.seal:SetPoint("LEFT", 12, 0)
   card.seal:SetSeal("teal", K.Art("IconNote"))
-  card.name = UI.Text(card, "Everything Kinship has saved", "Title", "heading", PW - 190)
+  card.name = UI.Text(card, Loc["Everything Kinship has saved"], "Title", "heading", PW - 190)
   card.name:SetPoint("TOPLEFT", 68, -14)
   card.name:SetWordWrap(false)
   card.sub = UI.Text(card, "", "Small", "subtle", PW - 190)
@@ -216,8 +217,8 @@ local function BuildBackup(pg)
   hint:SetPoint("TOPLEFT", 17, -86)
   hint:SetSpacing(2)
 
-  pg.others = UI.Toggle(pg, "Include other players' profiles and items",
-    "They come back as you meet people again; leave them out for a shorter backup.",
+  pg.others = UI.Toggle(pg, Loc["Include other players' profiles and items"],
+    Loc["They come back as you meet people again; leave them out for a shorter backup."],
     function() return State().others ~= false end,
     function(v) State().others = v and true or false; B:RefreshBackup() end, PW)
   pg.others:SetPoint("TOPLEFT", 16, -122)
@@ -229,10 +230,10 @@ local function BuildBackup(pg)
     if user and B.code and self:GetText() ~= B.code then self:SetText(B.code); self:HighlightText() end
   end)
 
-  pg.done = UI.Button(pg, "Done", 100, 28)
+  pg.done = UI.Button(pg, Loc["Done"], 100, 28)
   pg.done:SetPoint("BOTTOMRIGHT", -16, 14)
   pg.done:SetScript("OnClick", function() B.frame:Hide() end)
-  pg.select = UI.Button(pg, "Select all", 110, 28)
+  pg.select = UI.Button(pg, Loc["Select all"], 110, 28)
   pg.select:SetPoint("RIGHT", pg.done, "LEFT", -8, 0)
   pg.select:SetScript("OnClick", function()
     pg.area.edit:SetFocus()
@@ -241,7 +242,7 @@ local function BuildBackup(pg)
 end
 
 local function BuildRestore(pg)
-  local hint = UI.Text(pg, "Paste a backup below (Ctrl+V). Backups start with KINSHIPBAK1.", "Small", "deskSubtle", PW)
+  local hint = UI.Text(pg, Loc["Paste a backup below (Ctrl+V). Backups start with KINSHIPBAK1."], "Small", "deskSubtle", PW)
   hint:SetPoint("TOPLEFT", 17, -10)
 
   pg.area = UI.TextArea(pg, PW, 150, 0, function() B:QueueValidate() end, "desk")
@@ -267,10 +268,10 @@ local function BuildRestore(pg)
   card.warn:SetSpacing(2)
   pg.card = card
 
-  pg.go = UI.Button(pg, "Restore", 120, 28)
+  pg.go = UI.Button(pg, Loc["Restore"], 120, 28)
   pg.go:SetPoint("BOTTOMRIGHT", -16, 14)
   pg.go:SetScript("OnClick", function() if B.pending then B:Confirm() end end)
-  pg.clear = UI.Button(pg, "Clear", 90, 28)
+  pg.clear = UI.Button(pg, Loc["Clear"], 90, 28)
   pg.clear:SetPoint("RIGHT", pg.go, "LEFT", -8, 0)
   pg.clear:SetScript("OnClick", function()
     pg.area.edit:SetText("")
@@ -284,15 +285,15 @@ function B:Confirm()
   if not f.confirm then
     local m = UI.Modal(f, 400, 200, function() f.confirm:Hide() end)
     local c = m.card
-    c.title = UI.Text(c, "Replace everything?", "Title", "heading", 360)
+    c.title = UI.Text(c, Loc["Replace everything?"], "Title", "heading", 360)
     c.title:SetPoint("TOPLEFT", 20, -22)
     c.body = UI.Text(c, "", "Body", "text", 360)
     c.body:SetPoint("TOPLEFT", c.title, "BOTTOMLEFT", 0, -10)
     c.body:SetSpacing(2)
-    c.yes = UI.Button(c, "Restore and reload", 160, 28)
+    c.yes = UI.Button(c, Loc["Restore and reload"], 160, 28)
     c.yes:SetPoint("BOTTOMRIGHT", -16, 14)
     c.yes:SetScript("OnClick", function() if B.pending then B:Restore(B.pending) end end)
-    c.no = UI.Button(c, "Cancel", 90, 28)
+    c.no = UI.Button(c, Loc["Cancel"], 90, 28)
     c.no:SetPoint("RIGHT", c.yes, "LEFT", -8, 0)
     c.no:SetScript("OnClick", function() m:Hide() end)
     f.confirm = m
@@ -300,19 +301,19 @@ function B:Confirm()
   local p = self.pending
   f.confirm.card.body:SetText(("Kinship's saved data on this account will be replaced with the backup%s. "
     .. "Anything you've changed since then will be lost. Your interface reloads straight away.")
-    :format(p.t and (" from " .. K.FormatDate(p.t)) or ""))
+    :format(p.t and (Loc[" from "] .. K.FormatDate(p.t)) or ""))
   f.confirm:Show()
 end
 
 function B:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPBackup", "Back up everything", W, H)
+  local f = UI.Window("KinshipRPBackup", Loc["Back up everything"], W, H)
   f:SetFrameStrata("DIALOG")
   self.frame = f
   local desk = UI.Desk(f)
   desk:SetPoint("TOPLEFT", 1, -35)
   desk:SetPoint("BOTTOMRIGHT", -1, 1)
-  f.tabs = UI.TabBar(f, { "Back up", "Restore" }, function(i) B:ShowTab(i) end, true)
+  f.tabs = UI.TabBar(f, { Loc["Back up"], Loc["Restore"] }, function(i) B:ShowTab(i) end, true)
   f.tabs:SetPoint("TOPLEFT", 6, -42)
   f.pages = {}
   for i = 1, 2 do
@@ -347,7 +348,7 @@ end
 function B:RefreshBackup()
   local pg = self.frame.pages[1]
   pg.others:Refresh()
-  pg.card.sub:SetText("Packing...")
+  pg.card.sub:SetText(Loc["Packing..."])
   pg.card.size:Set(nil)
   pg.area.edit:SetText("")
   pg.select:SetEnabled(false)
@@ -358,11 +359,11 @@ function B:RefreshBackup()
     if B.packToken ~= token or not pg:IsVisible() then return end
     local code, data = B:Encode(State().others ~= false)
     if code and #code > MAX_SHOW then
-      code, data = nil, "This backup is too large to show. Leave out other players' profiles and items to shorten it."
+      code, data = nil, Loc["This backup is too large to show. Leave out other players' profiles and items to shorten it."]
     end
     B.code = code
     if not code then
-      pg.card.sub:SetText(data or "Your saved data couldn't be packed into a code.")
+      pg.card.sub:SetText(data or Loc["Your saved data couldn't be packed into a code."])
       return
     end
     pg.card.sub:SetText(Summary(data))
@@ -389,16 +390,16 @@ function B:Validate()
   self.pending = data
   pg.go:SetEnabled(data ~= nil)
   if not data then
-    pg.card.title:SetText("No backup yet")
-    pg.card.facts:SetText("A summary of what's in the backup appears here once you paste it.")
-    if err then SetStatus(pg, err, BAD) else SetStatus(pg, "Waiting for a backup.") end
+    pg.card.title:SetText(Loc["No backup yet"])
+    pg.card.facts:SetText(Loc["A summary of what's in the backup appears here once you paste it."])
+    if err then SetStatus(pg, err, BAD) else SetStatus(pg, Loc["Waiting for a backup."]) end
     return
   end
-  pg.card.title:SetText(data.t and ("Backup from " .. K.FormatDate(data.t)) or "Kinship backup")
+  pg.card.title:SetText(data.t and (Loc["Backup from "] .. K.FormatDate(data.t)) or Loc["Kinship backup"])
   pg.card.facts:SetText(Summary(data.data))
   local old = data.schema < K.SCHEMA
-  SetStatus(pg, ("A valid backup%s%s.%s"):format(data.by and (" from Kinship " .. data.by) or "",
-    data.who and (", made on " .. data.who) or "", old and " It will be updated as it loads." or ""),
+  SetStatus(pg, (Loc["A valid backup%s%s.%s"]):format(data.by and (Loc[" from Kinship "] .. data.by) or "",
+    data.who and (Loc[", made on "] .. data.who) or "", old and Loc[" It will be updated as it loads."] or ""),
     old and WARN or GOOD)
   UI.FadeIn(pg.card, 0.2)
 end
@@ -426,10 +427,10 @@ local function MaybeRemind()
   if now - (s.last or s.since) < REMIND_AFTER or now - (s.nag or 0) < REMIND_EVERY then return end
   if not WorthKeeping() or InCombatLockdown() then return end
   s.nag = now
-  UI.Toast({ icon = K.Art("IconNote"), title = "Back up your Kinship data?",
-    text = s.last and ("Your last backup was " .. K.FormatDate(s.last) .. ". The Forever client sometimes loses addon data; a fresh copy only takes a moment.")
-      or "The Forever client sometimes loses addon data. A backup is one block of text you keep somewhere safe.",
-    actions = { { label = "Back up now", fn = function() B:Open() end }, { label = "Not now", fn = function() end } } })
+  UI.Toast({ icon = K.Art("IconNote"), title = Loc["Back up your Kinship data?"],
+    text = s.last and (Loc["Your last backup was "] .. K.FormatDate(s.last) .. Loc[". The Forever client sometimes loses addon data; a fresh copy only takes a moment."])
+      or Loc["The Forever client sometimes loses addon data. A backup is one block of text you keep somewhere safe."],
+    actions = { { label = Loc["Back up now"], fn = function() B:Open() end }, { label = Loc["Not now"], fn = function() end } } })
 end
 
 K:On("LOGIN", function()
@@ -443,18 +444,18 @@ end)
 ---------------------------------------------------------------------------
 function B:AddSettings(card)
   local note = card:Note("", 28)
-  local bk = card:Button("Back up everything", function() B:Open() end, 170)
-  local rs = UI.Button(card, "Restore a backup", 150, 26)
+  local bk = card:Button(Loc["Back up everything"], function() B:Open() end, 170)
+  local rs = UI.Button(card, Loc["Restore a backup"], 150, 26)
   rs:SetPoint("LEFT", bk, "RIGHT", 8, 0)
   rs:SetScript("OnClick", function() B:Open("restore") end)
-  card:Toggle("Remind me to back up", "Now and then, when it's been a while since your last backup.", {
+  card:Toggle(Loc["Remind me to back up"], Loc["Now and then, when it's been a while since your last backup."], {
     get = function() return K.db.settings.backupReminder ~= false end,
     set = function(v) K.db.settings.backupReminder = v and true or false end,
   })
   card:EndRow()
   card:OnRefresh(function()
     local last = State().last
-    note:SetText("Keep a copy of all your Kinship data (every character on this account) as one block of text. "
-      .. (last and ("Last backup: " .. K.FormatDate(last) .. ".") or "You haven't made a backup yet."))
+    note:SetText(Loc["Keep a copy of all your Kinship data (every character on this account) as one block of text. "]
+      .. (last and (Loc["Last backup: "] .. K.FormatDate(last) .. ".") or Loc["You haven't made a backup yet."]))
   end)
 end

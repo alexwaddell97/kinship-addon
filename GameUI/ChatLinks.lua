@@ -11,6 +11,7 @@
 -- the rest of the message alone).
 
 local ADDON, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -89,7 +90,7 @@ function L:Insert(name)
   -- link instead, and add it when you open the chat box yourself.
   if K.Pad and K.Pad.Connected() then
     pending, pendingUntil = token, GetTime() + 60
-    K:Print("Open your chat box and the link will be added.")
+    K:Print(Loc["Open your chat box and the link will be added."])
     return
   end
   local open = (ChatFrameUtil and ChatFrameUtil.OpenChat) or ChatFrame_OpenChat
@@ -160,10 +161,10 @@ local function Hover(frame, link)
     local cur = Plain(UI.Clean(p.currently))
     if cur ~= "" then GameTooltip:AddLine("\"" .. cur .. "\"", 0.85, 0.85, 0.85, true) end
   else
-    GameTooltip:AddLine("Their profile hasn't arrived yet.", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(Loc["Their profile hasn't arrived yet."], 0.7, 0.7, 0.7)
   end
   GameTooltip:AddLine(" ")
-  GameTooltip:AddLine("Click to open the profile", 0.6, 0.6, 0.6)
+  GameTooltip:AddLine(Loc["Click to open the profile"], 0.6, 0.6, 0.6)
   GameTooltip:Show()
   L.hovering = true
 end
@@ -208,7 +209,7 @@ end)
 K:RegisterTargetButton({
   id = "chatlink", order = 60,
   icon = "Interface\\Icons\\INV_Misc_Note_02",
-  label = "Link profile in chat",
+  label = Loc["Link profile in chat"],
   shown = function(unit, name) return name ~= nil or (unit and UnitIsPlayer(unit)) end,
   onClick = function(unit, name)
     if not name and unit and UnitExists(unit) then
@@ -219,9 +220,9 @@ K:RegisterTargetButton({
   end,
 })
 
-K:RegisterSettings({ id = "chatlinks", title = "Profile links", order = 11, build = function(card)
-  card:Toggle("Clickable profile and item links", "Turns [Kinship: Name] and [Kinship item: Name] in chat into links you can click.", "chatLinks")
-  card:Note("Share a profile from the target bar, or shift-click a Kinship item while typing. Players without Kinship see plain text.")
-  local b = card:Button("Link my profile in chat", function() L:InsertMine() end, 180)
-  UI.Tooltip(b, "Link my profile", "Puts a link to your own profile in the chat box.")
+K:RegisterSettings({ id = "chatlinks", title = Loc["Profile links"], order = 11, build = function(card)
+  card:Toggle(Loc["Clickable profile and item links"], Loc["Turns [Kinship: Name] and [Kinship item: Name] in chat into links you can click."], "chatLinks")
+  card:Note(Loc["Share a profile from the target bar, or shift-click a Kinship item while typing. Players without Kinship see plain text."])
+  local b = card:Button(Loc["Link my profile in chat"], function() L:InsertMine() end, 180)
+  UI.Tooltip(b, Loc["Link my profile"], Loc["Puts a link to your own profile in the chat box."])
 end })

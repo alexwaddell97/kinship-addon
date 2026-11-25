@@ -2,18 +2,19 @@
 -- from Kinship and from other RP addons (Total RP 3, MyRolePlay, XRP).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
 local FILTERS = {
-  { key = "all", label = "Everyone" }, { key = "nearby", label = "Nearby" }, { key = "ic", label = "IC" },
-  { key = "lfrp", label = "LFRP" }, { key = "kin", label = "Your Kin" }, { key = "help", label = "RP help" },
+  { key = "all", label = Loc["Everyone"] }, { key = "nearby", label = Loc["Nearby"] }, { key = "ic", label = Loc["IC"] },
+  { key = "lfrp", label = Loc["LFRP"] }, { key = "kin", label = Loc["Your Kin"] }, { key = "help", label = Loc["RP help"] },
 }
 local ADDONS = {
   totalrp3 = "Total RP 3", kinshiprp = "Kinship", myroleplay = "MyRolePlay", xrp = "XRP", gnomtec_badge = "Badge",
 }
 local SORTS = {
-  { key = "recent", label = "Recent" }, { key = "name", label = "Name" }, { key = "bonds", label = "Bonds" },
+  { key = "recent", label = Loc["Recent"] }, { key = "name", label = Loc["Name"] }, { key = "bonds", label = Loc["Bonds"] },
 }
 local LIST_W, CW, CH = 404, 696, 466
 local NEARBY = 15 * 60
@@ -63,16 +64,16 @@ end
 local function RowMenu(owner, e)
   UI.Menu(owner, function(root)
     root:CreateTitle(DisplayName(e))
-    root:CreateButton("View profile", function() K.Viewer:ShowName(e.name) end)
-    root:CreateButton("Write a letter", function() K.Letters:Compose(e.name) end)
+    root:CreateButton(Loc["View profile"], function() K.Viewer:ShowName(e.name) end)
+    root:CreateButton(Loc["Write a letter"], function() K.Letters:Compose(e.name) end)
     if not K:KinFor(e.name) then
-      root:CreateButton("Add to Kin", function() K:AddKinByName(e.name) end)
+      root:CreateButton(Loc["Add to Kin"], function() K:AddKinByName(e.name) end)
     end
-    root:CreateButton("Whisper", function() K:Whisper(e.name) end)
-    if K.Relations then K.Relations:FillMenu(root:CreateButton("Relationship"), e.name) end
+    root:CreateButton(Loc["Whisper"], function() K:Whisper(e.name) end)
+    if K.Relations then K.Relations:FillMenu(root:CreateButton(Loc["Relationship"]), e.name) end
     root:CreateDivider()
-    if K.Safety then root:CreateButton("Ignore...", function() K.Safety:ConfirmIgnore(e.name) end) end
-    root:CreateButton("|cffff6060Forget this profile|r", function()
+    if K.Safety then root:CreateButton(Loc["Ignore..."], function() K.Safety:ConfirmIgnore(e.name) end) end
+    root:CreateButton(Loc["|cffff6060Forget this profile|r"], function()
       K.db.registry[K.NameKey(e.name) or ""] = nil
       K:Fire("REGISTRY")
     end)
@@ -80,20 +81,20 @@ local function RowMenu(owner, e)
 end
 
 K:RegisterPage({
-  id = "directory", trp3 = "hide", title = "Directory", heading = "Directory",
-  subtitle = "Everyone whose roleplay profile has reached you.",
+  id = "directory", trp3 = "hide", title = Loc["Directory"], heading = Loc["Directory"],
+  subtitle = Loc["Everyone whose roleplay profile has reached you."],
 
   build = function(c)
     c.filter, c.search = "all", ""
     function c:Selected() return self.selKey and K.Registry[self.selKey] or nil end
     c.filters = UI.Segments(c, FILTERS, 78, function(key) c.filter = key; K.Journal:RefreshCurrent() end)
     c.filters:SetPoint("TOPLEFT", 0, 0)
-    local search = UI.Search(c, 176, "Names and houses", function(t) c.search = t; K.Journal:RefreshCurrent() end)
+    local search = UI.Search(c, 176, Loc["Names and houses"], function(t) c.search = t; K.Journal:RefreshCurrent() end)
     search:SetPoint("TOPRIGHT", 0, 0)
     c.searchBox = search
 
     c.list = UI.List(c, LIST_W, CH - 34 - 26, 54,
-      "No profiles yet. Mouse over players who use Kinship, Total RP 3, MyRolePlay or XRP and their profiles will gather here.",
+      Loc["No profiles yet. Mouse over players who use Kinship, Total RP 3, MyRolePlay or XRP and their profiles will gather here."],
       function(row)
         row.dot = UI.Gem(row, 15)
         row.dot:SetPoint("LEFT", 14, 7)
@@ -120,7 +121,7 @@ K:RegisterPage({
       K.Journal:RefreshCurrent()
     end)
     c.sorts:SetPoint("BOTTOMLEFT", LIST_W - 3 * 64, 0)
-    UI.Tooltip(c.sorts, "Sort", "Recent: whose profile reached you last. Name: A to Z. "
+    UI.Tooltip(c.sorts, Loc["Sort"], "Recent: whose profile reached you last. Name: A to Z. "
       .. "Bonds: people you have a bond with first, then your Kin, then everyone else.")
 
     -- Preview card ---------------------------------------------------------------
@@ -174,7 +175,7 @@ K:RegisterPage({
     d.consent:SetPoint("TOPLEFT", 0, -236)
     d.consent:SetSpacing(2)
 
-    local nl = UI.Text(d, "Your private note", "Label", "subtle")
+    local nl = UI.Text(d, Loc["Your private note"], "Label", "subtle")
     nl:SetPoint("BOTTOMLEFT", 1, 104)
     d.note = UI.TextArea(d, PW, 62, 400, function(text)
       local key = c.selKey
@@ -183,13 +184,13 @@ K:RegisterPage({
     d.note:SetPoint("BOTTOMLEFT", 0, 36)
 
     local bw = math.floor((PW - 12) / 3)
-    d.open = UI.Button(d, "Profile", bw, 26)
+    d.open = UI.Button(d, Loc["Profile"], bw, 26)
     d.open:SetPoint("BOTTOMLEFT", 0, 0)
     d.open:SetScript("OnClick", function() local e = c:Selected(); if e then K.Viewer:ShowName(e.name) end end)
-    d.letter = UI.Button(d, "Letter", bw, 26)
+    d.letter = UI.Button(d, Loc["Letter"], bw, 26)
     d.letter:SetPoint("LEFT", d.open, "RIGHT", 6, 0)
     d.letter:SetScript("OnClick", function() local e = c:Selected(); if e then K.Letters:Compose(e.name) end end)
-    d.kin = UI.Button(d, "Add to Kin", bw, 26)
+    d.kin = UI.Button(d, Loc["Add to Kin"], bw, 26)
     d.kin:SetPoint("LEFT", d.letter, "RIGHT", 6, 0)
     d.kin:SetScript("OnClick", function() local e = c:Selected(); if e then K:AddKinByName(e.name); K.Journal:RefreshCurrent() end end)
 
@@ -200,7 +201,7 @@ K:RegisterPage({
     ei:SetSize(64, 64)
     ei:SetPoint("CENTER", 0, 24)
     ei:SetAlpha(0.75)
-    local et = UI.Text(c.empty, "Choose someone to see their profile at a glance. Double-click to open it in full.", "QuestFont", "subtle", 220)
+    local et = UI.Text(c.empty, Loc["Choose someone to see their profile at a glance. Double-click to open it in full."], "QuestFont", "subtle", 220)
     et:SetPoint("TOP", ei, "BOTTOM", 0, -12)
     et:SetJustifyH("CENTER")
     et:SetSpacing(2)
@@ -231,13 +232,13 @@ K:RegisterPage({
     else
       table.sort(items, function(a, b) return (a.t or 0) > (b.t or 0) end)
     end
-    c.count:SetText(total == 1 and "1 profile" or (total .. " profiles"))
+    c.count:SetText(total == 1 and Loc["1 profile"] or (total .. Loc[" profiles"]))
 
     c.list:SetItems(items, function(row, e)
       local p = e.profile
       row.dot:SetStatus(p.status)
       row.name:SetText(DisplayName(e))
-      local sub = (p.epithet ~= "" and UI.Escape(p.epithet)) or (p.house ~= "" and ("of House " .. UI.Escape(p.house))) or Short(e.name)
+      local sub = (p.epithet ~= "" and UI.Escape(p.epithet)) or (p.house ~= "" and (Loc["of House "] .. UI.Escape(p.house))) or Short(e.name)
       row.sub:SetText(sub)
       row.addon:Set(AddonLabel(p.addon), K:Theme().accent)
       row.ago:SetText(UI.Ago(e.t))
@@ -268,7 +269,7 @@ K:RegisterPage({
     d.stance:ClearAllPoints()
     d.stance:SetPoint("LEFT", d.status, "RIGHT", 6, 0)
     d.stance:Set(stance and stance.label or nil, stance and stance.color)
-    d.house:SetText(p.house ~= "" and ("of House " .. UI.Escape(p.house)) or Short(e.name))
+    d.house:SetText(p.house ~= "" and (Loc["of House "] .. UI.Escape(p.house)) or Short(e.name))
     for label, key in pairs({ Pronouns = "pronouns", Age = "age", Height = "height", Home = "home" }) do
       local v = p[key] or ""
       d.facts[label]:SetText(v ~= "" and UI.Escape(v) or "-")
@@ -285,7 +286,7 @@ K:RegisterPage({
     d.consent:SetText(table.concat(parts, "   "))
     if not d.note.edit:HasFocus() then d.note.edit:SetText(K.db.notes[c.selKey] or "") end
     local isKin = K:KinFor(e.name) ~= nil
-    d.kin:SetText(isKin and "In your Kin" or "Add to Kin")
+    d.kin:SetText(isKin and Loc["In your Kin"] or Loc["Add to Kin"])
     d.kin:SetEnabled(not isKin)
   end,
 })

@@ -3,6 +3,7 @@
 -- turns, and hand over attached to items (the document travels with the item).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -14,16 +15,16 @@ local WHITE = "Interface\\Buttons\\WHITE8X8"
 
 -- Paper styles. Fixed colours: documents are paper whatever the page around them.
 D.STYLES = {
-  parchment = { label = "Parchment", paper = { 0.955, 0.925, 0.850 }, edge = { 0.30, 0.20, 0.08, 0.40 },
+  parchment = { label = Loc["Parchment"], paper = { 0.955, 0.925, 0.850 }, edge = { 0.30, 0.20, 0.08, 0.40 },
                 rule = { 0.45, 0.32, 0.15, 0.16 }, grainA = 0, tint = { 1, 1, 1 },
                 ink = { 0.19, 0.17, 0.13 }, sub = { 0.45, 0.36, 0.24 }, head = { 0.30, 0.16, 0.04 } },
-  vellum    = { label = "Vellum", paper = { 0.975, 0.968, 0.940 }, edge = { 0.32, 0.30, 0.27, 0.35 },
+  vellum    = { label = Loc["Vellum"], paper = { 0.975, 0.968, 0.940 }, edge = { 0.32, 0.30, 0.27, 0.35 },
                 rule = { 0.36, 0.34, 0.30, 0.12 }, grainA = 0, tint = { 1, 1, 1 },
                 ink = { 0.15, 0.15, 0.17 }, sub = { 0.42, 0.41, 0.40 }, head = { 0.12, 0.15, 0.26 } },
-  dark      = { label = "Dark", paper = { 0.115, 0.100, 0.085 }, edge = { 0.94, 0.82, 0.54, 0.35 },
+  dark      = { label = Loc["Dark"], paper = { 0.115, 0.100, 0.085 }, edge = { 0.94, 0.82, 0.54, 0.35 },
                 rule = { 0.94, 0.82, 0.54, 0.16 }, grainA = 0, tint = { 0.55, 0.50, 0.45 },
                 ink = { 0.90, 0.86, 0.78 }, sub = { 0.68, 0.62, 0.52 }, head = { 0.96, 0.84, 0.56 } },
-  notice    = { label = "Notice", paper = { 0.880, 0.800, 0.610 }, edge = { 0.36, 0.24, 0.10, 0.55 },
+  notice    = { label = Loc["Notice"], paper = { 0.880, 0.800, 0.610 }, edge = { 0.36, 0.24, 0.10, 0.55 },
                 rule = { 0.36, 0.24, 0.10, 0.22 }, grainA = 0, tint = { 1, 0.90, 0.70 },
                 ink = { 0.20, 0.14, 0.08 }, sub = { 0.42, 0.30, 0.16 }, head = { 0.40, 0.10, 0.06 }, pin = true },
 }
@@ -33,7 +34,7 @@ local function Style(key) return D.STYLES[key] or D.STYLES.parchment end
 
 function D.SealLabel(key)
   for _, s in ipairs(UI.SEAL_COLORS) do if s.key == key then return s.label end end
-  return "Crimson"
+  return Loc["Crimson"]
 end
 
 local function ValidSeal(key)
@@ -146,7 +147,7 @@ function D:List()
   return mine
 end
 
-function D.Title(doc) return (doc and doc.title ~= "") and doc.title or "Untitled" end
+function D.Title(doc) return (doc and doc.title ~= "") and doc.title or Loc["Untitled"] end
 
 ---------------------------------------------------------------------------
 -- Page text: plain text with a little structure.
@@ -272,7 +273,7 @@ local RW, RH = 480, 620
 
 function D:BuildReader()
   if self.reader then return self.reader end
-  local f = UI.Window("KinshipRPDocument", "Document", RW, RH)
+  local f = UI.Window("KinshipRPDocument", Loc["Document"], RW, RH)
   f:SetFrameStrata("DIALOG")
   self.reader = f
 
@@ -325,10 +326,10 @@ function D:BuildReader()
   f.counter = paper:CreateFontString(nil, "OVERLAY")
   f.counter:SetFontObject(UI.FONTS.Small)
   f.counter:SetPoint("BOTTOM", 0, 26)
-  f.prev = UI.Button(paper, "Previous", 86, 24)
+  f.prev = UI.Button(paper, Loc["Previous"], 86, 24)
   f.prev:SetPoint("BOTTOMLEFT", 22, 20)
   f.prev:SetScript("OnClick", function() D:Turn(-1) end)
-  f.next = UI.Button(paper, "Next", 86, 24)
+  f.next = UI.Button(paper, Loc["Next"], 86, 24)
   f.next:SetPoint("BOTTOMRIGHT", -22, 20)
   f.next:SetScript("OnClick", function() D:Turn(1) end)
 
@@ -387,7 +388,7 @@ function D:RenderReader(resetScroll)
   if resetScroll ~= false then sf:SetVerticalScroll(0) end
   f.scroll.Update()
 
-  f.counter:SetText(n > 1 and ("Page %d of %d"):format(f.page, n) or "")
+  f.counter:SetText(n > 1 and (Loc["Page %d of %d"]):format(f.page, n) or "")
   f.counter:SetTextColor(st.sub[1], st.sub[2], st.sub[3])
   f.prev:SetShown(n > 1)
   f.next:SetShown(n > 1)
@@ -425,7 +426,7 @@ end
 function D:Open(id, page)
   if not K:ExtOn("documents") then return end
   local doc = self:Get(id)
-  if not doc then I.Error("The pages of this document never reached you.") return end
+  if not doc then I.Error(Loc["The pages of this document never reached you."]) return end
   local f = self:BuildReader()
   f.doc, f.page = doc, page or 1
   f.leaf:SetPoint("TOPLEFT", 0, 0)
@@ -491,7 +492,7 @@ function D:BuildTab(tab, opts)
   opts = opts or {}
   tab.page = 1
 
-  local new = UI.Button(tab, "New document", LIST_W, 26)
+  local new = UI.Button(tab, Loc["New document"], LIST_W, 26)
   new:SetPoint("TOPLEFT", 0, 0)
   new:SetScript("OnClick", function()
     local doc = D:New()
@@ -501,7 +502,7 @@ function D:BuildTab(tab, opts)
   end)
 
   tab.list = UI.List(tab, LIST_W, CARD_H - 34, 50,
-    "No documents yet. Write a book, a notice or a contract, then attach it to an item.",
+    Loc["No documents yet. Write a book, a notice or a contract, then attach it to an item."],
     function(row)
       row.sheet = row:CreateTexture(nil, "ARTWORK")
       row.sheet:SetTexture(WHITE)
@@ -542,33 +543,33 @@ function D:BuildTab(tab, opts)
   local ed = CreateFrame("Frame", nil, card)
   ed:SetAllPoints()
   tab.ed = ed
-  local pill = UI.Section(ed, "Writing desk")
+  local pill = UI.Section(ed, Loc["Writing desk"])
   pill:SetPoint("TOPLEFT", 21, -15)
 
   ed.del = UI.Button(ed, "Delete", 70, 22)
   ed.del:SetPoint("TOPRIGHT", -16, -10)
-  Confirming(ed.del, "Delete", "Sure?", function()
+  Confirming(ed.del, "Delete", Loc["Sure?"], function()
     if tab.selected then D:Delete(tab.selected); tab.selected = nil; K.Journal:RefreshCurrent() end
   end)
-  UI.Tooltip(ed.del, "Delete document", "Items already given away keep their own copy.")
-  ed.make = UI.Button(ed, "Make an item", 106, 22)
+  UI.Tooltip(ed.del, Loc["Delete document"], Loc["Items already given away keep their own copy."])
+  ed.make = UI.Button(ed, Loc["Make an item"], 106, 22)
   ed.make:SetPoint("RIGHT", ed.del, "LEFT", -6, 0)
   ed.make:SetScript("OnClick", function()
     local doc = D:Get(tab.selected)
     if doc and opts.onMakeItem then opts.onMakeItem(doc) end
   end)
-  UI.Tooltip(ed.make, "Make an item", "Design an item that carries this document. Whoever holds it can read it.")
-  ed.read = UI.Button(ed, "Read", 64, 22)
+  UI.Tooltip(ed.make, Loc["Make an item"], Loc["Design an item that carries this document. Whoever holds it can read it."])
+  ed.read = UI.Button(ed, Loc["Read"], 64, 22)
   ed.read:SetPoint("RIGHT", ed.make, "LEFT", -6, 0)
   ed.read:SetScript("OnClick", function() if tab.selected then D:Open(tab.selected, tab.page) end end)
 
-  ed.title = UI.Field(ed, "Title", IW, D.MAX_TITLE, function(text)
+  ed.title = UI.Field(ed, Loc["Title"], IW, D.MAX_TITLE, function(text)
     local doc = K.db.documents[tab.selected or ""]
     if doc then doc.title = strtrim(text); D:Touched(doc); D:RefreshList(tab) end
   end)
   ed.title:SetPoint("TOPLEFT", 16, -40)
 
-  local sl = UI.Text(ed, "Style", "Label", "subtle")
+  local sl = UI.Text(ed, Loc["Style"], "Label", "subtle")
   sl:SetPoint("TOPLEFT", 17, -88)
   local sitems = {}
   for _, key in ipairs(D.STYLE_ORDER) do sitems[#sitems + 1] = { key = key, label = D.STYLES[key].label } end
@@ -579,10 +580,10 @@ function D:BuildTab(tab, opts)
   ed.style:SetPoint("TOPLEFT", 16, -102)
 
   local sealX = 16 + 4 * 66 + 18
-  local wl = UI.Text(ed, "Seal", "Label", "subtle")
+  local wl = UI.Text(ed, Loc["Seal"], "Label", "subtle")
   wl:SetPoint("TOPLEFT", sealX + 1, -88)
   ed.swatches = {}
-  local choices = { { key = false, label = "No seal" } }
+  local choices = { { key = false, label = Loc["No seal"] } }
   for _, s in ipairs(UI.SEAL_COLORS) do choices[#choices + 1] = s end
   for i, s in ipairs(choices) do
     local b = CreateFrame("Button", nil, ed)
@@ -608,11 +609,11 @@ function D:BuildTab(tab, opts)
       local doc = K.db.documents[tab.selected or ""]
       if doc then doc.seal = b.key; D:Touched(doc); D:RefreshTab(tab) end
     end)
-    UI.Tooltip(b, s.key and (s.label .. " wax") or "No seal", s.key and "Pressed at the foot of the last page." or nil)
+    UI.Tooltip(b, s.key and (s.label .. Loc[" wax"]) or Loc["No seal"], s.key and Loc["Pressed at the foot of the last page."] or nil)
     ed.swatches[i] = b
   end
 
-  local pl = UI.Text(ed, "Pages", "Label", "subtle")
+  local pl = UI.Text(ed, Loc["Pages"], "Label", "subtle")
   pl:SetPoint("TOPLEFT", 17, -136)
   ed.tabs = {}
   for i = 1, D.MAX_PAGES do
@@ -637,7 +638,7 @@ function D:BuildTab(tab, opts)
     D:RefreshTab(tab)
     ed.body.edit:SetFocus()
   end)
-  UI.Tooltip(ed.add, "Add a page", "A blank page after this one.")
+  UI.Tooltip(ed.add, Loc["Add a page"], Loc["A blank page after this one."])
 
   ed.body = UI.TextArea(ed, IW, 172, D.MAX_PAGE, function(text)
     local doc = K.db.documents[tab.selected or ""]
@@ -650,9 +651,9 @@ function D:BuildTab(tab, opts)
     ed.count:SetText(("%d / %d"):format(self:GetNumLetters(), D.MAX_PAGE))
   end)
 
-  ed.remove = UI.Button(ed, "Remove page", 100, 22)
+  ed.remove = UI.Button(ed, Loc["Remove page"], 100, 22)
   ed.remove:SetPoint("TOPRIGHT", -16, -362)
-  Confirming(ed.remove, "Remove page", "Sure?", function()
+  Confirming(ed.remove, Loc["Remove page"], Loc["Sure?"], function()
     local doc = K.db.documents[tab.selected or ""]
     if not doc or #doc.pages <= 1 then return end
     table.remove(doc.pages, tab.page)
@@ -670,23 +671,23 @@ function D:BuildTab(tab, opts)
     D:Touched(doc)
     D:RefreshTab(tab, true)
   end
-  ed.later = UI.Button(ed, "Later", 62, 22)
+  ed.later = UI.Button(ed, Loc["Later"], 62, 22)
   ed.later:SetPoint("RIGHT", ed.remove, "LEFT", -6, 0)
   ed.later:SetScript("OnClick", function() Swap(1) end)
-  UI.Tooltip(ed.later, "Move this page later")
-  ed.earlier = UI.Button(ed, "Earlier", 66, 22)
+  UI.Tooltip(ed.later, Loc["Move this page later"])
+  ed.earlier = UI.Button(ed, Loc["Earlier"], 66, 22)
   ed.earlier:SetPoint("RIGHT", ed.later, "LEFT", -6, 0)
   ed.earlier:SetScript("OnClick", function() Swap(-1) end)
-  UI.Tooltip(ed.earlier, "Move this page earlier")
+  UI.Tooltip(ed.earlier, Loc["Move this page earlier"])
 
-  local hint = UI.Text(ed, "Start a line with # for a heading, ## for a subheading, or --- for a rule.", "Label", "subtle", IW)
+  local hint = UI.Text(ed, Loc["Start a line with # for a heading, ## for a subheading, or --- for a rule."], "Label", "subtle", IW)
   hint:SetPoint("TOPLEFT", 17, -396)
 
   -- Someone else's document ------------------------------------------------------
   local ro = CreateFrame("Frame", nil, card)
   ro:SetAllPoints()
   tab.ro = ro
-  local rp = UI.Section(ro, "From another hand")
+  local rp = UI.Section(ro, Loc["From another hand"])
   rp:SetPoint("TOPLEFT", 21, -15)
   ro.sheet = D.Paper(ro)
   ro.sheet:SetSize(120, 156)
@@ -705,23 +706,23 @@ function D:BuildTab(tab, opts)
   ro.info = UI.Text(ro, "", "Small", "text", IW - 136)
   ro.info:SetPoint("TOPLEFT", ro.by, "BOTTOMLEFT", 0, -10)
   ro.info:SetSpacing(3)
-  ro.readBtn = UI.Button(ro, "Read", 120, 26)
+  ro.readBtn = UI.Button(ro, Loc["Read"], 120, 26)
   ro.readBtn:SetPoint("TOPLEFT", 156, -150)
   ro.readBtn:SetScript("OnClick", function() if tab.selected then D:Open(tab.selected) end end)
-  ro.copy = UI.Button(ro, "Make a copy", 120, 26)
+  ro.copy = UI.Button(ro, Loc["Make a copy"], 120, 26)
   ro.copy:SetPoint("LEFT", ro.readBtn, "RIGHT", 8, 0)
   ro.copy:SetScript("OnClick", function()
     local doc = D:Copy(tab.selected)
     if doc then tab.selected, tab.page = doc.id, 1; K.Journal:RefreshCurrent() end
   end)
-  UI.Tooltip(ro.copy, "Make a copy", "An editable copy of your own.")
-  local el = UI.Text(ro, "First page", "Label", "subtle")
+  UI.Tooltip(ro.copy, Loc["Make a copy"], Loc["An editable copy of your own."])
+  local el = UI.Text(ro, Loc["First page"], "Label", "subtle")
   el:SetPoint("TOPLEFT", 17, -218)
   ro.excerpt = UI.ReadArea(ro, IW, CARD_H - 232 - 56, "Read", "text")
   ro.excerpt:SetPoint("TOPLEFT", 16, -234)
-  ro.forget = UI.Button(ro, "Forget", 80, 24)
+  ro.forget = UI.Button(ro, Loc["Forget"], 80, 24)
   ro.forget:SetPoint("BOTTOMRIGHT", -16, 14)
-  Confirming(ro.forget, "Forget", "Sure?", function()
+  Confirming(ro.forget, Loc["Forget"], Loc["Sure?"], function()
     if tab.selected then D:Forget(tab.selected); tab.selected = nil; K.Journal:RefreshCurrent() end
   end)
   ro.note = UI.Text(ro, "", "Small", "subtle", IW - 100)
@@ -736,12 +737,12 @@ function D:BuildTab(tab, opts)
   bi:SetSize(64, 64)
   bi:SetPoint("CENTER", 0, 44)
   bi:SetAlpha(0.8)
-  local bt = UI.Text(blank, "Books, notices and contracts, up to ten pages each. Attach one to an item and whoever holds it can read it.",
+  local bt = UI.Text(blank, Loc["Books, notices and contracts, up to ten pages each. Attach one to an item and whoever holds it can read it."],
     "Read", "subtle", IW - 60)
   bt:SetPoint("TOP", bi, "BOTTOM", 0, -12)
   bt:SetJustifyH("CENTER")
   bt:SetSpacing(3)
-  local bb = UI.Button(blank, "Write a document", 150, 26)
+  local bb = UI.Button(blank, Loc["Write a document"], 150, 26)
   bb:SetPoint("TOP", bt, "BOTTOM", 0, -16)
   bb:SetScript("OnClick", function() new:Click() end)
 end
@@ -761,11 +762,11 @@ function D:RefreshList(tab)
       row.seal:Hide()
     end
     row.name:SetText(UI.Escape(D.Title(doc)))
-    local pages = #doc.pages == 1 and "1 page" or (#doc.pages .. " pages")
+    local pages = #doc.pages == 1 and Loc["1 page"] or (#doc.pages .. Loc[" pages"])
     if D:IsMine(doc.id) then
       row.sub:SetText(pages .. "  ·  " .. st.label)
     else
-      local from = doc.author ~= "" and K.NameKey(doc.author) ~= me and ("From " .. UI.Escape(I.Short(doc.author))) or "Received"
+      local from = doc.author ~= "" and K.NameKey(doc.author) ~= me and (Loc["From "] .. UI.Escape(I.Short(doc.author))) or Loc["Received"]
       row.sub:SetText(from .. "  ·  " .. pages)
     end
     row.sel:SetShown(doc.id == tab.selected)
@@ -796,15 +797,15 @@ function D:RefreshTab(tab, forceText)
     r.sheetSeal:SetShown(doc.seal ~= nil)
     if doc.seal then r.sheetSeal:SetSeal(doc.seal, K.ICON) end
     r.title:SetText(UI.Escape(D.Title(doc)))
-    r.by:SetText(doc.author ~= "" and ("Written by " .. UI.Escape(I.Short(doc.author))) or "Author unknown")
-    local info = { (#doc.pages == 1 and "One page" or (#doc.pages .. " pages")) .. " of " .. st.label:lower() }
-    if doc.seal then info[#info + 1] = "Sealed in " .. D.SealLabel(doc.seal):lower() .. " wax" end
-    if doc.seen then info[#info + 1] = "Received " .. UI.Ago(doc.seen) end
+    r.by:SetText(doc.author ~= "" and (Loc["Written by "] .. UI.Escape(I.Short(doc.author))) or Loc["Author unknown"])
+    local info = { (#doc.pages == 1 and Loc["One page"] or (#doc.pages .. Loc[" pages"])) .. Loc[" of "] .. st.label:lower() }
+    if doc.seal then info[#info + 1] = Loc["Sealed in "] .. D.SealLabel(doc.seal):lower() .. Loc[" wax"] end
+    if doc.seen then info[#info + 1] = Loc["Received "] .. UI.Ago(doc.seen) end
     r.info:SetText(table.concat(info, "\n"))
     if changed then r.excerpt:SetText(UI.Escape(doc.pages[1] or "")) end
     local used = self:InUse(doc.id)
     r.forget:SetEnabled(not used)
-    r.note:SetText(used and "An item in your bags carries it." or "")
+    r.note:SetText(used and Loc["An item in your bags carries it."] or "")
     return
   end
 

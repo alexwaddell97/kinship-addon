@@ -33,6 +33,7 @@
 -- reading where the bag bar is.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -91,8 +92,8 @@ end
 local function MinTip(b)
   b:HookScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText("Minimise", 1, 0.82, 0)
-    GameTooltip:AddLine("Narrow it to a thin strip beside your bags. It still comes up with them, out of the way, until you click it.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Minimise"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["Narrow it to a thin strip beside your bags. It still comes up with them, out of the way, until you click it."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   b:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -549,22 +550,22 @@ local function Common(f, name)
   end)
 end
 
-local SEARCH_TIP = "Look for stashes other players have left near where you stand."
-local STASH_TIP = "The stashes you've left out in the world, and what's in them."
-local MORE_TIP = "The full Inventory page: item details, the Workshop and documents."
+local SEARCH_TIP = Loc["Look for stashes other players have left near where you stand."]
+local STASH_TIP = Loc["The stashes you've left out in the world, and what's in them."]
+local MORE_TIP = Loc["The full Inventory page: item details, the Workshop and documents."]
 
 -- The satchel's three buttons, spread evenly across the given width.
 local function Buttons(f, L, parent, x, y, w, h)
   local bw = math.floor((w - 8) / 3)
-  f.search = L.Button(parent, "Search", bw, h, function() SA:OpenPane("near") end)
+  f.search = L.Button(parent, Loc["Search"], bw, h, function() SA:OpenPane("near") end)
   f.search:SetPoint("BOTTOMLEFT", x, y)
-  Tip(f.search, "Search the area", SEARCH_TIP)
-  f.stashes = L.Button(parent, "Stashes", bw, h, function() SA:OpenPane("mine") end)
+  Tip(f.search, Loc["Search the area"], SEARCH_TIP)
+  f.stashes = L.Button(parent, Loc["Stashes"], bw, h, function() SA:OpenPane("mine") end)
   f.stashes:SetPoint("LEFT", f.search, "RIGHT", 4, 0)
-  Tip(f.stashes, "Your stashes", STASH_TIP)
-  f.more = L.Button(parent, "Journal", w - 2 * bw - 8, h, function() K.Journal:Open("inventory") end)
+  Tip(f.stashes, Loc["Your stashes"], STASH_TIP)
+  f.more = L.Button(parent, Loc["Journal"], w - 2 * bw - 8, h, function() K.Journal:Open("inventory") end)
   f.more:SetPoint("LEFT", f.stashes, "RIGHT", 4, 0)
-  Tip(f.more, "Inventory", MORE_TIP)
+  Tip(f.more, Loc["Inventory"], MORE_TIP)
 end
 
 local BUILD = {}
@@ -578,7 +579,7 @@ function BUILD.ellesmere()
   local rows = math.ceil(I.SLOTS / COLS)
   local h = 36 + PAD + rows * CELL + (rows - 1) * GAP + PAD + FOOT
   local name = "KinshipRPSatchelEllesmere"
-  local f = L.New(name, w, h, "Satchel", ICON, function() SA:Close() end)
+  local f = L.New(name, w, h, Loc["Satchel"], ICON, function() SA:Close() end)
   Common(f, name)
   f.min = MinButton(f.head, 18, function() return 0.85, 0.85, 0.85 end)
   f.min:SetPoint("RIGHT", f.close, "LEFT", -2, 0)
@@ -636,7 +637,7 @@ function BUILD.blizzard()
   local gridW = COLS * CELL + (COLS - 1) * GAP
   local gridH = rows * CELL + (rows - 1) * GAP
   local name = "KinshipRPSatchelBlizzard"
-  local f = L.New(name, gridW + 24, gridH + 64 + 52, "Satchel", ICON, function() SA:Close() end)
+  local f = L.New(name, gridW + 24, gridH + 64 + 52, Loc["Satchel"], ICON, function() SA:Close() end)
   if not f then return nil end
   Common(f, name)
   if f.CloseButton then
@@ -666,7 +667,7 @@ function BUILD.kinship()
   local w = PAD * 2 + COLS * CELL + (COLS - 1) * GAP
   local rows = math.ceil(I.SLOTS / COLS)
   local name = "KinshipRPSatchel"
-  local f = L.New(name, w, 100, "Satchel", ICON, function() SA:Close() end)
+  local f = L.New(name, w, 100, Loc["Satchel"], ICON, function() SA:Close() end)
   f:SetHeight(-f.top + rows * CELL + (rows - 1) * GAP + FOOT)
   Common(f, name)
   f.min = MinButton(f, 20, function() local c = K:Theme().deskSubtle or { 0.8, 0.8, 0.8 }; return c[1], c[2], c[3] end)
@@ -678,7 +679,7 @@ function BUILD.kinship()
   MakeCells(f, L.slot, COLS, CELL, GAP, PAD, f.top)
   f.free = UI.Text(f, "", "Small", "deskSubtle", w - 2 * PAD)
   f.free:SetPoint("BOTTOMLEFT", PAD, FOOT - 22)
-  f.freeFormat = "%d/%d used"
+  f.freeFormat = Loc["%d/%d used"]
   Buttons(f, L, f, PAD, 14, w - 2 * PAD, 24)
   f.gap = L.dock
   return f
@@ -800,11 +801,11 @@ local function BuildStrip(look)
   st:SetScript("OnClick", function() SA:SetCollapsed(false) end)
   st:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-    GameTooltip:SetText("Roleplay satchel", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Roleplay satchel"], 1, 0.82, 0)
     local used = 0
     for i = 1, I.SLOTS do if I:Slot(i) then used = used + 1 end end
-    GameTooltip:AddLine(("%d of %d slots used"):format(used, I.SLOTS), 1, 1, 1)
-    GameTooltip:AddLine("Click to open it.", 0.62, 0.62, 0.62)
+    GameTooltip:AddLine((Loc["%d of %d slots used"]):format(used, I.SLOTS), 1, 1, 1)
+    GameTooltip:AddLine(Loc["Click to open it."], 0.62, 0.62, 0.62)
     GameTooltip:Show()
   end)
   st:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -919,7 +920,7 @@ local function BuildPane(look)
   local IW = w - 2 * PAD
   local CELL, GAP = L.cell, L.gap
   local name = "KinshipRPStashPane" .. look
-  local p = L.New(name, w, 100, "Stashes", STASH_ICON, function() SA:ClosePane() end)
+  local p = L.New(name, w, 100, Loc["Stashes"], STASH_ICON, function() SA:ClosePane() end)
   if not p then return nil end
   p:SetFrameStrata("HIGH")
   p:EnableMouse(true)
@@ -928,16 +929,16 @@ local function BuildPane(look)
   p.mode = "near"
 
   local y = p.top - (L.template and 4 or PAD)
-  p.tabs = L.Tabs(p, { { key = "near", label = "Nearby" }, { key = "mine", label = "Yours" } }, IW, function(key)
+  p.tabs = L.Tabs(p, { { key = "near", label = Loc["Nearby"] }, { key = "mine", label = Loc["Yours"] } }, IW, function(key)
     p.mode, p.selected, p.offset = key, nil, 0
     SA:RefreshPane()
   end)
   p.tabs:SetPoint("TOPLEFT", PAD, y)
   y = y - 22 - 8
 
-  p.again = L.Button(p, "Search again", 96, 20, function() if K.Stashes then K.Stashes:Search() end end)
+  p.again = L.Button(p, Loc["Search again"], 96, 20, function() if K.Stashes then K.Stashes:Search() end end)
   p.again:SetPoint("TOPRIGHT", -PAD, y)
-  Tip(p.again, "Search the area", SEARCH_TIP)
+  Tip(p.again, Loc["Search the area"], SEARCH_TIP)
   p.status = L.Text(p, 12, "title")
   p.status:SetPoint("LEFT", p, "TOPLEFT", PAD, y - 10)
   p.status:SetPoint("RIGHT", p.again, "LEFT", -6, 0)
@@ -997,22 +998,22 @@ function SA:RefreshPane()
     local sweeping = St:Searching()
     if not sel and items[1] and not sweeping then sel = items[1] end
     local s = St.search
-    if sweeping then p.status:SetText("Searching the area...")
-    elseif not s then p.status:SetText("Look around you")
-    elseif #items == 0 then p.status:SetText("Nothing hidden here")
-    else p.status:SetText(#items == 1 and "You found a stash" or ("You found %d stashes"):format(#items)) end
+    if sweeping then p.status:SetText(Loc["Searching the area..."])
+    elseif not s then p.status:SetText(Loc["Look around you"])
+    elseif #items == 0 then p.status:SetText(Loc["Nothing hidden here"])
+    else p.status:SetText(#items == 1 and Loc["You found a stash"] or (Loc["You found %d stashes"]):format(#items)) end
     p.again:Show()
     p.again:SetEnabled(not sweeping)
-    p.empty:SetText(sweeping and "Listening for answers..." or
-      (s and "Nothing turned up. Stashes only answer while their keeper is online and nearby." or
-        "Search the area to find stashes others have left nearby."))
+    p.empty:SetText(sweeping and Loc["Listening for answers..."] or
+      (s and Loc["Nothing turned up. Stashes only answer while their keeper is online and nearby."] or
+        Loc["Search the area to find stashes others have left nearby."]))
   else
     for _, st in ipairs(St:Mine()) do items[#items + 1] = st end
     for _, st in ipairs(items) do if st == p.selected then sel = st end end
     sel = sel or items[1]
-    p.status:SetText(#items == 0 and "No stashes yet" or (#items == 1 and "One stash" or ("%d stashes"):format(#items)))
+    p.status:SetText(#items == 0 and Loc["No stashes yet"] or (#items == 1 and Loc["One stash"] or (Loc["%d stashes"]):format(#items)))
     p.again:Hide()
-    p.empty:SetText("Leave an item somewhere with Stash it on the Inventory page, and it will be listed here.")
+    p.empty:SetText(Loc["Leave an item somewhere with Stash it on the Inventory page, and it will be listed here."])
   end
   p.selected = sel
 
@@ -1028,11 +1029,11 @@ function SA:RefreshPane()
       r.icon:SetTexture(I.IconTexture(it.icon))
       r.name:SetText(it.name or "?")
       if near then
-        r.sub:SetText(("%s, %dy"):format(it.own and "Yours" or Short(it.owner), math.floor(it.dist + 0.5)))
+        r.sub:SetText((Loc["%s, %dy"]):format(it.own and Loc["Yours"] or Short(it.owner), math.floor(it.dist + 0.5)))
       else
         local n = 0
         for _, x in ipairs(it.items) do n = n + (x.count or 0) end
-        r.sub:SetText(n == 0 and "Empty" or (n == 1 and "1 item" or (n .. " items")))
+        r.sub:SetText(n == 0 and Loc["Empty"] or (n == 1 and Loc["1 item"] or (n .. Loc[" items"])))
       end
       r.sel = it == sel
       L.PaintRow(r, r.hover, r.sel)
@@ -1056,15 +1057,15 @@ function SA:RefreshPane()
     cell:SetMatch(not (c and c.asking))
   end
   if not sel then
-    p.hint:SetText(near and "Stashes show from about 25 yards. Hidden ones only when you're right on top of them." or "")
+    p.hint:SetText(near and Loc["Stashes show from about 25 yards. Hidden ones only when you're right on top of them."] or "")
   elseif #contents == 0 then
-    p.hint:SetText("It's empty.")
+    p.hint:SetText(Loc["It's empty."])
   elseif near and sel.own then
-    p.hint:SetText("Your own stash. Click an item to take it back.")
+    p.hint:SetText(Loc["Your own stash. Click an item to take it back."])
   elseif near then
-    p.hint:SetText("Click an item to take it. " .. Short(sel.owner) .. "'s client hands it over while you're close.")
+    p.hint:SetText(Loc["Click an item to take it. "] .. Short(sel.owner) .. Loc["'s client hands it over while you're close."])
   else
-    p.hint:SetText("Click an item to take it back. Right-click a stash to mark it on your map.")
+    p.hint:SetText(Loc["Click an item to take it back. Right-click a stash to mark it on your map."])
   end
 end
 
@@ -1186,7 +1187,7 @@ function SA:Dock()
 end
 
 function SA:Open(withBags)
-  if not On() then K:Print("Kinship items are switched off (Settings > Extended features).") return end
+  if not On() then K:Print(Loc["Kinship items are switched off (Settings > Extended features)."]) return end
   -- Opened on purpose, it opens in full; with the bags it stays as it was.
   if not withBags and self:Collapsed() then S().satchelMin = nil end
   -- Opened while the bags are open (closed and opened again, say), it still
@@ -1298,9 +1299,9 @@ end
 
 local function ButtonTooltip(self)
   GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
-  GameTooltip:SetText("Roleplay satchel", 1, 0.82, 0)
-  GameTooltip:AddLine(("%d of %d slots used"):format(Used(), I.SLOTS), 1, 1, 1)
-  GameTooltip:AddLine("Click to open. Right-click for the Inventory page.", 0.62, 0.62, 0.62)
+  GameTooltip:SetText(Loc["Roleplay satchel"], 1, 0.82, 0)
+  GameTooltip:AddLine((Loc["%d of %d slots used"]):format(Used(), I.SLOTS), 1, 1, 1)
+  GameTooltip:AddLine(Loc["Click to open. Right-click for the Inventory page."], 0.62, 0.62, 0.62)
   GameTooltip:Show()
 end
 
@@ -1519,4 +1520,4 @@ ev:RegisterEvent("DISPLAY_SIZE_CHANGED")
 ev:RegisterEvent("BAG_UPDATE_DELAYED")
 ev:SetScript("OnEvent", function() C_Timer.After(0.2, function() SA:PlaceButton() end) end)
 
-_G["BINDING_NAME_KINSHIPRP_SATCHEL"] = "Open the roleplay satchel"
+_G["BINDING_NAME_KINSHIPRP_SATCHEL"] = Loc["Open the roleplay satchel"]

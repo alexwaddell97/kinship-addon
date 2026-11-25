@@ -11,6 +11,7 @@
 -- never changed, so going back is always possible.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = {}
@@ -353,7 +354,7 @@ local W, H = 540, 440
 
 function I:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPMove", "Move to Kinship", W, H)
+  local f = UI.Window("KinshipRPMove", Loc["Move to Kinship"], W, H)
   f:SetFrameStrata("DIALOG")
   self.frame = f
   local desk = UI.Desk(f)
@@ -374,20 +375,20 @@ function I:Build()
   card:SetPoint("TOPLEFT", 18, -144)
   card:SetPoint("BOTTOMRIGHT", -18, 104)
   f.card = card
-  f.what = UI.Section(card, "What comes across")
+  f.what = UI.Section(card, Loc["What comes across"])
   f.what:SetPoint("TOPLEFT", 21, -15)
   f.body = UI.Text(card, "", "Small", "text", W - 76)
   f.body:SetPoint("TOPLEFT", 16, -40)
   f.body:SetSpacing(4)
 
-  f.switch = UI.Toggle(f, "Switch it off afterwards",
-    "Recommended. It takes effect after a reload. Its saved data stays untouched, so you can switch back.",
+  f.switch = UI.Toggle(f, Loc["Switch it off afterwards"],
+    Loc["Recommended. It takes effect after a reload. Its saved data stays untouched, so you can switch back."],
     function() return I.switchOff end, function(v) I.switchOff = v end, W - 36)
   f.switch:SetPoint("BOTTOMLEFT", 18, 52)
 
   f.go = UI.Button(f, "", 112, 28)
   f.go:SetPoint("BOTTOMRIGHT", -16, 14)
-  f.later = UI.Button(f, "Not now", 100, 28)
+  f.later = UI.Button(f, Loc["Not now"], 100, 28)
   f.later:SetPoint("RIGHT", f.go, "LEFT", -8, 0)
 end
 
@@ -400,37 +401,37 @@ function I:Show(fromSettings)
   f.switch:Refresh()
   f.switch:Show()
   f.later:Show()
-  f.later:SetText("Not now")
+  f.later:SetText(Loc["Not now"])
   f.later:SetScript("OnClick", function() K.db.migration.dismissed = time(); f:Hide() end)
 
   if not other then
-    f.title:SetText("Kinship is in charge")
-    f.sub:SetText("No other roleplay addon is running. Your profile, chat and tooltips are all Kinship's.")
-    f.body:SetText("Nothing to move.")
+    f.title:SetText(Loc["Kinship is in charge"])
+    f.sub:SetText(Loc["No other roleplay addon is running. Your profile, chat and tooltips are all Kinship's."])
+    f.body:SetText(Loc["Nothing to move."])
     f.switch:Hide()
     f.later:Hide()
-    f.go:SetText("Close")
+    f.go:SetText(Loc["Close"])
     f.go:SetScript("OnClick", function() f:Hide() end)
     f:Show()
     return
   end
 
   local label = I.Label(other)
-  f.title:SetText("Kinship replaces " .. label)
+  f.title:SetText(Loc["Kinship replaces "] .. label)
   if other == "totalRP3" and self:TRP3Available() then
     local found = self:TRP3Profiles()
     local names = {}
     for i, e in ipairs(found) do
       if i <= 4 then
-        names[#names + 1] = "|cff" .. UI.Hex(K:Theme().heading) .. e.name .. "|r" .. (e.mine and "  (this character)" or "")
+        names[#names + 1] = "|cff" .. UI.Hex(K:Theme().heading) .. e.name .. "|r" .. (e.mine and Loc["  (this character)"] or "")
       end
     end
-    if #found > 4 then names[#names + 1] = ("and %d more"):format(#found - 4) end
+    if #found > 4 then names[#names + 1] = (Loc["and %d more"]):format(#found - 4) end
     if #found > 0 then
-      f.sub:SetText(("Bring your %d %s across in one step. %s's own data stays untouched, so you can always go back.")
+      f.sub:SetText((Loc["Bring your %d %s across in one step. %s's own data stays untouched, so you can always go back."])
         :format(#found, #found == 1 and "profile" or "profiles", label))
     else
-      f.sub:SetText(("%s has no profiles of yours to bring across. You can still switch it off so Kinship runs alone.")
+      f.sub:SetText((Loc["%s has no profiles of yours to bring across. You can still switch it off so Kinship runs alone."])
         :format(label))
     end
     local t = K:Theme()
@@ -442,25 +443,25 @@ function I:Show(fromSettings)
       bullet .. "Glances, personality traits, pronouns, motto, house and RP style (as consent)",
       bullet .. "Your other characters pick up their own profile the first time they log in",
       "",
-      (#names > 0 and ("Found: " .. table.concat(names, ", ")) or "No profiles found to bring across."),
+      (#names > 0 and (Loc["Found: "] .. table.concat(names, ", ")) or Loc["No profiles found to bring across."]),
     }, "\n"))
-    f.what:SetText(#found > 0 and "What comes across" or "Why switch it off")
+    f.what:SetText(#found > 0 and Loc["What comes across"] or Loc["Why switch it off"])
     if #found == 0 then
       f.body:SetText(("While %s runs, both addons write the profile other players see. Switching it off leaves Kinship in charge; "
         .. "its saved data stays untouched."):format(label))
     end
-    f.go:SetText(#found > 0 and "Bring them across" or "Switch it off")
+    f.go:SetText(#found > 0 and Loc["Bring them across"] or Loc["Switch it off"])
     f.go:SetWidth(#found > 0 and 150 or 120)
     f.go:SetScript("OnClick", function()
       local n = #found > 0 and I:ImportTRP3() or 0
       I:Finish(other, n)
     end)
   else
-    f.what:SetText("Why switch it off")
-    f.sub:SetText(("%s and Kinship both write the profile other players see, so only one should run."):format(label))
+    f.what:SetText(Loc["Why switch it off"])
+    f.sub:SetText((Loc["%s and Kinship both write the profile other players see, so only one should run."]):format(label))
     f.body:SetText(("Kinship can't read %s's saved profile, so fill in your Profile page first, then switch %s off here. "
       .. "Its saved data stays untouched."):format(label, label))
-    f.go:SetText("Switch it off")
+    f.go:SetText(Loc["Switch it off"])
     f.go:SetWidth(120)
     f.go:SetScript("OnClick", function() I:Finish(other, 0) end)
   end
@@ -475,19 +476,19 @@ function I:Finish(other, count)
     self:DisableOther(other)
     if other == "totalRP3" then K.db.settings.trp3Mode = "alone" end
   end
-  f.title:SetText(count > 0 and "Welcome to Kinship" or "Almost done")
+  f.title:SetText(count > 0 and Loc["Welcome to Kinship"] or Loc["Almost done"])
   local kept = self.kept or 0
-  f.sub:SetText((count > 0 and ("%d %s brought across from %s."):format(count, count == 1 and "profile" or "profiles", label)
-    or ("Nothing was imported from %s."):format(label))
+  f.sub:SetText((count > 0 and (Loc["%d %s brought across from %s."]):format(count, count == 1 and "profile" or "profiles", label)
+    or (Loc["Nothing was imported from %s."]):format(label))
     .. (kept > 0 and (" %d you'd already changed in Kinship %s kept as you left %s."):format(kept,
       kept == 1 and "was" or "were", kept == 1 and "it" or "them") or ""))
   f.body:SetText(self.switchOff
-    and ("%s is switched off from your next reload. Reload now to finish moving, then open your journal with /kin."):format(label)
-    or ("%s is still on. Both addons will write your profile until you switch it off in the AddOns list."):format(label))
+    and (Loc["%s is switched off from your next reload. Reload now to finish moving, then open your journal with /kin."]):format(label)
+    or (Loc["%s is still on. Both addons will write your profile until you switch it off in the AddOns list."]):format(label))
   f.switch:Hide()
-  f.later:SetText("Later")
+  f.later:SetText(Loc["Later"])
   f.later:SetScript("OnClick", function() f:Hide() end)
-  f.go:SetText(self.switchOff and "Reload now" or "Done")
+  f.go:SetText(self.switchOff and Loc["Reload now"] or Loc["Done"])
   f.go:SetWidth(120)
   f.go:SetScript("OnClick", function()
     if I.switchOff then ReloadUI() else f:Hide(); K.Journal:Open("profile") end
@@ -501,8 +502,8 @@ end
 K:On("LOGIN", function()
   local n, active = I:ApplyLibrary()
   if n and n > 0 then
-    K:Print(("Brought %d profile%s across from your Total RP 3 import%s."):format(n, n == 1 and "" or "s",
-      active and (", and switched to \"" .. active .. "\"") or ""))
+    K:Print((Loc["Brought %d profile%s across from your Total RP 3 import%s."]):format(n, n == 1 and "" or "s",
+      active and (Loc[", and switched to \""] .. active .. "\"") or ""))
   end
   -- Only interrupt someone when there's actually something to bring across.
   -- (Settings > General > "Move to Kinship" is always there otherwise.)

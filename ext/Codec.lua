@@ -11,6 +11,7 @@
 --   K.ExtCodec:DecodeMessage(payload [, logged])             -> prefix, data, token | nil, why
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local E = K.Ext
 local C = {}
@@ -58,17 +59,17 @@ C.Compress, C.Decompress = Compress, Decompress
 ---------------------------------------------------------------------------
 -- The string for one root, exactly as Tools writes it.
 function C:Export(rootID, obj)
-  if not self:Ready() then return nil, "The import and export libraries didn't load." end
+  if not self:Ready() then return nil, Loc["The import and export libraries didn't load."] end
   obj = obj or E:Get(rootID)
-  if type(obj) ~= "table" then return nil, "There's nothing by that ID to export." end
+  if type(obj) ~= "table" then return nil, Loc["There's nothing by that ID to export."] end
   local ok, serial = pcall(AceSerializer.Serialize, AceSerializer, { E.VERSION, rootID, obj, E.DISPLAY_VERSION })
-  if not ok or type(serial) ~= "string" then return nil, "It couldn't be written out." end
+  if not ok or type(serial) ~= "string" then return nil, Loc["It couldn't be written out."] end
   serial = serial:gsub("|", "||")
   local packed = Compress(serial)
-  if not packed then return nil, "It couldn't be compressed." end
+  if not packed then return nil, Loc["It couldn't be compressed."] end
   local out = "!" .. LibDeflate:EncodeForPrint(packed)
   if #out >= C.MAX_EXPORT then
-    return nil, ("It's too large to export (%d KB; Total RP 3 stops at %d KB)."):format(math.floor(#out / 1024), C.MAX_EXPORT / 1000)
+    return nil, (Loc["It's too large to export (%d KB; Total RP 3 stops at %d KB)."]):format(math.floor(#out / 1024), C.MAX_EXPORT / 1000)
   end
   return out
 end
@@ -76,41 +77,41 @@ end
 -- Read a pasted string. Returns { version, id, object, display, compressed }
 -- with the object already sanitised, or nil and a reason to show.
 function C:Decode(text)
-  if not self:Ready() then return nil, "The import and export libraries didn't load." end
-  if type(text) ~= "string" then return nil, "Paste an export string first." end
-  if #text > C.MAX_INPUT * 2 then return nil, "That's far too long to be an export string." end
+  if not self:Ready() then return nil, Loc["The import and export libraries didn't load."] end
+  if type(text) ~= "string" then return nil, Loc["Paste an export string first."] end
+  if #text > C.MAX_INPUT * 2 then return nil, Loc["That's far too long to be an export string."] end
   -- Neither encoding ever contains whitespace (AceSerializer escapes it),
   -- so line breaks from pasting are dropped.
   text = text:gsub("%s+", "")
-  if text == "" then return nil, "Paste an export string first." end
-  if #text > C.MAX_INPUT then return nil, "That's too long to be an export string." end
+  if text == "" then return nil, Loc["Paste an export string first."] end
+  if #text > C.MAX_INPUT then return nil, Loc["That's too long to be an export string."] end
 
   local body, compressed = text:gsub("^!", "")
   local serial
   if compressed == 1 then
     local packed = LibDeflate:DecodeForPrint(body)
-    if not packed then return nil, "That isn't a Total RP 3: Extended export string." end
+    if not packed then return nil, Loc["That isn't a Total RP 3: Extended export string."] end
     serial = Decompress(packed)
-    if not serial then return nil, "That string is damaged (it wouldn't decompress)." end
+    if not serial then return nil, Loc["That string is damaged (it wouldn't decompress)."] end
   else
     serial = body
-    if serial:sub(1, 2) ~= "^1" then return nil, "That isn't a Total RP 3: Extended export string." end
+    if serial:sub(1, 2) ~= "^1" then return nil, Loc["That isn't a Total RP 3: Extended export string."] end
   end
-  if #serial > C.MAX_RAW then return nil, "That object is too large to import." end
+  if #serial > C.MAX_RAW then return nil, Loc["That object is too large to import."] end
   serial = serial:gsub("||", "|")
 
   local ok, data = AceSerializer:Deserialize(serial)
   if not ok or type(data) ~= "table" or (#data ~= 3 and #data ~= 4) then
-    return nil, "That string is damaged (it couldn't be read)."
+    return nil, Loc["That string is damaged (it couldn't be read)."]
   end
   local id, version, display = data[2], data[1], data[4]
   if type(id) == "number" then id = tostring(id) end
   if not E.ValidRootID(id) then
-    return nil, type(id) == "string" and id:find(E.SEP, 1, true) and "That's part of another object, not a whole one."
-      or "That string has no usable ID."
+    return nil, type(id) == "string" and id:find(E.SEP, 1, true) and Loc["That's part of another object, not a whole one."]
+      or Loc["That string has no usable ID."]
   end
   local obj, why = E.Sanitize(data[3])
-  if not obj then return nil, "It can't be imported: " .. why .. "." end
+  if not obj then return nil, Loc["It can't be imported: "] .. why .. "." end
   return {
     version = tonumber(version), id = id, object = obj,
     display = type(display) == "string" and display:sub(1, 20) or nil, compressed = compressed == 1,
@@ -121,7 +122,7 @@ end
 function C:Warnings(decoded)
   local out = {}
   if decoded.version and decoded.version ~= E.VERSION then
-    out[#out + 1] = ("It was made with Extended %s; Kinship reads %s."):format(
+    out[#out + 1] = (Loc["It was made with Extended %s; Kinship reads %s."]):format(
       decoded.display or tostring(decoded.version), E.DISPLAY_VERSION)
   end
   local have = E:Get(decoded.id)
@@ -129,14 +130,14 @@ function C:Warnings(decoded)
   if have then
     local mine = E.Num(E.Path(have, "MD", "V"), 0)
     if mine > theirs then
-      out[#out + 1] = ("You already have a newer version (%d) than this one (%d)."):format(mine, theirs)
+      out[#out + 1] = (Loc["You already have a newer version (%d) than this one (%d)."]):format(mine, theirs)
     else
-      out[#out + 1] = "It replaces the copy you already have."
+      out[#out + 1] = Loc["It replaces the copy you already have."]
     end
   end
   local _, _, refused = E.ComputeSecurity(decoded.id, decoded.object)
   if next(refused) then
-    out[#out + 1] = "It uses raw scripts or macros. Kinship keeps them but will never run them."
+    out[#out + 1] = Loc["It uses raw scripts or macros. Kinship keeps them but will never run them."]
   end
   return out
 end
@@ -174,8 +175,8 @@ end
 -- logged = sent on a "logged" channel (BNet relays): left uncompressed.
 function C:EncodeMessage(modulePrefix, data, token, logged)
   local Chomp = AddOn_Chomp
-  if not (Chomp and Chomp.Serialize and LibDeflate) then return nil, "Chomp or LibDeflate is missing." end
-  if type(modulePrefix) ~= "string" then return nil, "No module prefix." end
+  if not (Chomp and Chomp.Serialize and LibDeflate) then return nil, Loc["Chomp or LibDeflate is missing."] end
+  if type(modulePrefix) ~= "string" then return nil, Loc["No module prefix."] end
   local ok, serial = pcall(Chomp.Serialize, { modulePrefix = modulePrefix, data = data })
   if not ok or type(serial) ~= "string" then return nil, "The message couldn't be written out." end
   if not logged then
@@ -189,7 +190,7 @@ end
 -- Returns modulePrefix, data (sanitised) and the token, or nil and a reason.
 function C:DecodeMessage(payload, logged)
   local Chomp = AddOn_Chomp
-  if not (Chomp and Chomp.Deserialize and LibDeflate) then return nil, "Chomp or LibDeflate is missing." end
+  if not (Chomp and Chomp.Deserialize and LibDeflate) then return nil, Loc["Chomp or LibDeflate is missing."] end
   if type(payload) ~= "string" or #payload < 3 then return nil, "Empty message." end
   if #payload > C.MAX_MESSAGE then return nil, "Message too large." end
   local token, body = payload:sub(1, 2), payload:sub(3)

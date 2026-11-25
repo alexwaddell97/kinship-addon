@@ -24,6 +24,7 @@
 -- travel on K.Net as kind "gath" = { t = "G"|"R"|"D"|"H"|"Q", b = board, ... }.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local Safe = K.Safe
 local S = {}
@@ -602,12 +603,12 @@ K:On("LOGIN", function()
   C_Timer.NewTicker(PUBLIC_EVERY + math.random() * 120, function() S:HelloPublic() end)
 end)
 
-K:RegisterSettings({ id = "gatherings", title = "Gatherings", order = 36, build = function(card)
-  card:Toggle("House gatherings", "Share gatherings with players in your house.",
+K:RegisterSettings({ id = "gatherings", title = Loc["Gatherings"], order = 36, build = function(card)
+  card:Toggle(Loc["House gatherings"], Loc["Share gatherings with players in your house."],
     { get = function() return S_().gatherHouse ~= false end, set = function(v) K.db.settings.gatherHouse = v; K:Fire("GATHERINGS") end })
-  card:Toggle("Public gatherings", "See gatherings posted by nearby Kinship users, and pass them on.",
+  card:Toggle(Loc["Public gatherings"], Loc["See gatherings posted by nearby Kinship users, and pass them on."],
     { get = function() return S_().gatherPublic ~= false end, set = function(v) K.db.settings.gatherPublic = v; K:Fire("GATHERINGS") end })
-  card:Toggle("Add to my calendar when I'm going", "Adds gatherings you're going to to your game calendar.",
+  card:Toggle(Loc["Add to my calendar when I'm going"], Loc["Adds gatherings you're going to to your game calendar."],
     { get = function() return S_().gatherCalendar ~= false end, set = function(v) K.db.settings.gatherCalendar = v end })
-  card:Note("Public gatherings spread between Kinship users of your faction as they meet. Each player can have up to three on your board, and gatherings from ignored players are hidden.")
+  card:Note(Loc["Public gatherings spread between Kinship users of your faction as they meet. Each player can have up to three on your board, and gatherings from ignored players are hidden."])
 end })

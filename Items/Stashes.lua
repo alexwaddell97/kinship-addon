@@ -11,6 +11,7 @@
 --   stashNo      WHISPER  { req, why }
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -146,19 +147,19 @@ end
 -- { name, icon, hidden } for a new stash.
 function S:Drop(slot, n, into)
   local pos = S.Here()
-  if not pos then I.Error("You can't leave anything here.") return end
+  if not pos then I.Error(Loc["You can't leave anything here."]) return end
   local s = I:Slot(slot)
   local def = s and I:Get(s.def)
   if not def then return end
   n = math.floor(Num(n) or 1)
-  if n < 1 or I:Available(s.def) < n then I.Error("That item is promised in a trade.") return end
+  if n < 1 or I:Available(s.def) < n then I.Error(Loc["That item is promised in a trade."]) return end
   local st
   if type(into) == "string" then
     st = self:Find(into)
     local d = st and S.Distance(pos, st.pos)
-    if not d or d > 10 then I.Error("That stash isn't here.") return end
+    if not d or d > 10 then I.Error(Loc["That stash isn't here."]) return end
   else
-    if #self:Mine() >= MAX_STASHES then I.Error(("You can keep up to %d stashes. Empty one first."):format(MAX_STASHES)) return end
+    if #self:Mine() >= MAX_STASHES then I.Error((Loc["You can keep up to %d stashes. Empty one first."]):format(MAX_STASHES)) return end
     local name = strtrim(Cut(into and into.name or "", 40))
     st = {
       id = ("%d%06d"):format(time(), math.random(0, 999999)),
@@ -169,7 +170,7 @@ function S:Drop(slot, n, into)
   end
   local slotFor
   for _, it in ipairs(st.items) do if it.def == s.def then slotFor = it end end
-  if not slotFor and #st.items >= MAX_ITEMS then I.Error("That stash is full.") return end
+  if not slotFor and #st.items >= MAX_ITEMS then I.Error(Loc["That stash is full."]) return end
   if not I:Remove(s.def, n, slot) then return end
   if slotFor then slotFor.count = slotFor.count + n else st.items[#st.items + 1] = { def = def.id, count = n } end
   st.t = time()
@@ -184,8 +185,8 @@ function S:Withdraw(st, index)
   local def = it and I:Get(it.def)
   if not def then return end
   local n = it.count - Reserved(st, it.def)
-  if n < 1 then I.Error("Someone is taking that right now.") return end
-  if not I:Fits({ { id = it.def, n = n, stack = def.stack } }) then I.Error("There's no room in your bags.") return end
+  if n < 1 then I.Error(Loc["Someone is taking that right now."]) return end
+  if not I:Fits({ { id = it.def, n = n, stack = def.stack } }) then I.Error(Loc["There's no room in your bags."]) return end
   self:TakeOut(st.id, it.def, n)
   I:Add(it.def, n)
 end
@@ -196,7 +197,7 @@ function S:Empty(st)
 end
 
 function S:Remove(st)
-  if #st.items > 0 and not self:Empty(st) then I.Error("Make room in your bags to empty it first.") return end
+  if #st.items > 0 and not self:Empty(st) then I.Error(Loc["Make room in your bags to empty it first."]) return end
   local _, i = self:Find(st.id)
   if i then table.remove(self:Mine(), i) end
   K:Fire("STASHES")
@@ -212,8 +213,8 @@ function S:MarkOnMap(st)
       if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then C_SuperTrack.SetSuperTrackedUserWaypoint(true) end
     end)
   end
-  K:Print(("%s is in %s at %.1f, %.1f%s"):format(UI.Escape(st.name), st.zone or "?", p.x * 100, p.y * 100,
-    ok and " (marked on your map)." or "."))
+  K:Print((Loc["%s is in %s at %.1f, %.1f%s"]):format(UI.Escape(st.name), st.zone or "?", p.x * 100, p.y * 100,
+    ok and Loc[" (marked on your map)."] or "."))
 end
 
 ---------------------------------------------------------------------------
@@ -232,7 +233,7 @@ end
 
 function S:Search()
   local pos = S.Here()
-  if not pos then I.Error("You can't search here.") return false end
+  if not pos then I.Error(Loc["You can't search here."]) return false end
   if GetTime() - (self.lastSearch or -99) < 4 then return false end
   self.lastSearch = GetTime()
   local sid = ("%d%06d"):format(time(), math.random(0, 999999))
@@ -302,7 +303,7 @@ K.Net:On("stashFound", function(msg, sender, channel)
         end
       end
       local name = strtrim(Cut(raw.name, 40))
-      local r = { owner = sender, id = id, name = name ~= "" and name or "A stash", icon = I.IconTexture(raw.icon),
+      local r = { owner = sender, id = id, name = name ~= "" and name or Loc["A stash"], icon = I.IconTexture(raw.icon),
         hidden = raw.hidden == true, dist = d, north = math.max(-60, math.min(60, Num(raw.n) or 0)),
         east = math.max(-60, math.min(60, Num(raw.e) or 0)), items = items, born = GetTime() }
       local replaced = false
@@ -333,10 +334,10 @@ function S:Take(result, index)
   if it.asking then return end
   if GetTime() - (self.lastTake or -99) < 1.5 then return end
   local pos = S.Here()
-  if not pos then I.Error("You can't do that here.") return end
+  if not pos then I.Error(Loc["You can't do that here."]) return end
   local known = I:Get(it.def.id)
   if not I:Fits({ { id = it.def.id, n = it.n, stack = known and known.stack or it.def.stack } }) then
-    I.Error("There's no room in your bags.") return
+    I.Error(Loc["There's no room in your bags."]) return
   end
   self.lastTake = GetTime()
   local req = ("%d%06d"):format(time(), math.random(0, 999999))
@@ -349,7 +350,7 @@ function S:Take(result, index)
     if self.takes[req] == t then
       self.takes[req] = nil
       it.asking = nil
-      I.Error("No answer from the stash. Its keeper may have moved on.")
+      I.Error(Loc["No answer from the stash. Its keeper may have moved on."])
       K:Fire("STASHES")
     end
   end)
@@ -375,8 +376,8 @@ function S:Received(_, req, r)
   local def = I:Get(e.def.id) or e.def
   UI.Toast({
     icon = I.IconTexture(def.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-    title = "Taken from " .. UI.Escape(t.result.name),
-    text = I:Label(def, e.n) .. " is in your bags.", color = I.Quality(def.quality).color, duration = 5,
+    title = Loc["Taken from "] .. UI.Escape(t.result.name),
+    text = I:Label(def, e.n) .. Loc[" is in your bags."], color = I.Quality(def.quality).color, duration = 5,
   })
   K:Fire("STASHES")
 end
@@ -386,8 +387,8 @@ K.Net:On("stashNo", function(msg, sender)
   if not t or t.owner ~= K.NameKey(sender) then return end
   S.takes[msg.req] = nil
   t.item.asking = nil
-  local why = { far = "You're too far from that stash.", gone = "Someone got there first.",
-                busy = "The stash's keeper is busy. Try again in a moment." }
+  local why = { far = Loc["You're too far from that stash."], gone = Loc["Someone got there first."],
+                busy = Loc["The stash's keeper is busy. Try again in a moment."] }
   I.Error(why[msg.why] or why.gone)
   K:Fire("STASHES")
 end)
@@ -419,8 +420,8 @@ function S:Taken(id, o)
   local def = e and I:Get(e.id)
   UI.Toast({
     icon = st and I.IconTexture(st.icon) or S.DEFAULT_ICON, iconCoords = { 0.08, 0.92, 0.08, 0.92 },
-    title = Short(o.to) .. " found your stash",
-    text = ("%s taken from %s."):format(I:Label(def, e and e.n), UI.Escape(st and st.name or o.stashName or "a stash")),
+    title = Short(o.to) .. Loc[" found your stash"],
+    text = (Loc["%s taken from %s."]):format(I:Label(def, e and e.n), UI.Escape(st and st.name or o.stashName or Loc["a stash"])),
     color = BLIP.own, duration = 6,
   })
   K:Fire("STASHES")
@@ -475,7 +476,7 @@ local function Radar(parent, size)
   r.north = r:CreateFontString(nil, "OVERLAY")
   r.north:SetFontObject(UI.FONTS.Label)
   r.north:SetPoint("TOP", 0, -5)
-  r.north:SetText("N")
+  r.north:SetText(Loc["N"])
   r.north:SetTextColor(0.40, 0.92, 0.82, 0.55)
   r.blips = {}
   r.angle = math.pi / 2
@@ -582,7 +583,7 @@ function S:BuildPanel(page)
   local card = m.card
   m.mode = "near"
 
-  m.seg = UI.Segments(card, { { key = "near", label = "Search nearby" }, { key = "mine", label = "Your stashes" } }, 130,
+  m.seg = UI.Segments(card, { { key = "near", label = Loc["Search nearby"] }, { key = "mine", label = Loc["Your stashes"] } }, 130,
     function(key) m.mode = key; m.selected = nil; S:RefreshPanel() end)
   m.seg:SetPoint("TOPLEFT", 16, -16)
 
@@ -596,10 +597,10 @@ function S:BuildPanel(page)
   near.status = UI.Text(near, "", "Body", "heading", 168)
   near.status:SetPoint("TOP", near.radar, "BOTTOM", 0, -12)
   near.status:SetJustifyH("CENTER")
-  near.again = UI.Button(near, "Search the area", 168, 26)
+  near.again = UI.Button(near, Loc["Search the area"], 168, 26)
   near.again:SetPoint("TOP", near.radar, "BOTTOM", 0, -40)
   near.again:SetScript("OnClick", function() S:Search() end)
-  near.hint = UI.Text(near, "Stashes show from about 25 yards. Hidden ones only when you search right on top of them.",
+  near.hint = UI.Text(near, Loc["Stashes show from about 25 yards. Hidden ones only when you search right on top of them."],
     "Small", "subtle", 168)
   near.hint:SetPoint("TOP", near.again, "BOTTOM", 0, -12)
   near.hint:SetJustifyH("CENTER")
@@ -621,33 +622,33 @@ function S:BuildPanel(page)
   mine.where = UI.Text(mine, "", "Small", "subtle", 168)
   mine.where:SetPoint("TOPLEFT", 0, -64)
   mine.where:SetSpacing(2)
-  mine.vis = UI.Segments(mine, { { key = "shown", label = "Visible" }, { key = "hidden", label = "Hidden" } }, 84, function(key)
+  mine.vis = UI.Segments(mine, { { key = "shown", label = Loc["Visible"] }, { key = "hidden", label = Loc["Hidden"] } }, 84, function(key)
     local st = m.selected and S:Find(m.selected)
     if st then st.hidden = key == "hidden" or nil; K:Fire("STASHES") end
   end)
   mine.vis:SetPoint("TOPLEFT", 0, -114)
-  mine.map = UI.Button(mine, "Mark on map", 168, 26)
+  mine.map = UI.Button(mine, Loc["Mark on map"], 168, 26)
   mine.map:SetPoint("TOPLEFT", 0, -150)
   mine.map:SetScript("OnClick", function() local st = S:Find(m.selected or ""); if st then S:MarkOnMap(st) end end)
-  mine.empty = UI.Button(mine, "Empty into bags", 168, 26)
+  mine.empty = UI.Button(mine, Loc["Empty into bags"], 168, 26)
   mine.empty:SetPoint("TOPLEFT", 0, -182)
   mine.empty:SetScript("OnClick", function() local st = S:Find(m.selected or ""); if st then S:Empty(st) end end)
-  mine.remove = UI.Button(mine, "Remove stash", 168, 26)
+  mine.remove = UI.Button(mine, Loc["Remove stash"], 168, 26)
   mine.remove:SetPoint("TOPLEFT", 0, -214)
   mine.remove:SetScript("OnClick", function(self)
     local st = S:Find(m.selected or "")
     if not st then return end
     if not self.armed then
       self.armed = true
-      self:SetText(#st.items > 0 and "Empty and remove?" or "Remove it?")
-      C_Timer.After(3, function() self.armed = nil; self:SetText("Remove stash") end)
+      self:SetText(#st.items > 0 and Loc["Empty and remove?"] or Loc["Remove it?"])
+      C_Timer.After(3, function() self.armed = nil; self:SetText(Loc["Remove stash"]) end)
       return
     end
     self.armed = nil
-    self:SetText("Remove stash")
+    self:SetText(Loc["Remove stash"])
     if S:Remove(st) then m.selected = nil end
   end)
-  mine.none = UI.Text(mine, "Leave an item somewhere with Stash it on the Bags tab, and it will be listed here.",
+  mine.none = UI.Text(mine, Loc["Leave an item somewhere with Stash it on the Bags tab, and it will be listed here."],
     "Small", "subtle", 168)
   mine.none:SetPoint("TOPLEFT", 0, -4)
   mine.none:SetSpacing(2)
@@ -676,7 +677,7 @@ function S:BuildPanel(page)
   end, { emptyIcon = K.Art("IconPlace") })
   m.list:SetPoint("TOPLEFT", 200, -54)
 
-  m.contents = UI.Section(card, "Contents")
+  m.contents = UI.Section(card, Loc["Contents"])
   m.contents:SetPoint("TOPLEFT", 207, -230)
   m.grid = ItemGrid(card, function(index)
     if m.mode == "mine" then
@@ -720,19 +721,19 @@ function S:RefreshPanel()
     for _, r in ipairs(items) do r.selected = r == sel end
     m.near.radar:SetBlips(items)
     local s = self.search
-    if sweeping then m.near.status:SetText("Searching the area...")
-    elseif not s then m.near.status:SetText("Look around you")
-    elseif #items == 0 then m.near.status:SetText("Nothing hidden here")
-    else m.near.status:SetText(#items == 1 and "You found a stash" or (("You found %d stashes"):format(#items))) end
+    if sweeping then m.near.status:SetText(Loc["Searching the area..."])
+    elseif not s then m.near.status:SetText(Loc["Look around you"])
+    elseif #items == 0 then m.near.status:SetText(Loc["Nothing hidden here"])
+    else m.near.status:SetText(#items == 1 and Loc["You found a stash"] or ((Loc["You found %d stashes"]):format(#items))) end
     m.near.again:SetEnabled(not sweeping)
-    m.list.empty:SetText(sweeping and "Listening for answers..." or
-      (s and "Nothing turned up. Stashes only answer while their keeper is online and nearby." or
-        "Search the area to find stashes others have left nearby."))
+    m.list.empty:SetText(sweeping and Loc["Listening for answers..."] or
+      (s and Loc["Nothing turned up. Stashes only answer while their keeper is online and nearby."] or
+        Loc["Search the area to find stashes others have left nearby."]))
   else
     for _, st in ipairs(self:Mine()) do items[#items + 1] = st end
     sel = self:Find(type(m.selected) == "string" and m.selected or "")
     if not sel and items[1] then sel = items[1]; m.selected = sel.id end
-    m.list.empty:SetText("You haven't left any stashes yet.")
+    m.list.empty:SetText(Loc["You haven't left any stashes yet."])
   end
 
   m.list:SetItems(items, function(row, it)
@@ -742,13 +743,13 @@ function S:RefreshPanel()
     local count = 0
     for _, x in ipairs(it.items) do count = count + (x.n or x.count or 0) end
     if near then
-      local who = it.own and "Yours" or Short(it.owner)
-      row.sub:SetText(("%s  ·  %d yards"):format(who, math.floor(it.dist + 0.5)))
+      local who = it.own and Loc["Yours"] or Short(it.owner)
+      row.sub:SetText((Loc["%s  ·  %d yards"]):format(who, math.floor(it.dist + 0.5)))
     else
       row.sub:SetText(Where(it))
     end
-    row.count:Set(count == 0 and "Empty" or (count == 1 and "1 item" or (count .. " items")))
-    if it.hidden then row.flag:Set("Hidden", BLIP.hidden) else row.flag:Set(nil) end
+    row.count:Set(count == 0 and Loc["Empty"] or (count == 1 and Loc["1 item"] or (count .. Loc[" items"])))
+    if it.hidden then row.flag:Set(Loc["Hidden"], BLIP.hidden) else row.flag:Set(nil) end
     row.sel:SetShown(isSel and true or false)
   end)
 
@@ -762,7 +763,7 @@ function S:RefreshPanel()
       m.mine.name:SetText(UI.Escape(sel.name))
       local here = S.Here()
       local d = here and S.Distance(here, sel.pos)
-      m.mine.where:SetText(Where(sel) .. "\nLeft " .. UI.Ago(sel.t) .. (d and ("  ·  %d yards away"):format(math.floor(d + 0.5)) or ""))
+      m.mine.where:SetText(Where(sel) .. Loc["\nLeft "] .. UI.Ago(sel.t) .. (d and (Loc["  ·  %d yards away"]):format(math.floor(d + 0.5)) or ""))
       m.mine.vis:Select(sel.hidden and "hidden" or "shown")
       m.mine.empty:SetEnabled(#sel.items > 0)
     end
@@ -788,13 +789,13 @@ function S:RefreshPanel()
   if not sel then
     m.foot:SetText("")
   elseif #contents == 0 then
-    m.foot:SetText("It's empty.")
+    m.foot:SetText(Loc["It's empty."])
   elseif near and sel.own then
-    m.foot:SetText("Your own stash. Click an item to take it back.")
+    m.foot:SetText(Loc["Your own stash. Click an item to take it back."])
   elseif near then
-    m.foot:SetText("Click an item to take it. " .. Short(sel.owner) .. "'s client hands it over while you're close enough.")
+    m.foot:SetText(Loc["Click an item to take it. "] .. Short(sel.owner) .. Loc["'s client hands it over while you're close enough."])
   else
-    m.foot:SetText("Click an item to take it back into your bags.")
+    m.foot:SetText(Loc["Click an item to take it back into your bags."])
   end
 end
 
@@ -815,7 +816,7 @@ function S:BuildDrop(page)
   local m = UI.Modal(page, 440, 340, function() self.drop:Hide() end)
   self.drop = m
   local card = m.card
-  local pill = UI.Section(card, "Leave it here")
+  local pill = UI.Section(card, Loc["Leave it here"])
   pill:SetPoint("TOPLEFT", 21, -15)
 
   m.slot = I.NewSlot(card, 44)
@@ -842,7 +843,7 @@ function S:BuildDrop(page)
   m.plus:SetScript("OnClick", function() step(1) end)
   m.minus:SetScript("OnClick", function() step(-1) end)
 
-  m.seg = UI.Segments(card, { { key = "new", label = "A new stash" }, { key = "old", label = "One of yours here" } }, 150,
+  m.seg = UI.Segments(card, { { key = "new", label = Loc["A new stash"] }, { key = "old", label = Loc["One of yours here"] } }, 150,
     function(key) m.mode = key; S:RefreshDrop() end)
   m.seg:SetPoint("TOPLEFT", 16, -100)
 
@@ -854,20 +855,20 @@ function S:BuildDrop(page)
   new.iconBtn:SetPoint("TOPLEFT", 16, -14)
   new.iconBtn:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Stash icon", 1, 0.82, 0)
-    GameTooltip:AddLine("Click to choose how it looks to whoever finds it.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Stash icon"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["Click to choose how it looks to whoever finds it."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   new.iconBtn:SetScript("OnClick", function(self)
     I:ChooseIcon(self, m.icon, function(icon) m.icon = icon; S:RefreshDrop() end)
   end)
-  new.name = UI.Field(new, "Name", 350, 40)
+  new.name = UI.Field(new, Loc["Name"], 350, 40)
   new.name:SetPoint("TOPLEFT", 72, -14)
-  new.hidden = UI.Toggle(new, "Hidden", "Only found by someone searching right where you stand.",
+  new.hidden = UI.Toggle(new, Loc["Hidden"], Loc["Only found by someone searching right where you stand."],
     function() return m.hidden end, function(v) m.hidden = v end, 408, true)
   new.hidden:SetPoint("TOPLEFT", 16, -66)
 
-  m.old = UI.List(card, 408, 118, 38, "None of your stashes are within a few steps of here.", function(row)
+  m.old = UI.List(card, 408, 118, 38, Loc["None of your stashes are within a few steps of here."], function(row)
     row.icon = row:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(26, 26)
     row.icon:SetPoint("LEFT", 8, 0)
@@ -882,21 +883,21 @@ function S:BuildDrop(page)
   end, { emptyIcon = K.Art("IconPlace") })
   m.old:SetPoint("TOPLEFT", 16, -140)
 
-  m.go = UI.Button(card, "Leave it", 110, 26)
+  m.go = UI.Button(card, Loc["Leave it"], 110, 26)
   m.go:SetPoint("BOTTOMRIGHT", -16, 14)
   m.go:SetScript("OnClick", function()
     local into
     if m.mode == "old" then into = m.into
     else into = { name = new.name.edit:GetText(), icon = m.icon, hidden = m.hidden } end
-    if not into then I.Error("Choose a stash.") return end
+    if not into then I.Error(Loc["Choose a stash."]) return end
     local st = S:Drop(m.slotIndex, m.n or 1, into)
     if st then
       m:Hide()
-      UI.Toast({ icon = I.IconTexture(st.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 }, title = "Left in " .. UI.Escape(st.name),
-        text = (st.hidden and "Hidden. " or "") .. "Others nearby can find it while you're online.", color = BLIP.own, duration = 5 })
+      UI.Toast({ icon = I.IconTexture(st.icon), iconCoords = { 0.08, 0.92, 0.08, 0.92 }, title = Loc["Left in "] .. UI.Escape(st.name),
+        text = (st.hidden and Loc["Hidden. "] or "") .. Loc["Others nearby can find it while you're online."], color = BLIP.own, duration = 5 })
     end
   end)
-  m.cancel = UI.Button(card, "Cancel", 80, 26)
+  m.cancel = UI.Button(card, Loc["Cancel"], 80, 26)
   m.cancel:SetPoint("RIGHT", m.go, "LEFT", -8, 0)
   m.cancel:SetScript("OnClick", function() m:Hide() end)
   K:On("INVENTORY", function() if m:IsShown() then S:RefreshDrop() end end)
@@ -915,7 +916,7 @@ function S:RefreshDrop()
   m.name:SetText(UI.Escape(def.name))
   m.name:SetTextColor(unpack(I.QualityColor(def.quality, true)))
   local here = S.Here()
-  m.where:SetText(here and ("%s  ·  %.1f, %.1f"):format(UI.Escape((K:CurrentPlace())), here.x * 100, here.y * 100) or "You can't leave things here.")
+  m.where:SetText(here and ("%s  ·  %.1f, %.1f"):format(UI.Escape((K:CurrentPlace())), here.x * 100, here.y * 100) or Loc["You can't leave things here."])
   m.count:SetText(m.n)
   m.minus:SetEnabled(m.n > 1)
   m.plus:SetEnabled(m.n < avail)
@@ -929,7 +930,7 @@ function S:RefreshDrop()
     row.icon:SetTexture(I.IconTexture(st.icon))
     row.name:SetText(UI.Escape(st.name))
     local n = S:Total(st)
-    row.info:SetText(n == 1 and "1 item" or (n .. " items"))
+    row.info:SetText(n == 1 and Loc["1 item"] or (n .. Loc[" items"]))
     row.sel:SetShown(st.id == m.into)
   end)
   m.go:SetEnabled(here ~= nil and (m.mode == "new" or m.into ~= nil))

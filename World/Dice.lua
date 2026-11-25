@@ -3,6 +3,7 @@
 -- with your group, your target or everyone nearby (K.Net kind "dice").
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -19,10 +20,10 @@ local HISTORY_MAX = 40
 local SPAM_LIMIT, SPAM_WINDOW = 4, 6        -- incoming rolls per sender per window (seconds)
 
 D.SHARES = {
-  { key = "group",  label = "Group" },
-  { key = "target", label = "Target" },
-  { key = "nearby", label = "Nearby" },
-  { key = "self",   label = "Just me" },
+  { key = "group",  label = Loc["Group"] },
+  { key = "target", label = Loc["Target"] },
+  { key = "nearby", label = Loc["Nearby"] },
+  { key = "self",   label = Loc["Just me"] },
 }
 
 local S = K.Settings
@@ -33,28 +34,28 @@ local S = K.Settings
 -- "2d6+3" -> { groups = { { n = 2, d = 6, s = 1 } }, mod = 3 }.
 -- Dice keep their sign (s = 1 or -1); plain numbers fold into mod.
 function D.Parse(expr)
-  if type(expr) ~= "string" then return nil, "Nothing to roll." end
+  if type(expr) ~= "string" then return nil, Loc["Nothing to roll."] end
   local s = strtrim(expr:lower())
-  if s == "" then return nil, "Nothing to roll." end
-  if s:find("[^%dd%+%-%s]") then return nil, "Use dice like 1d20, 2d6+3 or d100." end
+  if s == "" then return nil, Loc["Nothing to roll."] end
+  if s:find("[^%dd%+%-%s]") then return nil, Loc["Use dice like 1d20, 2d6+3 or d100."] end
   local groups, mod, pos, len = {}, 0, 1, #s
   while pos <= len do
     local _, stop, sign, count, isDie, num = s:find("^%s*([%+%-]?)%s*(%d*)(d?)(%d+)%s*", pos)
-    if not stop then return nil, "Couldn't read \"" .. expr .. "\". Try 1d20 or 2d6+3." end
+    if not stop then return nil, Loc["Couldn't read \""] .. expr .. Loc["\". Try 1d20 or 2d6+3."] end
     local neg = sign == "-" and -1 or 1
     if isDie == "d" then
       local n, d = count == "" and 1 or tonumber(count), tonumber(num)
-      if not n or n < 1 or n > MAX_COUNT then return nil, ("Roll between 1 and %d dice at a time."):format(MAX_COUNT) end
-      if not d or d < 2 or d > MAX_SIDES then return nil, ("Dice need between 2 and %d sides."):format(MAX_SIDES) end
+      if not n or n < 1 or n > MAX_COUNT then return nil, (Loc["Roll between 1 and %d dice at a time."]):format(MAX_COUNT) end
+      if not d or d < 2 or d > MAX_SIDES then return nil, (Loc["Dice need between 2 and %d sides."]):format(MAX_SIDES) end
       groups[#groups + 1] = { n = n, d = d, s = neg }
-      if #groups > MAX_TERMS then return nil, ("Up to %d kinds of dice in one roll."):format(MAX_TERMS) end
+      if #groups > MAX_TERMS then return nil, (Loc["Up to %d kinds of dice in one roll."]):format(MAX_TERMS) end
     else
       mod = mod + neg * (tonumber(count .. num) or 0)
     end
     pos = stop + 1
   end
-  if #groups == 0 then return nil, "Add at least one die, like 1d20." end
-  if math.abs(mod) > MAX_MOD then return nil, "That modifier is too large." end
+  if #groups == 0 then return nil, Loc["Add at least one die, like 1d20."] end
+  if math.abs(mod) > MAX_MOD then return nil, Loc["That modifier is too large."] end
   return { groups = groups, mod = mod }
 end
 
@@ -144,11 +145,11 @@ end
 -- channel, target  or  nil, reason (the roll then stays with you)
 local function Channel(share, target)
   if share == "group" then
-    if not IsInGroup() then return nil, "You're not in a group, so only you saw it." end
+    if not IsInGroup() then return nil, Loc["You're not in a group, so only you saw it."] end
     return IsInRaid() and "RAID" or "PARTY"
   elseif share == "target" then
     local name = target or TargetName()
-    if not name then return nil, "No player targeted, so only you saw it." end
+    if not name then return nil, Loc["No player targeted, so only you saw it."] end
     return "WHISPER", name
   elseif share == "nearby" then
     return "YELL"
@@ -157,10 +158,10 @@ end
 
 -- Who a roll went to, for the history and chat ("your group", "Anduin").
 local function ShareLabel(channel, to)
-  if channel == "RAID" then return "your raid"
-  elseif channel == "PARTY" then return "your party"
+  if channel == "RAID" then return Loc["your raid"]
+  elseif channel == "PARTY" then return Loc["your party"]
   elseif channel == "WHISPER" then return Short(to)
-  elseif channel == "YELL" then return "everyone nearby" end
+  elseif channel == "YELL" then return Loc["everyone nearby"] end
   return nil
 end
 
@@ -183,7 +184,7 @@ function D:Roll(expr, share, mod, target, quiet)
       }, channel, to) then
         res.to = ShareLabel(channel, to)
       else
-        res.note = "Couldn't send it right now, so only you saw it."
+        res.note = Loc["Couldn't send it right now, so only you saw it."]
       end
     else
       res.note = to
@@ -214,13 +215,13 @@ function D:ChatLine(res)
   if only and only.n == 1 and only.s ~= -1 and (res.mod or 0) == 0 and RANDOM_ROLL_RESULT then
     line = RANDOM_ROLL_RESULT:format(who, res.total, 1, only.d)
   else
-    line = ("%s rolls %d (%s)"):format(who, res.total, D.Breakdown(res))
+    line = (Loc["%s rolls %d (%s)"]):format(who, res.total, D.Breakdown(res))
   end
   local nat = Natural(res)
-  if nat == "crit" then line = line .. " Natural 20!" elseif nat == "fumble" then line = line .. " Natural 1." end
+  if nat == "crit" then line = line .. Loc[" Natural 20!"] elseif nat == "fumble" then line = line .. Loc[" Natural 1."] end
   if res.me then
-    if res.to then line = line .. (" |cff8c8c8c(shared with %s)|r"):format(res.to)
-    elseif res.note then line = line .. " |cff8c8c8c(only you)|r" end
+    if res.to then line = line .. (Loc[" |cff8c8c8c(shared with %s)|r"]):format(res.to)
+    elseif res.note then line = line .. Loc[" |cff8c8c8c(only you)|r"] end
   end
   frame:AddMessage(line, r, g, b)
 end
@@ -229,8 +230,8 @@ function D:Toast(res)
   local nat = Natural(res)
   UI.Toast({
     icon = DICE_ICON, round = true,
-    title = res.who .. " rolls " .. res.expr,
-    text = (nat == "crit" and "Natural 20!  " or (nat == "fumble" and "Natural 1.  " or "")) .. D.Breakdown(res),
+    title = res.who .. Loc[" rolls "] .. res.expr,
+    text = (nat == "crit" and Loc["Natural 20!  "] or (nat == "fumble" and Loc["Natural 1.  "] or "")) .. D.Breakdown(res),
     big = tostring(res.total), color = NaturalColor(res) or DICE_COLOR, duration = 6,
     onClick = function() D:Open() end,
   })
@@ -284,7 +285,7 @@ local function WhoName(sender, claimed)
   return Short(sender)
 end
 
-local CHANNEL_LABEL = { PARTY = "your party", RAID = "your raid", WHISPER = "you", YELL = "everyone nearby" }
+local CHANNEL_LABEL = { PARTY = Loc["your party"], RAID = Loc["your raid"], WHISPER = Loc["you"], YELL = Loc["everyone nearby"] }
 
 K.Net:On("dice", function(msg, sender, channel)
   local key = K.NameKey(sender)
@@ -324,7 +325,7 @@ end
 
 function D:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPDiceTray", "Dice", W, H)
+  local f = UI.Window("KinshipRPDiceTray", Loc["Dice"], W, H)
   f:ClearAllPoints()
   f:SetPoint("CENTER", 320, 20)
   f.icon:SetTexture(DICE_ICON)
@@ -372,9 +373,9 @@ function D:Build()
 
   -- Quick dice --------------------------------------------------------------
   local y = -46 - 118 - 12
-  local ql = UI.Text(f, "Quick dice", "Label", "deskSubtle")
+  local ql = UI.Text(f, Loc["Quick dice"], "Label", "deskSubtle")
   ql:SetPoint("TOPLEFT", PAD + 1, y)
-  local qhint = UI.Text(f, "Shift-click to roll at once", "Label", "deskSubtle")
+  local qhint = UI.Text(f, Loc["Shift-click to roll at once"], "Label", "deskSubtle")
   qhint:SetPoint("TOPRIGHT", -PAD - 1, y)
   qhint:SetAlpha(0.8)
   local gap = 4
@@ -387,12 +388,12 @@ function D:Build()
     b:Paint()
     b:SetPoint("TOPLEFT", PAD + (i - 1) * (qw + gap), y - 15)
     b:SetScript("OnClick", function() D:QuickDie(sides) end)
-    UI.Tooltip(b, "d" .. sides, "Click to set it in the expression (click again for another die).\nShift-click to roll one right away.")
+    UI.Tooltip(b, "d" .. sides, Loc["Click to set it in the expression (click again for another die).\nShift-click to roll one right away."])
   end
 
   -- Expression and modifier -------------------------------------------------
   y = y - 15 - 30 - 12
-  local el = UI.Text(f, "Expression", "Label", "deskSubtle")
+  local el = UI.Text(f, Loc["Expression"], "Label", "deskSubtle")
   el:SetPoint("TOPLEFT", PAD + 1, y)
   local EW = INNER - 126
   f.expr = UI.Edit(f, EW, 26, "desk", 60)
@@ -401,7 +402,7 @@ function D:Build()
   f.expr:SetScript("OnEnterPressed", function(self) self:ClearFocus(); D:TrayRoll() end)
   f.expr:SetScript("OnTextChanged", function(_, user) if user then D:SetError(nil) end end)
 
-  local ml = UI.Text(f, "Modifier", "Label", "deskSubtle")
+  local ml = UI.Text(f, Loc["Modifier"], "Label", "deskSubtle")
   ml:SetPoint("TOPLEFT", PAD + EW + 10 + 1, y)
   local minus = UI.Button(f, "-", 26, 26)
   minus:SetPoint("TOPLEFT", PAD + EW + 10, y - 14)
@@ -427,12 +428,12 @@ function D:Build()
   f.modEdit:SetScript("OnEditFocusLost", function() ShowMod() end)
   f.modEdit:EnableMouseWheel(true)
   f.modEdit:SetScript("OnMouseWheel", function(_, delta) Step(delta > 0 and 1 or -1) end)
-  UI.Tooltip(f.modEdit, "Modifier", "Added to every roll from the tray. Scroll or use - and + (Shift for 5).")
+  UI.Tooltip(f.modEdit, Loc["Modifier"], Loc["Added to every roll from the tray. Scroll or use - and + (Shift for 5)."])
   ShowMod()
 
   -- Share -------------------------------------------------------------------
   y = y - 14 - 26 - 12
-  local sl = UI.Text(f, "Share with", "Label", "deskSubtle")
+  local sl = UI.Text(f, Loc["Share with"], "Label", "deskSubtle")
   sl:SetPoint("TOPLEFT", PAD + 1, y)
   f.share = UI.Segments(f, D.SHARES, INNER / #D.SHARES, function(key)
     S().diceShare = key
@@ -454,13 +455,13 @@ function D:Build()
 
   -- History -----------------------------------------------------------------
   y = y - 32 - 14
-  local hl = UI.Text(f, "History", "Label", "deskSubtle")
+  local hl = UI.Text(f, Loc["History"], "Label", "deskSubtle")
   hl:SetPoint("TOPLEFT", PAD + 1, y)
-  local clear = UI.Button(f, "Clear", 54, 18)
+  local clear = UI.Button(f, Loc["Clear"], 54, 18)
   clear:SetPoint("TOPRIGHT", -PAD, y + 3)
   clear:SetScript("OnClick", function() wipe(D.history); D:RefreshHistory() end)
   local listH = H + y - 14 - PAD
-  f.list = UI.List(f, INNER, listH, 38, "No rolls yet. Yours, and the ones shared with you, gather here.",
+  f.list = UI.List(f, INNER, listH, 38, Loc["No rolls yet. Yours, and the ones shared with you, gather here."],
     function(row)
       row.icon = row:CreateTexture(nil, "ARTWORK")
       row.icon:SetSize(24, 24)
@@ -484,10 +485,10 @@ function D:Build()
         local res = self.item
         if not res then return end
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText((res.me and "You" or res.who) .. " rolled " .. res.expr, 1, 0.82, 0)
+        GameTooltip:SetText((res.me and Loc["You"] or res.who) .. Loc[" rolled "] .. res.expr, 1, 0.82, 0)
         GameTooltip:AddLine(D.Breakdown(res) .. " = " .. res.total, 1, 1, 1, true)
         GameTooltip:AddLine(UI.Ago(res.t), 0.7, 0.7, 0.7)
-        GameTooltip:AddLine("Click to use this expression again.", 0.45, 0.8, 0.75)
+        GameTooltip:AddLine(Loc["Click to use this expression again."], 0.45, 0.8, 0.75)
         GameTooltip:Show()
       end
     end, { emptyIcon = K.Art("IconNote") })
@@ -534,16 +535,16 @@ function D:UpdateHint()
   f.share:Select(share)
   local text
   if share == "group" then
-    if IsInRaid() then text = "Kinship users in your raid see the roll."
-    elseif IsInGroup() then text = "Kinship users in your party see the roll."
-    else text = "You're not in a group, so only you will see it." end
+    if IsInRaid() then text = Loc["Kinship users in your raid see the roll."]
+    elseif IsInGroup() then text = Loc["Kinship users in your party see the roll."]
+    else text = Loc["You're not in a group, so only you will see it."] end
   elseif share == "target" then
     local name = self.targetName or TargetName()
-    text = name and ("Whispered to " .. Short(name) .. ", if they use Kinship.") or "Target a player to whisper them your roll."
+    text = name and (Loc["Whispered to "] .. Short(name) .. Loc[", if they use Kinship."]) or Loc["Target a player to whisper them your roll."]
   elseif share == "nearby" then
-    text = "Kinship users nearby in this zone see the roll."
+    text = Loc["Kinship users nearby in this zone see the roll."]
   else
-    text = "Only you see the roll."
+    text = Loc["Only you see the roll."]
   end
   f.hint:SetText(text)
 end
@@ -556,7 +557,7 @@ function D:SetError(err)
   elseif self.shown then
     f.card.breakdown:SetText(D.Breakdown(self.shown))
   else
-    f.card.breakdown:SetText("Pick a die, or type an expression.")
+    f.card.breakdown:SetText(Loc["Pick a die, or type an expression."])
   end
 end
 
@@ -573,21 +574,21 @@ function D:ShowResult(res)
   local card = self.frame.card
   self.shown = res
   if not res then
-    card.expr:SetText("READY TO ROLL")
+    card.expr:SetText(Loc["READY TO ROLL"])
     card.total:SetText("-")
     card.chip:Set(nil)
     self:SetError(nil)
     self:PaintTotal()
     return
   end
-  local who = res.me and "You rolled " or (res.who .. " rolled ")
+  local who = res.me and Loc["You rolled "] or (res.who .. Loc[" rolled "])
   card.expr:SetText(who .. res.expr)
   card.total:SetText(res.total)
   local nat = Natural(res)
-  if nat == "crit" then card.chip:Set("Natural 20", CRIT_COLOR)
-  elseif nat == "fumble" then card.chip:Set("Natural 1", FUMBLE_COLOR)
-  elseif res.me and res.to then card.chip:Set("To " .. res.to, K:Theme().accent)
-  elseif res.me and res.note then card.chip:Set("Only you", K:Theme().subtle)
+  if nat == "crit" then card.chip:Set(Loc["Natural 20"], CRIT_COLOR)
+  elseif nat == "fumble" then card.chip:Set(Loc["Natural 1"], FUMBLE_COLOR)
+  elseif res.me and res.to then card.chip:Set(Loc["To "] .. res.to, K:Theme().accent)
+  elseif res.me and res.note then card.chip:Set(Loc["Only you"], K:Theme().subtle)
   else card.chip:Set(nil) end
   card.breakdown:SetText(res.note and ("|cff%s%s|r"):format(UI.CardHex(FUMBLE_COLOR), res.note) or D.Breakdown(res))
   self:PaintTotal()
@@ -605,7 +606,7 @@ function D:Animate(res)
   local t, nextTick, dur = 0, 0, 0.75
   self.spinning, self.pending = true, res
   card.chip:Set(nil)
-  card.expr:SetText("Rolling " .. res.expr .. "...")
+  card.expr:SetText(Loc["Rolling "] .. res.expr .. "...")
   card.breakdown:SetText("")
   self:PaintTotal()
   if SOUNDKIT and SOUNDKIT.UI_BAG_SORTING_01 then PlaySound(SOUNDKIT.UI_BAG_SORTING_01) end
@@ -647,9 +648,9 @@ local function FillHistory(row, res)
   local t = K:Theme()
   local sub = UI.Hex(t.subtle)
   local where
-  if res.me then where = res.to and ("to " .. res.to) or "just you"
-  else where = res.via and ("to " .. res.via) or nil end
-  row.title:SetText((res.me and "You" or res.who) .. "  |cff" .. sub .. res.expr .. (where and ("  ·  " .. where) or "") .. "|r")
+  if res.me then where = res.to and (Loc["to "] .. res.to) or Loc["just you"]
+  else where = res.via and (Loc["to "] .. res.via) or nil end
+  row.title:SetText((res.me and Loc["You"] or res.who) .. "  |cff" .. sub .. res.expr .. (where and ("  ·  " .. where) or "") .. "|r")
   row.sub:SetText(D.Breakdown(res))
   local nat = NaturalColor(res)
   local c = nat and UI.OnCard(nat) or t.heading
@@ -698,15 +699,15 @@ K:On("LOGIN", function()
   if s.diceShare == nil then s.diceShare = "group" end
 end)
 
-K:RegisterSettings({ id = "dice", title = "Dice", order = 40, build = function(card)
-  card:Toggle("Shared rolls as toasts", "Shows a message at the top of the screen when someone shares a roll with you.", "diceToasts")
-  card:Toggle("Shared rolls in chat", "Shows shared rolls in your chat window.", "diceChat")
-  card:Note("Roll from the dice tray, the target bar or with /kin roll 2d6+3. Only Kinship users see shared rolls. Anyone rolling too often is ignored for a few seconds.")
-  card:Button("Open the dice tray", function() D:Open() end, 160)
+K:RegisterSettings({ id = "dice", title = Loc["Dice"], order = 40, build = function(card)
+  card:Toggle(Loc["Shared rolls as toasts"], Loc["Shows a message at the top of the screen when someone shares a roll with you."], "diceToasts")
+  card:Toggle(Loc["Shared rolls in chat"], Loc["Shows shared rolls in your chat window."], "diceChat")
+  card:Note(Loc["Roll from the dice tray, the target bar or with /kin roll 2d6+3. Only Kinship users see shared rolls. Anyone rolling too often is ignored for a few seconds."])
+  card:Button(Loc["Open the dice tray"], function() D:Open() end, 160)
 end })
 
 K:RegisterTargetButton({
-  id = "dice", icon = DICE_ICON, label = "Roll dice", order = 35,
+  id = "dice", icon = DICE_ICON, label = Loc["Roll dice"], order = 35,
   onClick = function(unit, name)
     local n = name
     if not n and unit and UnitExists(unit) then

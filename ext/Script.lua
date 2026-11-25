@@ -12,6 +12,7 @@
 -- scripts = SC, classID = full ID, LAST = what the last effect returned }.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local E = K.Ext
 local S = { effects = {}, operands = {}, notes = {} }
@@ -481,7 +482,7 @@ end
 -- Ask for a word, keep it in a variable, then carry on with a workflow.
 local prompt
 StaticPopupDialogs["KINSHIPRP_EXT_PROMPT"] = {
-  text = "%s", button1 = OKAY or "OK", button2 = CANCEL or "Cancel",
+  text = "%s", button1 = OKAY or "OK", button2 = CANCEL or Loc["Cancel"],
   hasEditBox = true, maxLetters = 200,
   OnShow = function(self)
     local eb = self.editBox or self.EditBox or (self.GetEditBox and self:GetEditBox())

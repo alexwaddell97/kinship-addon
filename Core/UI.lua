@@ -4,6 +4,7 @@
 -- dark-brown text.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = {}
 K.UI = UI
@@ -822,13 +823,24 @@ function UI.TabBar(parent, names, onSelect, desk)
     b.text = b:CreateFontString(nil, "OVERLAY")
     b.text:SetFontObject(desk and UI.FONTS.HeaderShadow or UI.FONTS.Header)
     b.text:SetPoint("CENTER", 0, 1)
+    b.text:SetWordWrap(false)
     b.text:SetText(label)
     b.line = b:CreateTexture(nil, "ARTWORK")
     b.line:SetTexture(WHITE)
     b.line:SetHeight(2)
     b.line:SetPoint("BOTTOM")
-    b:SetScript("OnEnter", function(self) self.hover = true; bar:Paint() end)
-    b:SetScript("OnLeave", function(self) self.hover = false; bar:Paint() end)
+    b:SetScript("OnEnter", function(self)
+      self.hover = true; bar:Paint()
+      if self.cut then
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(label)
+        GameTooltip:Show()
+      end
+    end)
+    b:SetScript("OnLeave", function(self)
+      self.hover = false; bar:Paint()
+      if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+    end)
     b:SetScript("OnClick", function()
       if SOUNDKIT then PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB) end
       bar:Select(i)
@@ -846,17 +858,38 @@ function UI.TabBar(parent, names, onSelect, desk)
       order = {}
       for i = 1, #self.tabs do order[i] = i end
     end
+    local ws = {}
     for _, i in ipairs(order) do
       local b = self.tabs[i]
-      if b and not b.off then sum = sum + math.ceil(b.text:GetStringWidth()); n = n + 1 end
+      if b and not b.off then
+        b.text:SetWidth(0)
+        local fs = b.text
+        ws[i] = math.ceil(fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or fs:GetStringWidth())
+        sum = sum + ws[i]; n = n + 1
+      end
     end
     if self.maxWidth and n > 1 and sum + gap * (n - 1) > self.maxWidth then
       gap = math.max(10, math.floor((self.maxWidth - sum) / (n - 1)))
     end
+    -- Still too wide (long names in another language): the longest names are
+    -- cut short so the row fits, and show in full on hover.
+    local cap
+    if self.maxWidth and sum + gap * (n - 1) > self.maxWidth then
+      local sorted, room = {}, self.maxWidth - gap * (n - 1)
+      for _, w in pairs(ws) do sorted[#sorted + 1] = w end
+      table.sort(sorted)
+      for k, w in ipairs(sorted) do
+        local share = math.floor(room / (#sorted - k + 1))
+        if w > share then cap = share; break end
+        room = room - w
+      end
+    end
     for _, i in ipairs(order) do
       local b = self.tabs[i]
       if b and not b.off then
-        local w = math.ceil(b.text:GetStringWidth())
+        local w = ws[i]
+        b.cut = cap and w > cap or nil
+        if b.cut then w = cap; b.text:SetWidth(w) end
         b:SetSize(w + math.min(20, gap - 4), 26)
         b:ClearAllPoints()
         b:SetPoint("LEFT", x, 0)
@@ -1440,7 +1473,7 @@ function UI.Search(parent, width, placeholder, onChange)
   eb.icon:SetSize(13, 13)
   eb.icon:SetPoint("LEFT", 7, -1)
   eb.icon:SetAlpha(0.6)
-  eb.hint = UI.Text(eb, placeholder or SEARCH or "Search", "Small", "deskSubtle")
+  eb.hint = UI.Text(eb, placeholder or SEARCH or Loc["Search"], "Small", "deskSubtle")
   eb.hint:SetPoint("LEFT", 24, 0)
   eb.hint:SetPoint("RIGHT", -8, 0)   -- a long hint ends in "..." inside the box
   eb.hint:SetWordWrap(false)
@@ -1634,13 +1667,13 @@ function UI.SetProgress(key, p) progress[key] = p end
 
 -- "just now", "12m ago", "3h ago", "yesterday", "4 days ago"
 function UI.Ago(t)
-  if not t then return "never" end
+  if not t then return Loc["never"] end
   local s = time() - t
   if s < 90 then return "just now" end
   if s < 3600 then return math.floor(s / 60) .. "m ago" end
   if s < 86400 then return math.floor(s / 3600) .. "h ago" end
   local d = math.floor(s / 86400)
-  return d == 1 and "yesterday" or (d .. " days ago")
+  return d == 1 and Loc["yesterday"] or (d .. Loc[" days ago"])
 end
 
 -- Text that came from another player: show it as typed, never as UI codes.
@@ -1788,13 +1821,13 @@ end
 -- Wax seal: a disc of coloured wax with the crest pressed into it.
 ---------------------------------------------------------------------------
 UI.SEAL_COLORS = {
-  { key = "crimson", label = "Crimson", color = { 0.60, 0.10, 0.12 } },
+  { key = "crimson", label = Loc["Crimson"], color = { 0.60, 0.10, 0.12 } },
   { key = "royal",   label = "Royal",   color = { 0.17, 0.25, 0.58 } },
-  { key = "forest",  label = "Forest",  color = { 0.14, 0.40, 0.22 } },
-  { key = "teal",    label = "Teal",    color = { 0.05, 0.38, 0.38 } },
-  { key = "gold",    label = "Gold",    color = { 0.78, 0.58, 0.18 } },
-  { key = "violet",  label = "Violet",  color = { 0.40, 0.18, 0.52 } },
-  { key = "night",   label = "Night",   color = { 0.13, 0.12, 0.12 } },
+  { key = "forest",  label = Loc["Forest"],  color = { 0.14, 0.40, 0.22 } },
+  { key = "teal",    label = Loc["Teal"],    color = { 0.05, 0.38, 0.38 } },
+  { key = "gold",    label = Loc["Gold"],    color = { 0.78, 0.58, 0.18 } },
+  { key = "violet",  label = Loc["Violet"],  color = { 0.40, 0.18, 0.52 } },
+  { key = "night",   label = Loc["Night"],   color = { 0.13, 0.12, 0.12 } },
 }
 function UI.SealColor(key)
   for _, s in ipairs(UI.SEAL_COLORS) do if s.key == key then return s.color end end

@@ -4,6 +4,7 @@
 -- game's Options on the way), and a few shortcuts.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local O = {}
@@ -29,7 +30,7 @@ local function Build()
   logo:SetPoint("TOPLEFT", 16, -18)
   local title = UI.Text(f, "Kinship RP", "Huge", "deskHeading")
   title:SetPoint("TOPLEFT", logo, "TOPRIGHT", 14, -6)
-  local ver = UI.Text(f, "Version " .. tostring(K.VERSION or "?"), "Small", "deskSubtle")
+  local ver = UI.Text(f, Loc["Version "] .. tostring(K.VERSION or "?"), "Small", "deskSubtle")
   ver:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 1, -5)
 
   local blurb = UI.Text(f, "Your roleplay profile, the people you meet, your stories and the Warfront, all in one journal. "
@@ -37,14 +38,14 @@ local function Build()
   blurb:SetPoint("TOPLEFT", logo, "BOTTOMLEFT", 2, -16)
   blurb:SetSpacing(3)
 
-  local open = UI.Button(f, "Open Kinship settings", 220, 30)
+  local open = UI.Button(f, Loc["Open Kinship settings"], 220, 30)
   open:SetPoint("TOPLEFT", blurb, "BOTTOMLEFT", -2, -18)
   open:SetScript("OnClick", function() O:OpenJournal("settings") end)
 
   local row = {
-    { "Open the journal", function() O:OpenJournal(nil) end },
-    { "Edit your profile", function() O:OpenJournal("profile") end },
-    { "Replay the welcome tour", function()
+    { Loc["Open the journal"], function() O:OpenJournal(nil) end },
+    { Loc["Edit your profile"], function() O:OpenJournal("profile") end },
+    { Loc["Replay the welcome tour"], function()
       O:OpenJournal(nil)
       C_Timer.After(0.4, function() if K.Guide then K.Guide:Start("journal", K.Journal, K.Journal.frame) end end)
     end },

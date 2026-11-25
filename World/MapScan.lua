@@ -4,6 +4,7 @@
 -- ("scanr"), and they show as status-coloured dots on the map for a while.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -36,10 +37,10 @@ function M:Hidden()
 end
 
 local HIDDEN_TEXT = {
-  off = "You're hidden: sharing your location is switched off.",
-  ooc = "You're hidden while out of character.",
-  pvp = "You're hidden while flagged for PvP.",
-  instance = "You're hidden inside dungeons and raids.",
+  off = Loc["You're hidden: sharing your location is switched off."],
+  ooc = Loc["You're hidden while out of character."],
+  pvp = Loc["You're hidden while flagged for PvP."],
+  instance = Loc["You're hidden inside dungeons and raids."],
 }
 
 -- Your position on the asked-for map if you're on it, else on your own zone map.
@@ -146,8 +147,8 @@ local function PinEnter(pin)
   if p and p.currently and p.currently ~= "" then
     GameTooltip:AddLine("\"" .. UI.Clean(p.currently) .. "\"", 0.85, 0.85, 0.85, true)
   end
-  GameTooltip:AddLine("Seen " .. UI.Ago(e.t), 0.6, 0.6, 0.6)
-  GameTooltip:AddLine("Click to view their profile", 0.45, 0.8, 0.75)
+  GameTooltip:AddLine(Loc["Seen "] .. UI.Ago(e.t), 0.6, 0.6, 0.6)
+  GameTooltip:AddLine(Loc["Click to view their profile"], 0.45, 0.8, 0.75)
   GameTooltip:Show()
   if K.Comm and K.Comm.Request then K.Comm:Request(e.name) end
 end
@@ -275,7 +276,7 @@ function M:BuildButton()
   b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   UI.Round(b.icon)
   b.pulse:SetPoint("CENTER", b.icon)
-  b.label = UI.Text(b, "Find roleplayers", "Small", "deskText")
+  b.label = UI.Text(b, Loc["Find roleplayers"], "Small", "deskText")
   b.label:SetPoint("LEFT", b.icon, "RIGHT", 7, 0)
   b.label:SetWordWrap(false)
   b.count = UI.Chip(b, "Label", true)
@@ -294,13 +295,13 @@ function M:BuildButton()
   b:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.12, paint)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT")
-    GameTooltip:SetText("Find roleplayers", 1, 0.86, 0.55)
-    GameTooltip:AddLine("Asks Kinship users nearby in this zone where they are. They show as dots on the map for a few minutes.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Find roleplayers"], 1, 0.86, 0.55)
+    GameTooltip:AddLine(Loc["Asks Kinship users nearby in this zone where they are. They show as dots on the map for a few minutes."], 1, 1, 1, true)
     local why = M:Hidden()
     GameTooltip:AddLine(" ")
     if why then GameTooltip:AddLine(HIDDEN_TEXT[why], 0.95, 0.70, 0.40, true)
-    else GameTooltip:AddLine("You're visible to other people's scans.", 0.45, 0.85, 0.55, true) end
-    GameTooltip:AddLine("Right-click: privacy settings", 0.7, 0.7, 0.7)
+    else GameTooltip:AddLine(Loc["You're visible to other people's scans."], 0.45, 0.85, 0.55, true) end
+    GameTooltip:AddLine(Loc["Right-click: privacy settings"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.15, paint); GameTooltip:Hide() end)
@@ -371,7 +372,7 @@ function M:UpdateButton()
     b:SetPoint("TOPRIGHT", host, "TOPRIGHT", -10, CornerY(host))
   end
   if owner then b:SetFrameLevel(math.min(9000, owner:GetCanvas():GetFrameLevel() + 1300)) end
-  local text = self.flash or (b.scanning and "Looking for roleplayers..." or "Find roleplayers")
+  local text = self.flash or (b.scanning and Loc["Looking for roleplayers..."] or Loc["Find roleplayers"])
   b.label:SetText(text)
   b.count:Set(self.used > 0 and tostring(self.used) or nil, K:Theme().ui)
   local w = 9 + 18 + 7 + math.ceil(b.label:GetStringWidth()) + 12 + (b.count:IsShown() and (b.count:GetWidth() + 6) or 0)
@@ -395,17 +396,17 @@ function M:Scan()
   if not b or b.scanning then return end
   local now = GetTime()
   if self.scanAt and now - self.scanAt < SCAN_COOLDOWN then
-    self:Flash("Just a moment...", 1.5)
+    self:Flash(Loc["Just a moment..."], 1.5)
     return
   end
-  if IsInInstance() then self:Flash("Not inside instances") return end
+  if IsInInstance() then self:Flash(Loc["Not inside instances"]) return end
   local map = owner and owner:GetMapID()
   if not map then
     local ok, best = pcall(C_Map.GetBestMapForUnit, "player")
     map = ok and Safe(best) and best or nil
   end
   if not K.Net:Send("scan", { m = map }, "YELL") then
-    self:Flash("Can't scan right now")
+    self:Flash(Loc["Can't scan right now"])
     return
   end
   wipe(self.found)
@@ -421,9 +422,9 @@ function M:Scan()
     M:Layout()
     local n = 0
     for _ in pairs(M.found) do n = n + 1 end
-    if n == 0 then M:Flash("No one answered nearby", 4)
-    elseif M.used == 0 then M:Flash(n .. " found, not on this map", 4)
-    else M:Flash(M.used == 1 and "1 roleplayer found" or (M.used .. " roleplayers found"), 4) end
+    if n == 0 then M:Flash(Loc["No one answered nearby"], 4)
+    elseif M.used == 0 then M:Flash(n .. Loc[" found, not on this map"], 4)
+    else M:Flash(M.used == 1 and Loc["1 roleplayer found"] or (M.used .. Loc[" roleplayers found"]), 4) end
   end)
 end
 
@@ -477,15 +478,15 @@ end)
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
-K:RegisterSettings({ id = "mapscan", trp3 = "hide", title = "Find roleplayers on the map", order = 45, build = function(card)
-  card:Toggle("Share my location", "Lets nearby Kinship users see you when they look for roleplayers on the world map.", "mapShare")
-  card:Toggle("Not while out of character", "Stay hidden from scans while your status is OOC.", "mapHideOOC")
-  card:Toggle("Not while flagged for PvP", "Stay hidden from scans while you're PvP-flagged.", "mapHidePvP")
+K:RegisterSettings({ id = "mapscan", trp3 = "hide", title = Loc["Find roleplayers on the map"], order = 45, build = function(card)
+  card:Toggle(Loc["Share my location"], Loc["Lets nearby Kinship users see you when they look for roleplayers on the world map."], "mapShare")
+  card:Toggle(Loc["Not while out of character"], Loc["Stay hidden from scans while your status is OOC."], "mapHideOOC")
+  card:Toggle(Loc["Not while flagged for PvP"], Loc["Stay hidden from scans while you're PvP-flagged."], "mapHidePvP")
   card:EndRow()
   local note = card:Note("", 16)
   card:OnRefresh(function()
     local why = M:Hidden()
     note:SetText(why and HIDDEN_TEXT[why]
-      or "You're visible right now. Click \"Find roleplayers\" on the world map to see who's nearby.")
+      or Loc["You're visible right now. Click \"Find roleplayers\" on the world map to see who's nearby."])
   end)
 end })

@@ -10,6 +10,7 @@
 --          fields; other RP addons ignore them).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 
 K.GROUP_CREST = "Interface\\Icons\\INV_BannerPVP_02"
@@ -47,8 +48,8 @@ function K:SetGroupMember(key, name, state)
   if not g or not key then return end
   g.members = g.members or {}
   g.members[key] = state and { name = name, state = state } or nil
-  if state == "recognised" then self:Print(name .. " is now recognised as one of yours.")
-  elseif state == "ignored" then self:Print(name .. "'s claim will no longer be shown.") end
+  if state == "recognised" then self:Print(name .. Loc[" is now recognised as one of yours."])
+  elseif state == "ignored" then self:Print(name .. Loc["'s claim will no longer be shown."]) end
   self:Fire("HOUSE")
   if K.Journal then K.Journal:RefreshCurrent() end
 end
@@ -76,7 +77,7 @@ function K:GroupMembers()
         seen[k] = true
         local role = strtrim(prof.groupRole or "")
         recognised[#recognised + 1] = { name = p.name, key = k, mine = true, state = "recognised",
-          role = role ~= "" and role or (guid == self:CharKey() and "You" or "Your character") }
+          role = role ~= "" and role or (guid == self:CharKey() and Loc["You"] or Loc["Your character"]) }
       end
     end
   end
@@ -91,7 +92,7 @@ function K:GroupMembers()
       if not seen[k] and state ~= "ignored" then
         seen[k] = true
         local role = strtrim(K.UI.Clean(pr.groupRole or ""))
-        if role == "" and (reg.t or 0) > recent then role = "|cff5fd35fNearby|r" end
+        if role == "" and (reg.t or 0) > recent then role = Loc["|cff5fd35fNearby|r"] end
         local m = { name = K.Short(reg.name), raw = reg.name, key = k, state = state, role = role }
         if state == "recognised" then recognised[#recognised + 1] = m else claims[#claims + 1] = m end
       end

@@ -9,6 +9,7 @@
 -- }
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local A = {}
@@ -18,22 +19,22 @@ local ICONS = "Interface\\Icons\\"
 
 -- Conditions, in the order the editor shows them.
 A.CONDITIONS = {
-  { key = "instance", short = "Dungeon or raid", long = "In a dungeon or raid",               icon = ICONS .. "INV_Misc_Key_03" },
-  { key = "pvp",      short = "Battleground",    long = "In a battleground, arena or war zone", icon = ICONS .. "INV_BannerPVP_02" },
-  { key = "hostile",  short = "Enemy land",      long = "In enemy territory",                 icon = ICONS .. "Ability_DualWield" },
-  { key = "city",     short = "City or inn",     long = "Resting in a city or inn",           icon = ICONS .. "Spell_Nature_Sleep" },
-  { key = "mounted",  short = "Mounted",         long = "While mounted",                      icon = ICONS .. "Ability_Mount_RidingHorse", quiet = true },
-  { key = "combat",   short = "In combat",       long = "In combat",                          icon = ICONS .. "Ability_Warrior_OffensiveStance", quiet = true },
-  { key = "group",    short = "In a group",      long = "In a group",                         icon = ICONS .. "INV_Misc_GroupNeedMore" },
-  { key = "raid",     short = "In a raid",       long = "In a raid group",                    icon = ICONS .. "Spell_Holy_PrayerOfHealing" },
+  { key = "instance", short = Loc["Dungeon or raid"], long = Loc["In a dungeon or raid"],               icon = ICONS .. "INV_Misc_Key_03" },
+  { key = "pvp",      short = Loc["Battleground"],    long = Loc["In a battleground, arena or war zone"], icon = ICONS .. "INV_BannerPVP_02" },
+  { key = "hostile",  short = Loc["Enemy land"],      long = Loc["In enemy territory"],                 icon = ICONS .. "Ability_DualWield" },
+  { key = "city",     short = Loc["City or inn"],     long = Loc["Resting in a city or inn"],           icon = ICONS .. "Spell_Nature_Sleep" },
+  { key = "mounted",  short = Loc["Mounted"],         long = Loc["While mounted"],                      icon = ICONS .. "Ability_Mount_RidingHorse", quiet = true },
+  { key = "combat",   short = Loc["In combat"],       long = Loc["In combat"],                          icon = ICONS .. "Ability_Warrior_OffensiveStance", quiet = true },
+  { key = "group",    short = Loc["In a group"],      long = Loc["In a group"],                         icon = ICONS .. "INV_Misc_GroupNeedMore" },
+  { key = "raid",     short = Loc["In a raid"],       long = Loc["In a raid group"],                    icon = ICONS .. "Spell_Holy_PrayerOfHealing" },
 }
 local COND = {}
 for _, c in ipairs(A.CONDITIONS) do COND[c.key] = c end
 
 A.ACTIONS = {
-  { key = "status",  label = "Status",     verb = "Changes your status" },
-  { key = "profile", label = "Profile",    verb = "Switches your profile" },
-  { key = "stance",  label = "War stance", verb = "Changes your war stance" },
+  { key = "status",  label = Loc["Status"],     verb = Loc["Changes your status"] },
+  { key = "profile", label = Loc["Profile"],    verb = Loc["Switches your profile"] },
+  { key = "stance",  label = Loc["War stance"], verb = Loc["Changes your war stance"] },
 }
 local ACTION = {}
 for _, a in ipairs(A.ACTIONS) do ACTION[a.key] = a end
@@ -110,7 +111,7 @@ function A:ValueLabel(action, value)
     local s = K.STANCES[value or ""]
     return s and s.label or "?", s and s.color
   end
-  return value and ("\"" .. value .. "\"") or "No profile chosen", K:Theme().accent
+  return value and ("\"" .. value .. "\"") or Loc["No profile chosen"], K:Theme().accent
 end
 
 local function Notify(rule, value, back)
@@ -118,7 +119,7 @@ local function Notify(rule, value, back)
   if not c or c.quiet or K.db.settings.autoNotify == false then return end
   local label = A:ValueLabel(rule.action, value)
   UI.Toast({ icon = c.icon, round = true, duration = 3,
-    title = back and "Back to how it was" or c.long,
+    title = back and Loc["Back to how it was"] or c.long,
     text = ("%s: %s"):format(ACTION[rule.action] and ACTION[rule.action].label or "", label) })
 end
 
@@ -271,10 +272,10 @@ function A:BuildEditor()
   self.editor = ov
   local card = ov.card
 
-  card.title = UI.Section(card, "New rule")
+  card.title = UI.Section(card, Loc["New rule"])
   card.title:SetPoint("TOPLEFT", 21, -15)
 
-  local when = UI.Text(card, "When", "Label", "subtle")
+  local when = UI.Text(card, Loc["When"], "Label", "subtle")
   when:SetPoint("TOPLEFT", 17, -44)
   card.tiles = {}
   for i, c in ipairs(A.CONDITIONS) do
@@ -284,7 +285,7 @@ function A:BuildEditor()
     card.tiles[i] = t
   end
 
-  local doThis = UI.Text(card, "Do this", "Label", "subtle")
+  local doThis = UI.Text(card, Loc["Do this"], "Label", "subtle")
   doThis:SetPoint("TOPLEFT", 17, -184)
   card.action = UI.Segments(card, A.ACTIONS, IW / 3, function(key)
     A.draft.action = key
@@ -310,21 +311,21 @@ function A:BuildEditor()
   card.profile:SetPoint("TOPLEFT", 16, -252)
   card.profile:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Switch to")
+      root:CreateTitle(Loc["Switch to"])
       for _, name in ipairs(K:ProfileNames()) do
         root:CreateRadio(name, function() return A.draft.value == name end, function() A.draft.value = name; A:PaintEditor() end)
       end
     end)
   end)
-  card.profileNote = UI.Text(card, "Profiles belong to this character.", "Small", "subtle", IW - 232)
+  card.profileNote = UI.Text(card, Loc["Profiles belong to this character."], "Small", "subtle", IW - 232)
   card.profileNote:SetPoint("LEFT", card.profile, "RIGHT", 12, 0)
 
-  card.restore = UI.Toggle(card, "Switch back afterwards",
-    "When the moment passes, return to what you had before, unless you've changed it yourself.",
+  card.restore = UI.Toggle(card, Loc["Switch back afterwards"],
+    Loc["When the moment passes, return to what you had before, unless you've changed it yourself."],
     function() return A.draft and A.draft.restore end, function(v) A.draft.restore = v end, IW, true)
   card.restore:SetPoint("TOPLEFT", 16, -292)
 
-  card.save = UI.Button(card, "Save rule", 120, 28)
+  card.save = UI.Button(card, Loc["Save rule"], 120, 28)
   card.save:SetPoint("BOTTOMRIGHT", -16, 14)
   card.save:SetScript("OnClick", function()
     local d = A.draft
@@ -332,7 +333,7 @@ function A:BuildEditor()
     ov:Hide()
     A:Save(d)
   end)
-  card.cancel = UI.Button(card, "Cancel", 96, 28)
+  card.cancel = UI.Button(card, Loc["Cancel"], 96, 28)
   card.cancel:SetPoint("RIGHT", card.save, "LEFT", -8, 0)
   card.cancel:SetScript("OnClick", function() ov:Hide() end)
   return ov
@@ -348,9 +349,9 @@ function A:PaintEditor()
   card.profileNote:SetShown(d.action == "profile")
   if d.action == "status" then card.status:Select(d.value)
   elseif d.action == "stance" then card.stance:Select(d.value) end
-  card.valueLabel:SetText(d.action == "status" and "Set my status to" or d.action == "stance" and "Set my war stance to"
-    or "Switch to the profile")
-  card.profile:SetText(d.action == "profile" and d.value and Valid("profile", d.value) and d.value or "Choose a profile...")
+  card.valueLabel:SetText(d.action == "status" and Loc["Set my status to"] or d.action == "stance" and Loc["Set my war stance to"]
+    or Loc["Switch to the profile"])
+  card.profile:SetText(d.action == "profile" and d.value and Valid("profile", d.value) and d.value or Loc["Choose a profile..."])
   card.restore:Refresh()
   card.save:SetEnabled(Valid(d.action, d.value))
 end
@@ -364,7 +365,7 @@ function A:Edit(rule)
     self.draft = { id = ("%d-%d"):format(time(), math.random(1000, 9999)), enabled = true,
                    cond = "instance", action = "status", value = "ooc", restore = true }
   end
-  ov.card.title:SetText(rule and "Edit rule" or "New rule")
+  ov.card.title:SetText(rule and Loc["Edit rule"] or Loc["New rule"])
   self:PaintEditor()
   ov:Show()
 end
@@ -392,7 +393,7 @@ local function BuildRow(row)
   row.del = UI.CloseButton(row, true, 20)
   row.del:SetPoint("RIGHT", -10, 0)
   row.del:SetScript("OnClick", function() if row.item then A:Delete(row.item) end end)
-  UI.Tooltip(row.del, "Delete rule")
+  UI.Tooltip(row.del, Loc["Delete rule"])
   row.toggle = UI.Toggle(row, "", nil, function() return row.item and row.item.enabled end, function(v)
     if row.item then row.item.enabled = v; A:Evaluate(); A:RefreshList() end
   end, 50, true)
@@ -402,7 +403,7 @@ local function BuildRow(row)
   row:SetScript("OnClick", function(self) if self.item then A:Edit(self.item) end end)
   row.onEnter = function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Click to edit this rule", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Click to edit this rule"], 1, 0.82, 0)
     GameTooltip:Show()
   end
 end
@@ -413,7 +414,7 @@ local function FillRow(row, rule)
   row.title:SetText(c.long)
   local active = A:IsActive(rule)
   local sub = (ACTION[rule.action] and ACTION[rule.action].verb or "") ..
-    (rule.restore and ", then switches back" or ", and leaves it")
+    (rule.restore and Loc[", then switches back"] or Loc[", and leaves it"])
   if active and rule.enabled then sub = sub .. ("  ·  |cff%sactive now|r"):format(UI.Hex(K:Theme().accent)) end
   row.sub:SetText(sub)
   local label, color = A:ValueLabel(rule.action, rule.value)
@@ -430,12 +431,12 @@ function A:RefreshList()
   self.list:SetItems(self:Rules(), FillRow)
   if self.count then
     local n = #self:Rules()
-    self.count:SetText(n == 0 and "" or (n == 1 and "1 rule" or (n .. " rules")))
+    self.count:SetText(n == 0 and "" or (n == 1 and Loc["1 rule"] or (n .. Loc[" rules"])))
   end
 end
 
-K:RegisterSettings({ id = "automation", title = "Automation", order = 15, build = function(card)
-  card:Note("Rules change your status, profile or war stance when something happens, and can change it back afterwards. Click a rule to edit it.")
+K:RegisterSettings({ id = "automation", title = Loc["Automation"], order = 15, build = function(card)
+  card:Note(Loc["Rules change your status, profile or war stance when something happens, and can change it back afterwards. Click a rule to edit it."])
   card:EndRow()
   local w = card:GetWidth() - 32
   local h = ROW_H * ROWS
@@ -450,15 +451,15 @@ K:RegisterSettings({ id = "automation", title = "Automation", order = 15, build 
     holder.edge:SetColor(unpack(t.panelEdge))
   end)
   local list = UI.List(holder, w, h, ROW_H,
-    "No rules yet. For example: go OOC in dungeons and raids, and switch back when you leave.",
+    Loc["No rules yet. For example: go OOC in dungeons and raids, and switch back when you leave."],
     BuildRow, { bare = true, emptyIcon = K.Art("IconMilestone") })
   list:SetPoint("TOPLEFT")
   A.list = list
   card:Space(h + 12)
 
-  local add = card:Button("Add a rule", function() A:Edit(nil) end, 140)
+  local add = card:Button(Loc["Add a rule"], function() A:Edit(nil) end, 140)
   A.count = UI.Text(card, "", "Small", "subtle")
   A.count:SetPoint("LEFT", add, "RIGHT", 12, 0)
-  card:Toggle("Tell me when a rule switches", "Shows a message when a rule changes something. Not shown for combat or mounting.", "autoNotify")
+  card:Toggle(Loc["Tell me when a rule switches"], Loc["Shows a message when a rule changes something. Not shown for combat or mounting."], "autoNotify")
   card:OnRefresh(function() A:RefreshList() end)
 end })

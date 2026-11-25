@@ -4,6 +4,7 @@
 -- other addons simply ignore them.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local Safe = K.Safe
 local C = {}
@@ -58,7 +59,7 @@ local function Units(v, unit)
   return n and ("%s %s"):format(v, unit) or v
 end
 -- Relationship status (RS) as Total RP 3 numbers it; 0 is "not shown".
-local RELATIONSHIP = { ["1"] = "Single", ["2"] = "Taken", ["3"] = "Married", ["4"] = "Divorced", ["5"] = "Widowed" }
+local RELATIONSHIP = { ["1"] = Loc["Single"], ["2"] = Loc["Taken"], ["3"] = Loc["Married"], ["4"] = Loc["Divorced"], ["5"] = Loc["Widowed"] }
 local FC_IN  = { ["1"] = "ooc", ["2"] = "ic", ["3"] = "lfrp", ["4"] = "ic" }
 
 -- Other RP addons that publish their own MSP profile. Kinship is meant to
@@ -338,7 +339,7 @@ K:On("LOGIN", function()
   K.Registry = K.db.registry
 
   if not C:Available() then
-    K:Print("Profile sharing is unavailable (LibMSP didn't load).")
+    K:Print(Loc["Profile sharing is unavailable (LibMSP didn't load)."])
     return
   end
 

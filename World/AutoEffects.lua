@@ -16,6 +16,7 @@
 -- Only time you're playing counts, never time logged out.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local A = K.Auras
 local AE = {}
@@ -36,12 +37,12 @@ local FOOD = { ["Food"] = true, ["Food & Drink"] = true, ["Well Fed"] = true }
 
 -- The switches, in the order Settings shows them.
 AE.LIST = {
-  { id = "drunk",     label = "Drunk",       desc = "When the game says you feel tipsy or drunk. Gone when you sober up." },
-  { id = "soaked",    label = "Soaked",      desc = "Sometimes, after a good while in the water." },
-  { id = "bandaged",  label = "Bandaged",    desc = "A real bandage on a wounded character: wounds heal in half the time." },
-  { id = "hungry",    label = "Hungry",      desc = "Sometimes, after three hours without eating. Food clears it." },
-  { id = "exhausted", label = "Exhausted",   desc = "Sometimes, after four hours without resting. Rest clears it." },
-  { id = "rested",    label = "Well rested", desc = "After half an hour's rest at an inn or in a city." },
+  { id = "drunk",     label = Loc["Drunk"],       desc = Loc["When the game says you feel tipsy or drunk. Gone when you sober up."] },
+  { id = "soaked",    label = Loc["Soaked"],      desc = Loc["Sometimes, after a good while in the water."] },
+  { id = "bandaged",  label = Loc["Bandaged"],    desc = Loc["A real bandage on a wounded character: wounds heal in half the time."] },
+  { id = "hungry",    label = Loc["Hungry"],      desc = Loc["Sometimes, after three hours without eating. Food clears it."] },
+  { id = "exhausted", label = Loc["Exhausted"],   desc = Loc["Sometimes, after four hours without resting. Rest clears it."] },
+  { id = "rested",    label = Loc["Well rested"], desc = Loc["After half an hour's rest at an inn or in a city."] },
 }
 
 local Now = K.Now
@@ -83,8 +84,8 @@ function AE:OnSystem(msg)
       if e then
         if e.auto and e.expires then e.expires = math.max(e.expires, Now() + HOUR) end
       else
-        A:AutoGive("drunk", HOUR, i == 4 and "Completely smashed. Loud, swaying, and very sure of yourself."
-          or "The drink is going to your head.")
+        A:AutoGive("drunk", HOUR, i == 4 and Loc["Completely smashed. Loud, swaying, and very sure of yourself."]
+          or Loc["The drink is going to your head."])
       end
       return
     end
@@ -100,7 +101,7 @@ function AE:Bandaged()
     if e.kind == "wound" and e.expires then wounds[#wounds + 1] = e end
   end
   if #wounds == 0 then return false end
-  if not A:AutoGive("bandaged", AE.BANDAGE_FOR, "Your wounds are cleaned and dressed. They'll heal in half the time.") then
+  if not A:AutoGive("bandaged", AE.BANDAGE_FOR, Loc["Your wounds are cleaned and dressed. They'll heal in half the time."]) then
     return false
   end
   local now = Now()
@@ -160,13 +161,13 @@ function AE:Tick(spent, swimming, resting)
     local long = b.swim >= AE.SWIM_FOR
     b.swim = 0
     if long and math.random() < AE.SOAK_CHANCE then
-      A:AutoGive("soaked", AE.SOAK_FOR, "Drenched to the bone and dripping. Rest at an inn or in town to dry off sooner.")
+      A:AutoGive("soaked", AE.SOAK_FOR, Loc["Drenched to the bone and dripping. Rest at an inn or in town to dry off sooner."])
     end
   end
   -- Hungry
   b.unfed = (b.unfed or 0) + spent
   if b.unfed >= AE.HUNGRY_AFTER and not A:Find("hungry") and not InCombat() and Roll(AE.HUNGRY_CHANCE, spent) then
-    A:AutoGive("hungry", AE.HUNGRY_FOR, "Your stomach's growling. Something to eat would fix it.")
+    A:AutoGive("hungry", AE.HUNGRY_FOR, Loc["Your stomach's growling. Something to eat would fix it."])
   end
   -- Exhausted: rest takes the count down three times as fast as it builds
   if resting then
@@ -175,7 +176,7 @@ function AE:Tick(spent, swimming, resting)
     b.awake = (b.awake or 0) + spent
     if b.awake >= AE.TIRED_AFTER and not A:Find("exhausted") and not A:Find("rested") and not InCombat()
       and Roll(AE.TIRED_CHANCE, spent) then
-      A:AutoGive("exhausted", HOUR, "You've been on your feet too long. Rest at an inn or in a city.")
+      A:AutoGive("exhausted", HOUR, Loc["You've been on your feet too long. Rest at an inn or in a city."])
     end
   end
 end
@@ -211,9 +212,9 @@ K:On("LOGIN", function()
   C_Timer.NewTicker(5, function() K.Try("auto effects", OnTick) end)
 end)
 
-K:RegisterSettings({ id = "autoEffects", title = "Effects that come on their own", order = 17,
+K:RegisterSettings({ id = "autoEffects", title = Loc["Effects that come on their own"], order = 17,
   shown = function() return K:ExtOn("auras") end, build = function(card)
-  card:Toggle("Let effects come on their own", "Adds small effects based on what happens in the game. Click Not now to remove one.", { get = function() return S().auraAuto ~= false end,
+  card:Toggle(Loc["Let effects come on their own"], Loc["Adds small effects based on what happens in the game. Click Not now to remove one."], { get = function() return S().auraAuto ~= false end,
     set = function(v) K.db.settings.auraAuto = v end })
   for _, fx in ipairs(AE.LIST) do
     card:Toggle(fx.label, fx.desc, {
@@ -224,5 +225,5 @@ K:RegisterSettings({ id = "autoEffects", title = "Effects that come on their own
       end,
     })
   end
-  card:Note("Only time spent playing counts. Nothing that would affect your roleplay is added automatically.")
+  card:Note(Loc["Only time spent playing counts. Nothing that would affect your roleplay is added automatically."])
 end })

@@ -10,6 +10,7 @@
 -- asked for their profile, a few at a time.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -233,10 +234,10 @@ K:On("LOGIN", function()
   end)
 end)
 
-K:RegisterSettings({ id = "listNames", title = "People lists", order = 42, build = function(card)
-  card:Toggle("Roleplay names in friends, guild and who", "Shows roleplay names next to character names once Kinship has their profile.", {
+K:RegisterSettings({ id = "listNames", title = Loc["People lists"], order = 42, build = function(card)
+  card:Toggle(Loc["Roleplay names in friends, guild and who"], Loc["Shows roleplay names next to character names once Kinship has their profile."], {
     get = function() return On() end,
     set = function(v) K.db.settings.listNames = v; SN:Refresh() end,
   })
-  card:Note("Kinship asks online friends and guild members for their profiles a few at a time.")
+  card:Note(Loc["Kinship asks online friends and guild members for their profiles a few at a time."])
 end })

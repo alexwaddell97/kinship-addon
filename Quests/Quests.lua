@@ -8,6 +8,7 @@
 --   qprog   the storyteller's progress (trusted only from the quest's author)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -22,10 +23,10 @@ local LOG_MAX, LIB_MAX, PLAYERS_MAX, PENDING_MAX = 200, 200, 40, 5
 Q.DEFAULT_ICON = "Interface\\Icons\\INV_Scroll_03"
 Q.DONE = { 0.40, 0.80, 0.48 }
 Q.STATES = {
-  active    = { label = "Active",    color = { 0.95, 0.76, 0.36 } },
-  complete  = { label = "Complete",  color = { 0.40, 0.80, 0.48 } },
-  abandoned = { label = "Set aside", color = { 0.62, 0.62, 0.66 } },
-  failed    = { label = "Failed",    color = { 0.90, 0.36, 0.30 } },
+  active    = { label = Loc["Active"],    color = { 0.95, 0.76, 0.36 } },
+  complete  = { label = Loc["Complete"],  color = { 0.40, 0.80, 0.48 } },
+  abandoned = { label = Loc["Set aside"], color = { 0.62, 0.62, 0.66 } },
+  failed    = { label = Loc["Failed"],    color = { 0.90, 0.36, 0.30 } },
 }
 Q.pending = {}
 
@@ -251,10 +252,10 @@ end
 ---------------------------------------------------------------------------
 function Q:Save(draft)
   local q = Q.Sanitize(draft)
-  if not q then return nil, "Give your quest a title first." end
+  if not q then return nil, Loc["Give your quest a title first."] end
   local lib = self:Library()
   if not (draft.id and lib[draft.id]) and Count(lib) >= LIB_MAX then
-    return nil, "Your library is full. Delete an old quest first."
+    return nil, Loc["Your library is full. Delete an old quest first."]
   end
   q.id = draft.id or NewID()
   q.author = K:MyName()
@@ -320,7 +321,7 @@ function Q:Start(id)
   e.players = players or {}
   log[id] = e
   TrimLog(log)
-  K:AddEntry("milestone", ("Set a quest in motion: %s"):format(UI.Clean(e.title)), e.giver ~= "" and ("Given by " .. UI.Clean(e.giver)) or nil)
+  K:AddEntry("milestone", (Loc["Set a quest in motion: %s"]):format(UI.Clean(e.title)), e.giver ~= "" and (Loc["Given by "] .. UI.Clean(e.giver)) or nil)
   K:Fire("QUESTS")
   K:Fire("QUEST_ACCEPTED", id)
   return e
@@ -330,27 +331,27 @@ local lastShare = {}
 -- how: "group" or "target". Returns ok, message.
 function Q:Share(id, how)
   local q = self:Library()[id]
-  if not q then return false, "Save the quest first." end
+  if not q then return false, Loc["Save the quest first."] end
   local channel, target
   if how == "target" then
     if not UnitExists("target") or not UnitIsPlayer("target") or UnitIsUnit("target", "player") then
-      return false, "Target another player first."
+      return false, Loc["Target another player first."]
     end
     local n = GetUnitName("target", true)
-    if not Safe(n) or not n then return false, "Couldn't read your target's name." end
+    if not Safe(n) or not n then return false, Loc["Couldn't read your target's name."] end
     channel, target = "WHISPER", n
   else
-    if not IsInGroup() then return false, "You're not in a group." end
+    if not IsInGroup() then return false, Loc["You're not in a group."] end
     channel = IsInRaid() and "RAID" or "PARTY"
   end
   local key = id .. (target or channel)
-  if lastShare[key] and GetTime() - lastShare[key] < 5 then return false, "Give them a moment to answer." end
+  if lastShare[key] and GetTime() - lastShare[key] < 5 then return false, Loc["Give them a moment to answer."] end
   if not K.Net:Send("qoffer", Q.Pack(q), channel, target) then
-    return false, "Couldn't send it right now. Try again in a moment."
+    return false, Loc["Couldn't send it right now. Try again in a moment."]
   end
   lastShare[key] = GetTime()
   self:Start(id)   -- you run it as its storyteller
-  return true, target and ("Offered to " .. Short(target) .. ".") or "Offered to your group."
+  return true, target and (Loc["Offered to "] .. Short(target) .. ".") or Loc["Offered to your group."]
 end
 
 function Q:Accept(offer)
@@ -358,8 +359,8 @@ function Q:Accept(offer)
   local log = self:Log()
   log[e.id] = e
   TrimLog(log)
-  K:AddEntry("milestone", ("Accepted the quest %s"):format(UI.Clean(e.title)),
-    ("Given by %s"):format(e.giver ~= "" and UI.Clean(e.giver) or Short(offer.from)))
+  K:AddEntry("milestone", (Loc["Accepted the quest %s"]):format(UI.Clean(e.title)),
+    (Loc["Given by %s"]):format(e.giver ~= "" and UI.Clean(e.giver) or Short(offer.from)))
   K.Net:Send("qack", { id = e.id, s = "active" }, "WHISPER", offer.from)
   Sound("IG_QUEST_LIST_OPEN")
   K:Fire("QUESTS")
@@ -422,10 +423,10 @@ function Q:Complete(id)
   local e = self:Log()[id]
   if not e or e.state ~= "active" then return end
   e.state, e.completed = "complete", time()
-  K:AddEntry("milestone", ("Completed the quest %s"):format(UI.Clean(e.title)),
-    e.reward ~= "" and ("Reward: " .. UI.Clean(e.reward)) or nil)
+  K:AddEntry("milestone", (Loc["Completed the quest %s"]):format(UI.Clean(e.title)),
+    e.reward ~= "" and (Loc["Reward: "] .. UI.Clean(e.reward)) or nil)
   UI.Toast({
-    icon = e.icon, round = true, title = "Quest complete", text = UI.Clean(e.title),
+    icon = e.icon, round = true, title = Loc["Quest complete"], text = UI.Clean(e.title),
     color = Q.DONE, sound = "IG_QUEST_LIST_COMPLETE", duration = 7,
     onClick = function() Q:Open(id) end,
   })
@@ -444,9 +445,9 @@ function Q:Fail(id)
   local e = self:Log()[id]
   if not e or e.state ~= "active" then return end
   e.state, e.completed = "failed", time()
-  K:AddEntry("milestone", ("Failed the quest %s"):format(UI.Clean(e.title)), e.giver ~= "" and ("Given by " .. UI.Clean(e.giver)) or nil)
+  K:AddEntry("milestone", (Loc["Failed the quest %s"]):format(UI.Clean(e.title)), e.giver ~= "" and (Loc["Given by "] .. UI.Clean(e.giver)) or nil)
   UI.Toast({
-    icon = e.icon, round = true, title = "Quest failed", text = UI.Clean(e.title),
+    icon = e.icon, round = true, title = Loc["Quest failed"], text = UI.Clean(e.title),
     color = Q.STATES.failed.color, sound = "IG_QUEST_FAILED", duration = 7,
     onClick = function() Q:Open(id) end,
   })
@@ -521,7 +522,7 @@ function Q:OnOffer(msg, sender)
         end
       end
       K:Fire("QUESTS")
-      UI.Toast({ icon = e.icon, round = true, title = "Quest updated", text = UI.Clean(e.title), duration = 5,
+      UI.Toast({ icon = e.icon, round = true, title = Loc["Quest updated"], text = UI.Clean(e.title), duration = 5,
                  onClick = function() Q:Open(e.id) end })
       return
     end
@@ -543,12 +544,12 @@ local function OnAck(msg, sender)
   e.players = e.players or {}
   if not e.players[key] and Count(e.players) >= PLAYERS_MAX then return end
   e.players[key] = { name = sender, s = s, t = time() }
-  local verb = ({ active = "accepted", declined = "declined", complete = "completed", abandoned = "set aside", failed = "failed" })[s]
+  local verb = ({ active = Loc["accepted"], declined = Loc["declined"], complete = Loc["completed"], abandoned = Loc["set aside"], failed = Loc["failed"] })[s]
   if s == "active" or s == "complete" then
-    UI.Toast({ icon = e.icon, round = true, title = ("%s %s your quest"):format(Short(sender), verb), text = UI.Clean(e.title),
+    UI.Toast({ icon = e.icon, round = true, title = (Loc["%s %s your quest"]):format(Short(sender), verb), text = UI.Clean(e.title),
                duration = 5, color = s == "complete" and Q.DONE or nil, onClick = function() Q:Open(e.id) end })
   else
-    K:Print(("%s %s %s."):format(Short(sender), verb, UI.Clean(e.title)))
+    K:Print((Loc["%s %s %s."]):format(Short(sender), verb, UI.Clean(e.title)))
   end
   K:Fire("QUESTS")
 end
@@ -571,7 +572,7 @@ local function OnProgress(msg, sender)
           o.done = done
           K:Fire("QUEST_OBJECTIVE", e.id, i, done)
           if done and not e.tracked then
-            UI.Toast({ icon = e.icon, round = true, title = UI.Clean(o.text), text = "Objective complete  ·  " .. UI.Clean(e.title),
+            UI.Toast({ icon = e.icon, round = true, title = UI.Clean(o.text), text = Loc["Objective complete  ·  "] .. UI.Clean(e.title),
                        duration = 4, color = Q.DONE, onClick = function() Q:Open(e.id) end })
           end
         end
@@ -609,7 +610,7 @@ local function BuildPopover()
     pop.bg:SetColorTexture(unpack(t.chrome))
     pop.edge:SetColor(t.ui[1], t.ui[2], t.ui[3], 0.45)
   end)
-  local title = UI.Text(pop, "Choose an icon", "Header", "deskHeading")
+  local title = UI.Text(pop, Loc["Choose an icon"], "Header", "deskHeading")
   title:SetPoint("TOPLEFT", 12, -10)
   pop.close = UI.CloseButton(pop, false, 20)
   pop.close:SetPoint("TOPRIGHT", -4, -4)
@@ -637,9 +638,9 @@ local function BuildPopover()
   end
   pop.edit = UI.Edit(pop, 200, 24, "desk", 100)
   pop.edit:SetPoint("BOTTOMLEFT", 12, 12)
-  pop.hint = UI.Text(pop.edit, "or type an icon name", "Small", "deskSubtle")
+  pop.hint = UI.Text(pop.edit, Loc["or type an icon name"], "Small", "deskSubtle")
   pop.hint:SetPoint("LEFT", 8, 0)
-  pop.use = UI.Button(pop, "Use", 64, 24)
+  pop.use = UI.Button(pop, Loc["Use"], 64, 24)
   pop.use:SetPoint("BOTTOMRIGHT", -12, 12)
   local function Use()
     local v = Q.ValidIcon(strtrim(pop.edit:GetText() or ""))
@@ -754,7 +755,7 @@ function Q.Sheet(parent, w, h, opts)
   s.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
   UI.Round(s.icon)
   local tw = w - PAD * 2 - 56 - 12
-  s.kicker = UI.Text(s, "QUEST", "Label", "accent", tw - 96)
+  s.kicker = UI.Text(s, Loc["QUEST"], "Label", "accent", tw - 96)
   s.kicker:SetPoint("TOPLEFT", s.ring, "TOPRIGHT", 12, -3)
   s.kicker:SetWordWrap(false)
   s.title = UI.Text(s, "", "Huge", "heading", tw)
@@ -782,8 +783,8 @@ function Q.Sheet(parent, w, h, opts)
   s.desc = UI.Text(body, "", "Read", "text", s.bw - 4)
   s.desc:SetJustifyV("TOP")
   s.desc:SetSpacing(4)
-  s.objHead = UI.Section(body, "Objectives")
-  s.rewardHead = UI.Section(body, "Reward")
+  s.objHead = UI.Section(body, Loc["Objectives"])
+  s.rewardHead = UI.Section(body, Loc["Reward"])
   s.rewardIcon = body:CreateTexture(nil, "ARTWORK")
   s.rewardIcon:SetSize(24, 24)
   s.rewardIcon:SetTexture("Interface\\Icons\\INV_Misc_Bag_10")
@@ -812,21 +813,21 @@ function Q.Sheet(parent, w, h, opts)
     if not q then return end
     self.icon:SetTexture(q.icon or Q.DEFAULT_ICON)
     local camp = UI.Clean(q.campaign)
-    self.kicker:SetText(camp ~= "" and ("QUEST  ·  " .. camp) or "QUEST")
+    self.kicker:SetText(camp ~= "" and (Loc["QUEST  ·  "] .. camp) or Loc["QUEST"])
     local title = UI.Clean(q.title)
-    self.title:SetText(title ~= "" and title or "An untitled quest")
+    self.title:SetText(title ~= "" and title or Loc["An untitled quest"])
     local giver = UI.Clean(q.giver)
     local QM = K.QuestMarkers
     local lvl = QM and QM.LevelText(q)
-    local lvlText = lvl and ("  ·  |cff%sLevel %s|r"):format(QM.LevelHex(q, true) or "ffffff", lvl) or ""
-    if giver ~= "" then self.giver:SetText("Given by " .. giver .. lvlText)
+    local lvlText = lvl and (Loc["  ·  |cff%sLevel %s|r"]):format(QM.LevelHex(q, true) or "ffffff", lvl) or ""
+    if giver ~= "" then self.giver:SetText(Loc["Given by "] .. giver .. lvlText)
     elseif q.ext then self.giver:SetText(q.from and ("A Total RP 3: Extended campaign by " .. Short(q.from)) or "A Total RP 3: Extended campaign")
-    elseif q.author and not Q:IsMine(q) then self.giver:SetText("From " .. Short(q.author) .. lvlText)
-    else self.giver:SetText("A quest of your own making" .. lvlText) end
+    elseif q.author and not Q:IsMine(q) then self.giver:SetText(Loc["From "] .. Short(q.author) .. lvlText)
+    else self.giver:SetText(Loc["A quest of your own making"] .. lvlText) end
 
     local t = K:Theme()
     local desc = UI.Clean(q.description)
-    self.desc:SetText(desc ~= "" and desc or "No story has been written for this quest yet.")
+    self.desc:SetText(desc ~= "" and desc or Loc["No story has been written for this quest yet."])
     self.desc:SetTextColor(unpack(desc ~= "" and t.text or t.subtle))
     self.desc:ClearAllPoints()
     self.desc:SetPoint("TOPLEFT", 2, -2)
@@ -884,7 +885,7 @@ function Q.Sheet(parent, w, h, opts)
         if options then extra = extra .. ("\n|cff%s%s|r"):format(sub, options) end
         local progress = QA and not ob.done and q.id and QA.ProgressText(q, i)
         if progress then extra = extra .. ("\n|cff%s%s|r"):format(UI.CardHex(K:Theme().accent), progress) end
-        if state == "locked" then extra = extra .. ("\n|cff%sLocked until the one before is done|r"):format(sub)
+        if state == "locked" then extra = extra .. (Loc["\n|cff%sLocked until the one before is done|r"]):format(sub)
         elseif state == "failed" then extra = extra .. ("\n|cff%s%s|r"):format(UI.CardHex({ 0.90, 0.36, 0.30 }), QA.FailText(ob)) end
         local counter = QA and q.id and QA.CounterPrefix(q, i) or ""
         r.text:SetText(counter .. UI.Clean(ob.text) .. extra)
@@ -1043,9 +1044,9 @@ function Q:ShowOffer()
   if not self.offerFrame then self:BuildOffer() end
   local f = self.offerFrame
   self.showing = offer
-  f.from:SetText(("|cffffffff%s|r offers you a quest"):format(Short(offer.from)))
+  f.from:SetText((Loc["|cffffffff%s|r offers you a quest"]):format(Short(offer.from)))
   f.sheet:SetQuest(offer.q)
-  f.more:SetText(#self.pending > 1 and ("%d more waiting"):format(#self.pending - 1) or "")
+  f.more:SetText(#self.pending > 1 and (Loc["%d more waiting"]):format(#self.pending - 1) or "")
   local wasShown = f:IsShown()
   f:Show()
   Sound("IG_QUEST_LIST_OPEN")
@@ -1077,21 +1078,21 @@ end
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
-K:RegisterSettings({ id = "quests", title = "Quests", order = 35,
+K:RegisterSettings({ id = "quests", title = Loc["Quests"], order = 35,
   shown = function() return K:ExtOn("campaigns") end, build = function(card)
-  card:Toggle("In the objective tracker", "Shows tracked roleplay quests in your objective tracker.", {
+  card:Toggle(Loc["In the objective tracker"], Loc["Shows tracked roleplay quests in your objective tracker."], {
     get = function() return K.db.settings.questTracker ~= false end,
     set = function(v) K.db.settings.questTracker = v; K:Fire("QUESTS") end,
   })
-  card:Toggle("Distances in the tracker", "Shows how far away each objective is. When off, hover a quest to see distances.", {
+  card:Toggle(Loc["Distances in the tracker"], Loc["Shows how far away each objective is. When off, hover a quest to see distances."], {
     get = function() return K.db.settings.questTrackerDistance == true end,
     set = function(v) K.db.settings.questTrackerDistance = v or nil; K:Fire("QUESTS") end,
   })
-  card:Toggle("Roleplay tab in the quest log", "Adds a tab to the quest log listing your roleplay quests.", {
+  card:Toggle(Loc["Roleplay tab in the quest log"], Loc["Adds a tab to the quest log listing your roleplay quests."], {
     get = function() return K.db.settings.questLogTab ~= false end,
     set = function(v) K.db.settings.questLogTab = v; if K.QuestTracker then K.QuestTracker:ApplyLogSetting() end end,
   })
-  card:Toggle("Quest offers", "Lets other Kinship users offer you quests. You can still say no.", "questOffers")
+  card:Toggle(Loc["Quest offers"], Loc["Lets other Kinship users offer you quests. You can still say no."], "questOffers")
   card:Toggle("Campaign bar", "Shows Look, Listen, Talk and Interact buttons while a Total RP 3: Extended campaign plays.", {
     get = function() return K.db.settings.extBar ~= false end,
     set = function(v) K.db.settings.extBar = v; if K.ExtCampaign then K.ExtCampaign:ShowBar() end end,

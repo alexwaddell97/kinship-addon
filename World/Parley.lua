@@ -5,6 +5,7 @@
 -- matter in a fight one flick away. Hold the key, point, let go.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -14,22 +15,22 @@ K.Parley = P
 -- Clockwise from the top: hostile on the right, peaceful on the left.
 -- narrate: optional custom emote for your own side (%s = target name).
 P.SLOTS = {
-  { label = "Challenge",  token = "THREATEN",  icon = "Ability_Warrior_Challange",
-    sees = "They see you threaten them with the wrath of doom.", narrate = "levels a weapon at %s. A challenge." },
-  { label = "Battle cry", token = "ROAR",      icon = "Ability_Warrior_BattleShout",
-    sees = "They see you roar at them.", narrate = "lets out a battle cry." },
-  { label = "Taunt",      token = "TAUNT",     icon = "Spell_Nature_Reincarnation",
-    sees = "They see you taunt them.", narrate = "taunts %s, beckoning them closer." },
-  { label = "Retreat",    token = "FLEE",      icon = "Ability_Rogue_Sprint",
-    sees = "Everyone hears you call to flee.", narrate = "calls the retreat." },
-  { label = "Yield",      token = "SURRENDER", icon = "Ability_Warrior_DefensiveStance",
-    sees = "They see you surrender before them.", narrate = "lowers their weapon and yields to %s." },
-  { label = "Mercy",      token = "MERCY",     icon = "Spell_Holy_Heal",
-    sees = "They see you beg them for mercy.", narrate = "begs %s for mercy." },
-  { label = "Salute",     token = "SALUTE",    icon = "INV_Banner_02",
-    sees = "They see you salute them with respect.", narrate = "salutes %s. Well fought." },
-  { label = "Parley",     token = "WAVE",      icon = "INV_Misc_Note_01",
-    sees = "They see you wave: a sign you mean to talk.", narrate = "raises an open hand toward %s, asking for parley." },
+  { label = Loc["Challenge"],  token = "THREATEN",  icon = "Ability_Warrior_Challange",
+    sees = Loc["They see you threaten them with the wrath of doom."], narrate = Loc["levels a weapon at %s. A challenge."] },
+  { label = Loc["Battle cry"], token = "ROAR",      icon = "Ability_Warrior_BattleShout",
+    sees = Loc["They see you roar at them."], narrate = Loc["lets out a battle cry."] },
+  { label = Loc["Taunt"],      token = "TAUNT",     icon = "Spell_Nature_Reincarnation",
+    sees = Loc["They see you taunt them."], narrate = Loc["taunts %s, beckoning them closer."] },
+  { label = Loc["Retreat"],    token = "FLEE",      icon = "Ability_Rogue_Sprint",
+    sees = Loc["Everyone hears you call to flee."], narrate = Loc["calls the retreat."] },
+  { label = Loc["Yield"],      token = "SURRENDER", icon = "Ability_Warrior_DefensiveStance",
+    sees = Loc["They see you surrender before them."], narrate = Loc["lowers their weapon and yields to %s."] },
+  { label = Loc["Mercy"],      token = "MERCY",     icon = "Spell_Holy_Heal",
+    sees = Loc["They see you beg them for mercy."], narrate = Loc["begs %s for mercy."] },
+  { label = Loc["Salute"],     token = "SALUTE",    icon = "INV_Banner_02",
+    sees = Loc["They see you salute them with respect."], narrate = Loc["salutes %s. Well fought."] },
+  { label = Loc["Parley"],     token = "WAVE",      icon = "INV_Misc_Note_01",
+    sees = Loc["They see you wave: a sign you mean to talk."], narrate = Loc["raises an open hand toward %s, asking for parley."] },
 }
 
 local RADIUS, SLOT, HUB = 132, 60, 132
@@ -90,7 +91,7 @@ function P:Build()
   hub.ring:SetPoint("CENTER")
   hub.fill = UI.Circle(hub, HUB - 4, "ARTWORK", 1)
   hub.fill:SetPoint("CENTER")
-  hub.label = UI.Text(hub, "Parley", "Title", "deskHeading", HUB - 20)
+  hub.label = UI.Text(hub, Loc["Parley"], "Title", "deskHeading", HUB - 20)
   hub.label:SetPoint("CENTER", 0, 10)
   hub.label:SetJustifyH("CENTER")
   hub.sees = UI.Text(hub, "", "Label", "deskSubtle", HUB - 26)
@@ -104,7 +105,7 @@ function P:Build()
 
   f.target = UI.Text(wheel, "", "Header", "deskHeading")
   f.target:SetPoint("BOTTOM", wheel, "TOP", 0, -6)
-  f.hint = UI.Text(wheel, "Point and release, or click.  Right-click or Esc to close.", "Small", "deskSubtle")
+  f.hint = UI.Text(wheel, Loc["Point and release, or click.  Right-click or Esc to close."], "Small", "deskSubtle")
   f.hint:SetPoint("TOP", wheel, "BOTTOM", 0, 6)
 
   f.slots = {}
@@ -166,9 +167,9 @@ function P:Open()
   local name, enemy = TargetInfo()
   if name then
     local short = Ambiguate and Ambiguate(name, "none") or name
-    f.target:SetText((enemy and "|cffe65c4cEnemy|r  " or "") .. short)
+    f.target:SetText((enemy and Loc["|cffe65c4cEnemy|r  "] or "") .. short)
   else
-    f.target:SetText("No target: emotes go to everyone nearby")
+    f.target:SetText(Loc["No target: emotes go to everyone nearby"])
   end
   f:Show()
   if SOUNDKIT then PlaySound(SOUNDKIT.IG_MAINMENU_OPEN) end
@@ -218,8 +219,8 @@ function P:Update(elapsed)
   end
 
   local s = sel and self.SLOTS[sel]
-  f.hub.label:SetText(s and s.label or "Parley")
-  f.hub.sees:SetText(s and s.sees or "Emotes the other faction can read.")
+  f.hub.label:SetText(s and s.label or Loc["Parley"])
+  f.hub.sees:SetText(s and s.sees or Loc["Emotes the other faction can read."])
   if sel then
     local a = f.slots[sel].angle
     f.pointer:Show()
@@ -239,7 +240,7 @@ function P:Choose(i)
   local short = name and (Ambiguate and Ambiguate(name, "none") or name)
   -- Optional words for your own side (the other faction sees strange gestures)
   if K.db.settings.parleyNarrate and s.narrate then
-    local line = s.narrate:format(short or "everyone")
+    local line = s.narrate:format(short or Loc["everyone"])
     local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
     if send then pcall(send, line, "EMOTE") end
   end
@@ -256,5 +257,5 @@ function KinshipRP_ParleyKey(keystate)
 end
 
 BINDING_HEADER_KINSHIPRP = "Kinship RP"
-_G["BINDING_NAME_KINSHIPRP_PARLEY"] = "Parley wheel (hold, aim, release)"
-_G["BINDING_NAME_KINSHIPRP_JOURNAL"] = "Open the Kinship journal"
+_G["BINDING_NAME_KINSHIPRP_PARLEY"] = Loc["Parley wheel (hold, aim, release)"]
+_G["BINDING_NAME_KINSHIPRP_JOURNAL"] = Loc["Open the Kinship journal"]

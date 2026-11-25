@@ -24,6 +24,7 @@
 -- was given. A step whose target is missing or hidden shows centred instead.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local G = { defs = {}, order = {}, queue = {} }
@@ -107,16 +108,16 @@ local function Build()
     d:Hide()
     c.dots[i] = d
   end
-  c.next = UI.Button(c, "Next", 76, 24)
+  c.next = UI.Button(c, Loc["Next"], 76, 24)
   c.next:SetPoint("BOTTOMRIGHT", -14, 12)
   c.next:SetScript("OnClick", function() G:Step(1) end)
-  c.back = UI.Button(c, "Back", 64, 24)
+  c.back = UI.Button(c, Loc["Back"], 64, 24)
   c.back:SetPoint("RIGHT", c.next, "LEFT", -6, 0)
   c.back:SetScript("OnClick", function() G:Step(-1) end)
-  c.skip = UI.Button(c, "Skip tour", 84, 24)
+  c.skip = UI.Button(c, Loc["Skip tour"], 84, 24)
   c.skip:SetPoint("BOTTOMLEFT", 14, 12)
   c.skip:SetScript("OnClick", function() G:Finish(true) end)
-  UI.Tooltip(c.skip, "Skip this tour", "Replay it any time with the ? at the top of the journal. Esc skips every tour waiting; Settings > Guides turns them off.")
+  UI.Tooltip(c.skip, Loc["Skip this tour"], Loc["Replay it any time with the ? at the top of the journal. Esc skips every tour waiting; Settings > Guides turns them off."])
   UI:OnTheme(function(t)
     c.accent:SetVertexColor(unpack(t.accent))
     o.edge.b:SetColor(t.ui[1], t.ui[2], t.ui[3], 1)
@@ -243,7 +244,7 @@ function G:Show()
   if step.before then K.Try("guide", step.before, self.ctx) end
   local c = o.card
   local n = #self.steps
-  c.kicker:SetText("Guide  ·  " .. (def.title or def.id))
+  c.kicker:SetText(Loc["Guide  ·  "] .. (def.title or def.id))
   c.count:SetText(("%d / %d"):format(self.index, n))
   c.title:SetText(step.title or "")
   c.text:SetText(step.text or "")
@@ -260,7 +261,7 @@ function G:Show()
     end
   end
   c.back:SetEnabled(self.index > 1)
-  c.next:SetText(self.index == n and "Done" or "Next")
+  c.next:SetText(self.index == n and Loc["Done"] or Loc["Next"])
   c.skip:SetShown(self.index < n)
   UI.FadeIn(c, 0.15)
   -- Let a tab switch in `before` settle before measuring.
@@ -367,8 +368,8 @@ local function AddHelpButton()
   b:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.1, paint)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("Guide", 1, 0.82, 0)
-    GameTooltip:AddLine("A short tour of this page.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Guide"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["A short tour of this page."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, paint); GameTooltip:Hide() end)
@@ -416,12 +417,12 @@ K:On("LOGIN", function()
   if K.db.settings.guidesAuto == nil then K.db.settings.guidesAuto = true end
 end)
 
-K:RegisterSettings({ id = "guides", title = "Guides", order = 2, build = function(card)
-  card:Toggle("Show a tour on new pages", "The first time you open a page, a short tour explains it. Press Esc to skip one.",
+K:RegisterSettings({ id = "guides", title = Loc["Guides"], order = 2, build = function(card)
+  card:Toggle(Loc["Show a tour on new pages"], Loc["The first time you open a page, a short tour explains it. Press Esc to skip one."],
     { get = function() return G:AutoOn() end, set = function(v) K.db.settings.guidesAuto = v end })
-  card:Button("Reset tours", function()
+  card:Button(Loc["Reset tours"], function()
     G:Reset()
-    K:Print("Tours reset. Each page will show its tour again next time you open it.")
+    K:Print(Loc["Tours reset. Each page will show its tour again next time you open it."])
   end, 200)
-  card:Note("Click ? at the top of the journal to replay the tour for the page you're on.")
+  card:Note(Loc["Click ? at the top of the journal to replay the tour for the page you're on."])
 end })

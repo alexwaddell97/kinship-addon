@@ -4,6 +4,7 @@
 -- item, and the item slot widget shared by the bags, trading and stashes.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = { SLOTS = 30, MAX_STACK = 99 }
@@ -21,16 +22,16 @@ I.DEFAULT_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 -- as the character screen lays out its gear: side = "left", "right" or
 -- "bottom", in order down (or along) each.
 I.WEAR = {
-  { key = "head", label = "Head", side = "left" }, { key = "neck", label = "Neck", side = "left" },
-  { key = "shoulder", label = "Shoulders", side = "left" }, { key = "back", label = "Back", side = "left" },
-  { key = "chest", label = "Chest", side = "left" }, { key = "shirt", label = "Shirt", side = "left" },
-  { key = "tabard", label = "Tabard", side = "left" }, { key = "wrist", label = "Wrists", side = "left" },
-  { key = "hands", label = "Hands", side = "right" }, { key = "waist", label = "Waist", side = "right" },
-  { key = "legs", label = "Legs", side = "right" }, { key = "feet", label = "Feet", side = "right" },
-  { key = "finger", label = "Ring", side = "right" }, { key = "finger2", label = "Second ring", side = "right" },
-  { key = "keepsake", label = "Keepsake", side = "right" }, { key = "charm", label = "Charm", side = "right" },
-  { key = "main", label = "Main hand", side = "bottom" }, { key = "off", label = "Off hand", side = "bottom" },
-  { key = "carried", label = "Carried", side = "bottom" },
+  { key = "head", label = Loc["Head"], side = "left" }, { key = "neck", label = Loc["Neck"], side = "left" },
+  { key = "shoulder", label = Loc["Shoulders"], side = "left" }, { key = "back", label = "Back", side = "left" },
+  { key = "chest", label = Loc["Chest"], side = "left" }, { key = "shirt", label = Loc["Shirt"], side = "left" },
+  { key = "tabard", label = Loc["Tabard"], side = "left" }, { key = "wrist", label = Loc["Wrists"], side = "left" },
+  { key = "hands", label = Loc["Hands"], side = "right" }, { key = "waist", label = Loc["Waist"], side = "right" },
+  { key = "legs", label = Loc["Legs"], side = "right" }, { key = "feet", label = Loc["Feet"], side = "right" },
+  { key = "finger", label = Loc["Ring"], side = "right" }, { key = "finger2", label = Loc["Second ring"], side = "right" },
+  { key = "keepsake", label = Loc["Keepsake"], side = "right" }, { key = "charm", label = Loc["Charm"], side = "right" },
+  { key = "main", label = Loc["Main hand"], side = "bottom" }, { key = "off", label = Loc["Off hand"], side = "bottom" },
+  { key = "carried", label = Loc["Carried"], side = "bottom" },
 }
 -- Where each slot sits in its column (or row): [key] = { side, position from 0 }
 I.WEAR_PLACE = {}
@@ -47,12 +48,12 @@ for _, w in ipairs(I.WEAR) do I.WEAR_LABEL[w.key] = w.label end
 -- Item quality, as the game colours it. "ink" is the same colour darkened
 -- for cream cards (Common falls back to the card's text colour).
 I.QUALITY = {
-  [0] = { label = "Poor",      color = { 0.62, 0.62, 0.62 }, ink = { 0.42, 0.42, 0.42 } },
-  [1] = { label = "Common",    color = { 1, 1, 1 } },
-  [2] = { label = "Uncommon",  color = { 0.12, 1, 0 },       ink = { 0.10, 0.48, 0.04 } },
-  [3] = { label = "Rare",      color = { 0, 0.44, 0.87 },    ink = { 0.00, 0.33, 0.68 } },
-  [4] = { label = "Epic",      color = { 0.64, 0.21, 0.93 }, ink = { 0.46, 0.14, 0.70 } },
-  [5] = { label = "Legendary", color = { 1, 0.50, 0 },       ink = { 0.76, 0.36, 0.00 } },
+  [0] = { label = Loc["Poor"],      color = { 0.62, 0.62, 0.62 }, ink = { 0.42, 0.42, 0.42 } },
+  [1] = { label = Loc["Common"],    color = { 1, 1, 1 } },
+  [2] = { label = Loc["Uncommon"],  color = { 0.12, 1, 0 },       ink = { 0.10, 0.48, 0.04 } },
+  [3] = { label = Loc["Rare"],      color = { 0, 0.44, 0.87 },    ink = { 0.00, 0.33, 0.68 } },
+  [4] = { label = Loc["Epic"],      color = { 0.64, 0.21, 0.93 }, ink = { 0.46, 0.14, 0.70 } },
+  [5] = { label = Loc["Legendary"], color = { 1, 0.50, 0 },       ink = { 0.76, 0.36, 0.00 } },
 }
 
 -- A few hand-picked icons for when no icon picker is installed.
@@ -87,7 +88,7 @@ function I.Num(v)
 end
 local Num = I.Num
 
-function I.Short(name) return K.Short(name, "someone") end
+function I.Short(name) return K.Short(name, Loc["someone"]) end
 
 function I.Error(msg)
   if UIErrorsFrame and UIErrorsFrame.AddMessage then UIErrorsFrame:AddMessage(msg, 1, 0.25, 0.2) else K:Print(msg) end
@@ -196,7 +197,7 @@ function I:SaveDesign(fields, id)
   raw.created = old and old.created or now
   raw.edited = now
   local def = I.Sanitize(raw)
-  if not def then return nil, "Give the item a name first." end
+  if not def then return nil, Loc["Give the item a name first."] end
   K.db.itemDefs[def.id] = def
   K:Fire("ITEMDEFS", def)
   return def
@@ -365,13 +366,13 @@ function I:Split(slot, n)
       return i
     end
   end
-  I.Error("There's no empty slot to split the stack into.")
+  I.Error(Loc["There's no empty slot to split the stack into."])
 end
 
 function I:Destroy(slot)
   local s = self:Bag()[slot]
   if not s then return end
-  if self:Reserved(s.def) > 0 then I.Error("That item is promised in a trade.") return end
+  if self:Reserved(s.def) > 0 then I.Error(Loc["That item is promised in a trade."]) return end
   self:Bag()[slot] = nil
   if SOUNDKIT and SOUNDKIT.IG_BACKPACK_CLOSE then PlaySound(SOUNDKIT.IG_BACKPACK_CLOSE) end
   K:Fire("INVENTORY")
@@ -389,7 +390,7 @@ function I:Use(slot)
   local did = false
   if def.useText ~= "" then
     if GetTime() - (self.lastUse or 0) < 1.5 then return end
-    if def.consume and self:Available(def.id) < 1 then I.Error("That item is promised in a trade.") return end
+    if def.consume and self:Available(def.id) < 1 then I.Error(Loc["That item is promised in a trade."]) return end
     self.lastUse = GetTime()
     local line = strtrim((def.useText:gsub("[|\r\n]", " ")))
     line = Cut(line, 255)
@@ -404,13 +405,13 @@ function I:Use(slot)
   end
   -- Something to wear and nothing else to do: put it on.
   if not did and def.wear and K.Worn then K.Worn:Wear(slot) return end
-  if not did then I.Error(UI.Escape(def.name) .. " has no use.") end
+  if not did then I.Error(UI.Escape(def.name) .. Loc[" has no use."]) end
 end
 
 function I:Read(def)
   if type(def) == "string" then def = self:Get(def) end
   if not def or not def.documentId then return end
-  if not K:ExtOn("documents") then I.Error("Documents are switched off (Settings > Extended features).") return end
+  if not K:ExtOn("documents") then I.Error(Loc["Documents are switched off (Settings > Extended features)."]) return end
   if K.Documents and K.Documents.Open then K.Documents:Open(def.documentId) end
 end
 
@@ -421,27 +422,27 @@ end
 function I:FillTooltip(tt, item, count)
   local def = type(item) == "table" and item or self:Get(item)
   if not def then
-    tt:SetText("Unknown item", 0.62, 0.62, 0.62)
-    tt:AddLine("Its description never reached you.", 1, 1, 1, true)
+    tt:SetText(Loc["Unknown item"], 0.62, 0.62, 0.62)
+    tt:AddLine(Loc["Its description never reached you."], 1, 1, 1, true)
     return
   end
   local c = I.Quality(def.quality).color
   tt:SetText(UI.Escape(def.name), c[1], c[2], c[3], 1, true)
   local right = ""
-  if def.stack > 1 then right = count and ("%d / %d"):format(count, def.stack) or ("Stacks to %d"):format(def.stack) end
-  tt:AddDoubleLine(I.Quality(def.quality).label .. " item", right, 0.62, 0.62, 0.62, 0.62, 0.62, 0.62)
+  if def.stack > 1 then right = count and ("%d / %d"):format(count, def.stack) or (Loc["Stacks to %d"]):format(def.stack) end
+  tt:AddDoubleLine(I.Quality(def.quality).label .. Loc[" item"], right, 0.62, 0.62, 0.62, 0.62, 0.62, 0.62)
   if def.description ~= "" then tt:AddLine(UI.Clean(def.description), 1, 1, 1, true) end
   if def.useText ~= "" then
-    tt:AddLine("Use: " .. UI.Escape(def.useText) .. (def.consume and " (used up)" or ""), 0.12, 1, 0, true)
+    tt:AddLine(Loc["Use: "] .. UI.Escape(def.useText) .. (def.consume and Loc[" (used up)"] or ""), 0.12, 1, 0, true)
   end
   if def.documentId then
     local doc = K.Documents and K.Documents:Get(def.documentId)
-    tt:AddLine(doc and ("Read: " .. UI.Escape(doc.title ~= "" and doc.title or "Untitled")) or "Its writing never reached you.",
+    tt:AddLine(doc and (Loc["Read: "] .. UI.Escape(doc.title ~= "" and doc.title or Loc["Untitled"])) or Loc["Its writing never reached you."],
       0.55, 0.80, 1, true)
   end
-  if def.wear and I.WEAR_LABEL[def.wear] then tt:AddLine("Worn on: " .. I.WEAR_LABEL[def.wear], 0.55, 0.80, 1) end
+  if def.wear and I.WEAR_LABEL[def.wear] then tt:AddLine(Loc["Worn on: "] .. I.WEAR_LABEL[def.wear], 0.55, 0.80, 1) end
   if def.flavor ~= "" then tt:AddLine("\"" .. UI.Clean(def.flavor) .. "\"", 1, 0.82, 0, true) end
-  if def.creator ~= "" then tt:AddLine("Made by " .. UI.Escape(I.Short(def.creator)), 0.55, 0.55, 0.55) end
+  if def.creator ~= "" then tt:AddLine(Loc["Made by "] .. UI.Escape(I.Short(def.creator)), 0.55, 0.55, 0.55) end
 end
 
 function I:ShowTooltip(owner, item, count, anchor)
@@ -452,7 +453,7 @@ end
 
 -- "[Name] x3" in quality colour, for chat lines and toasts (dark backgrounds).
 function I:Label(def, count)
-  if not def then return "an unknown item" end
+  if not def then return Loc["an unknown item"] end
   local c = I.Quality(def.quality).color
   return ("|cff%s[%s]|r%s"):format(UI.Hex(c), UI.Escape(def.name), (count and count > 1) and (" x" .. count) or "")
 end
@@ -629,7 +630,7 @@ local function BuildChooser()
     f.bg:SetColorTexture(unpack(t.chrome))
     f.edge:SetColor(unpack(t.chromeEdge))
   end)
-  local title = UI.Text(f, "Choose an icon", "Header", "deskHeading")
+  local title = UI.Text(f, Loc["Choose an icon"], "Header", "deskHeading")
   title:SetPoint("TOPLEFT", 14, -12)
   local close = UI.CloseButton(f, false, 20)
   close:SetPoint("TOPRIGHT", -6, -6)
@@ -653,14 +654,14 @@ local function BuildChooser()
   end
   f.field = UI.Edit(f, 184, 24, "desk", 80)
   f.field:SetPoint("BOTTOMLEFT", 14, 14)
-  f.hint = UI.Text(f.field, "or type an icon name", "Small", "deskSubtle")
+  f.hint = UI.Text(f.field, Loc["or type an icon name"], "Small", "deskSubtle")
   f.hint:SetPoint("LEFT", 8, 0)
   f.field:HookScript("OnTextChanged", function(self) f.hint:SetShown(self:GetText() == "") end)
-  f.ok = UI.Button(f, "Use", 70, 24)
+  f.ok = UI.Button(f, Loc["Use"], 70, 24)
   f.ok:SetPoint("BOTTOMRIGHT", -14, 14)
   local function accept()
     local v = I.ValidIcon(strtrim(f.field:GetText() or ""))
-    if not v then I.Error("That isn't an icon name (try INV_Misc_Bag_08).") return end
+    if not v then I.Error(Loc["That isn't an icon name (try INV_Misc_Bag_08)."]) return end
     f:Hide()
     if f.onPick then f.onPick(v) end
   end
@@ -723,27 +724,27 @@ K:On("LOGIN", function()
   K.Try("items", PruneCache)
 end)
 
-K:RegisterSettings({ id = "items", title = "Items & stashes", order = 40,
+K:RegisterSettings({ id = "items", title = Loc["Items & stashes"], order = 40,
   shown = function() return K:ExtOn("inventory") end, build = function(card)
-  card:Toggle("Accept item offers", "Lets other players offer you items. When off, all offers are declined.", "itemOffers")
-  card:Toggle("Answer area searches", "Players searching nearby can find your stashes.", "stashAnswer")
-  card:Toggle("Kinship items in the trade window", "When trading with another Kinship user, shows a panel for swapping Kinship items too.", {
+  card:Toggle(Loc["Accept item offers"], Loc["Lets other players offer you items. When off, all offers are declined."], "itemOffers")
+  card:Toggle(Loc["Answer area searches"], Loc["Players searching nearby can find your stashes."], "stashAnswer")
+  card:Toggle(Loc["Kinship items in the trade window"], Loc["When trading with another Kinship user, shows a panel for swapping Kinship items too."], {
     get = function() return K.db.settings.tradeCard ~= false end,
     set = function(v) K.db.settings.tradeCard = v end,
   })
-  card:Toggle("Kinship vault at the bank", "Adds 30 extra slots next to the bank when you visit a banker.", {
+  card:Toggle(Loc["Kinship vault at the bank"], Loc["Adds 30 extra slots next to the bank when you visit a banker."], {
     get = function() return K.db.settings.vault ~= false end,
     set = function(v) K.db.settings.vault = v; if not v and K.Vault then K.Vault:Hide() end end,
   })
-  card:Toggle("Satchel button by your bags", "Adds a button next to your bags that opens your roleplay satchel.", {
+  card:Toggle(Loc["Satchel button by your bags"], Loc["Adds a button next to your bags that opens your roleplay satchel."], {
     get = function() return K.db.settings.satchelButton ~= false end,
     set = function(v) K.db.settings.satchelButton = v; if K.Satchel then K.Satchel:PlaceButton() end end,
   })
-  card:Toggle("Open the satchel with your bags", "Opens and closes the satchel with your bags.", {
+  card:Toggle(Loc["Open the satchel with your bags"], Loc["Opens and closes the satchel with your bags."], {
     get = function() return K.db.settings.satchelOpensWithBags == true end,
     set = function(v) K.db.settings.satchelOpensWithBags = v or nil end,
   })
-  card:Toggle("Keep the satchel minimised", "The satchel opens as a small bar next to your bags. Click it to expand.", {
+  card:Toggle(Loc["Keep the satchel minimised"], Loc["The satchel opens as a small bar next to your bags. Click it to expand."], {
     get = function() return K.db.settings.satchelMin and true or false end,
     set = function(v) if K.Satchel then K.Satchel:SetCollapsed(v) else K.db.settings.satchelMin = v or nil end end,
   })

@@ -5,6 +5,7 @@
 --   Campaigns  - quests gathered by campaign, with progress
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Q = K.Quests
@@ -97,11 +98,11 @@ local function QuestMenu(owner, e)
   UI.Menu(owner, function(root)
     root:CreateTitle(Clean(e.title))
     if e.state == "active" then
-      root:CreateButton(e.tracked and "Stop tracking" or "Track", function() Q:Track(e.id, not e.tracked) end)
-      root:CreateButton("Set aside", function() Q:Abandon(e.id) end)
+      root:CreateButton(e.tracked and Loc["Stop tracking"] or Loc["Track"], function() Q:Track(e.id, not e.tracked) end)
+      root:CreateButton(Loc["Set aside"], function() Q:Abandon(e.id) end)
     else
-      root:CreateButton("Take it up again", function() Q:Resume(e.id) end)
-      root:CreateButton("Remove from journal", function() Q:Forget(e.id) end)
+      root:CreateButton(Loc["Take it up again"], function() Q:Resume(e.id) end)
+      root:CreateButton(Loc["Remove from journal"], function() Q:Forget(e.id) end)
     end
   end)
 end
@@ -109,14 +110,14 @@ end
 local function BuildJournal(tab)
   tab.filter = "active"
   tab.seg = UI.Segments(tab, {
-    { key = "active", label = "Active" }, { key = "complete", label = "Completed" }, { key = "failed", label = "Failed" },
-    { key = "abandoned", label = "Set aside" },
+    { key = "active", label = Loc["Active"] }, { key = "complete", label = Loc["Completed"] }, { key = "failed", label = Loc["Failed"] },
+    { key = "abandoned", label = Loc["Set aside"] },
   }, 65, function(k) tab.filter = k; tab.selected = nil; K.Journal:RefreshCurrent() end)
   tab.seg:Fit(56)   -- "Completed" needs more than a quarter of the list's width
   tab.seg:SetPoint("TOPLEFT", 0, 0)
 
   tab.list = UI.List(tab, LIST_W, BODY_H - 34, 56,
-    "No quests here yet. Accept one from a friend, or write your own under Write.",
+    Loc["No quests here yet. Accept one from a friend, or write your own under Write."],
     function(row)
       row.medal = Medal(row, 34)
       row.medal.ring:SetPoint("LEFT", 10, 0)
@@ -166,14 +167,14 @@ local function BuildJournal(tab)
     local e = tab.shown
     if not e or not e.players then return end
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText("Following your quest", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Following your quest"], 1, 0.82, 0)
     for _, p in pairs(e.players) do
       local st = STATES[p.s] or STATES.abandoned
-      local label = p.s == "declined" and "Declined" or st.label
+      local label = p.s == "declined" and Loc["Declined"] or st.label
       GameTooltip:AddDoubleLine(Short(p.name), label, 1, 1, 1, st.color[1], st.color[2], st.color[3])
     end
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("Tick objectives and everyone who accepted sees your progress.", 0.8, 0.8, 0.8, true)
+    GameTooltip:AddLine(Loc["Tick objectives and everyone who accepted sees your progress."], 0.8, 0.8, 0.8, true)
     GameTooltip:Show()
   end)
   tab.following:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -183,7 +184,7 @@ local function BuildJournal(tab)
   tab.empty:SetPoint("BOTTOMRIGHT", sheet)
   local ebg = UI.Panel(tab.empty)
   ebg:SetAllPoints()
-  local es = EmptyState(ebg, "IconMilestone", "Choose a quest to read it, or write one of your own under Write.")
+  local es = EmptyState(ebg, "IconMilestone", Loc["Choose a quest to read it, or write one of your own under Write."])
   es:SetAllPoints()
 end
 
@@ -207,7 +208,7 @@ local function RefreshJournal(tab, c)
     row.title:SetText(Clean(e.title))
     local camp = Clean(e.campaign)
     local giver = Clean(e.giver)
-    row.sub:SetText(camp ~= "" and camp or (giver ~= "" and giver or (Q:IsMine(e) and "Your own story" or ("From " .. Short(e.author)))))
+    row.sub:SetText(camp ~= "" and camp or (giver ~= "" and giver or (Q:IsMine(e) and Loc["Your own story"] or (Loc["From "] .. Short(e.author)))))
     local done, total = Q.Progress(e)
     row.count:SetText(total > 0 and ("%d/%d"):format(done, total) or "")
     row.bar:SetShown(total > 0)
@@ -234,35 +235,35 @@ local function RefreshJournal(tab, c)
     onToggle = function(i) local o = e.objectives[i]; if o then Q:SetObjective(e.id, i, not o.done) end end,
   })
   local st = STATES[e.state] or STATES.active
-  if e.state == "active" and mine then tab.sheet.chip:Set("Storyteller", K:Theme().accent)
+  if e.state == "active" and mine then tab.sheet.chip:Set(Loc["Storyteller"], K:Theme().accent)
   else tab.sheet.chip:Set(st.label, st.color) end
 
   -- Footer buttons, right to left
   if e.state == "active" then
-    Button(tab.primary, e.tracked and "Untrack" or "Track", function() Q:Track(e.id, not e.tracked) end, 92)
-    Button(tab.secondary, "Set aside", function() Q:Abandon(e.id) end, 92)
+    Button(tab.primary, e.tracked and Loc["Untrack"] or Loc["Track"], function() Q:Track(e.id, not e.tracked) end, 92)
+    Button(tab.secondary, Loc["Set aside"], function() Q:Abandon(e.id) end, 92)
     local _, total = Q.Required(e)
     local CP = K.ExtCampaign
     if e.ext and CP then
       local playing = CP:Current() == e.ext.c
       Button(tab.tertiary, playing and "Pause campaign" or "Play campaign", function() CP:Toggle(e.ext.c) end, 120)
     elseif mine then
-      Button(tab.tertiary, "Mark complete", function() Q:Complete(e.id) end, 112)
+      Button(tab.tertiary, Loc["Mark complete"], function() Q:Complete(e.id) end, 112)
     elseif total == 0 or not e.st then
-      Button(tab.tertiary, "Complete", function() Q:Complete(e.id) end, 96)
+      Button(tab.tertiary, Loc["Complete"], function() Q:Complete(e.id) end, 96)
     else
       Button(tab.tertiary, nil)
     end
   else
-    Button(tab.primary, "Remove", function() Q:Forget(e.id); tab.selected = nil end, 92)
-    Button(tab.secondary, "Take it up", function() Q:Resume(e.id); tab.filter = "active" end, 100)
+    Button(tab.primary, Loc["Remove"], function() Q:Forget(e.id); tab.selected = nil end, 92)
+    Button(tab.secondary, Loc["Take it up"], function() Q:Resume(e.id); tab.filter = "active" end, 100)
     Button(tab.tertiary, nil)
   end
 
   local n = 0
   for _, p in pairs(e.players or {}) do if p.s == "active" or p.s == "complete" then n = n + 1 end end
   tab.following:SetShown(mine and n > 0)
-  tab.following.text:SetText(n == 1 and "1 following" or (n .. " following"))
+  tab.following.text:SetText(n == 1 and Loc["1 following"] or (n .. Loc[" following"]))
 end
 
 ---------------------------------------------------------------------------
@@ -293,8 +294,8 @@ local function PinButton(parent, title, get, set)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     GameTooltip:SetText(title, 1, 0.82, 0)
     local mk = get()
-    GameTooltip:AddLine(mk and QM and QM.Label(mk) or "No marker. Click to set one.", 1, 1, 1, true)
-    if mk and mk.r then GameTooltip:AddLine(("An area %d yards across."):format(mk.r * 2), 0.75, 0.75, 0.75) end
+    GameTooltip:AddLine(mk and QM and QM.Label(mk) or Loc["No marker. Click to set one."], 1, 1, 1, true)
+    if mk and mk.r then GameTooltip:AddLine((Loc["An area %d yards across."]):format(mk.r * 2), 0.75, 0.75, 0.75) end
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.12, function(p) self:Paint(p) end); GameTooltip:Hide() end)
@@ -330,11 +331,11 @@ local function RuleButton(parent, get, onClick)
   b:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.1, function(p) self:Paint(p) end)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Completes when...", 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Completes when..."], 1, 0.82, 0)
     local QA = K.QuestAuto
     local rule, opts = get()
     GameTooltip:AddLine(rule and QA and QA.Describe(rule, parent.objectiveForRule and parent:objectiveForRule())
-      or "Ticked by hand. Click to make it complete itself.", 1, 1, 1, true)
+      or Loc["Ticked by hand. Click to make it complete itself."], 1, 1, 1, true)
     local more = QA and QA.DescribeOptions(opts)
     if more then GameTooltip:AddLine(more, 0.75, 0.75, 0.75, true) end
     GameTooltip:Show()
@@ -351,34 +352,34 @@ local function BuildWrite(tab)
   tab.pick:SetPoint("TOPLEFT", 0, 0)
   tab.pick:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Your quests")
+      root:CreateTitle(Loc["Your quests"])
       local list = {}
       for _, q in pairs(Q:Library()) do list[#list + 1] = q end
       table.sort(list, SortByTime("edited"))
-      if #list == 0 then root:CreateTitle("Nothing written yet") end
+      if #list == 0 then root:CreateTitle(Loc["Nothing written yet"]) end
       for _, q in ipairs(list) do
         root:CreateButton(Clean(q.title), function() tab:Load(q) end)
       end
       root:CreateDivider()
-      root:CreateButton("Start a new quest", function() tab:Load(nil) end)
+      root:CreateButton(Loc["Start a new quest"], function() tab:Load(nil) end)
     end)
   end)
-  UI.Tooltip(tab.pick, "Your quests", "Choose a quest from your library to edit it.")
-  tab.new = UI.Button(tab, "New quest", 96, 24)
+  UI.Tooltip(tab.pick, Loc["Your quests"], Loc["Choose a quest from your library to edit it."])
+  tab.new = UI.Button(tab, Loc["New quest"], 96, 24)
   tab.new:SetPoint("LEFT", tab.pick, "RIGHT", 6, 0)
   tab.new:SetScript("OnClick", function() tab:Load(nil) end)
   tab.status = UI.Text(tab, "", "Small", "deskSubtle", 124)
   tab.status:SetPoint("LEFT", tab.new, "RIGHT", 10, 0)
   tab.status:SetWordWrap(false)
 
-  tab.save = UI.Button(tab, "Save", 80, 24)
+  tab.save = UI.Button(tab, Loc["Save"], 80, 24)
   tab.save:SetPoint("TOPRIGHT", 0, 0)
   tab.save:SetScript("OnClick", function() tab:SaveDraft() end)
-  tab.share = UI.Button(tab, "Share...", 90, 24)
+  tab.share = UI.Button(tab, Loc["Share..."], 90, 24)
   tab.share:SetPoint("RIGHT", tab.save, "LEFT", -6, 0)
   tab.share:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Share this quest")
+      root:CreateTitle(Loc["Share this quest"])
       local function go(how)
         local q = tab:SaveDraft()
         if not q then return end
@@ -386,12 +387,12 @@ local function BuildWrite(tab)
         tab:Say(msg, not ok)
         if ok then K:Print(msg) end
       end
-      root:CreateButton("Offer to my group", function() go("group") end)
-      root:CreateButton("Offer to my target", function() go("target") end)
+      root:CreateButton(Loc["Offer to my group"], function() go("group") end)
+      root:CreateButton(Loc["Offer to my target"], function() go("target") end)
       root:CreateDivider()
-      root:CreateButton("Run it myself", function()
+      root:CreateButton(Loc["Run it myself"], function()
         local q = tab:SaveDraft()
-        if q and Q:Start(q.id) then tab:Say("It's in your journal.") end
+        if q and Q:Start(q.id) then tab:Say(Loc["It's in your journal."]) end
       end)
     end)
   end)
@@ -402,7 +403,7 @@ local function BuildWrite(tab)
     if not id or not Q:Library()[id] then tab:Load(nil) return end
     if not self.armed then
       self.armed = true
-      self:SetText("Sure?")
+      self:SetText(Loc["Sure?"])
       C_Timer.After(3, function() self.armed = false; self:SetText("Delete") end)
       return
     end
@@ -410,9 +411,9 @@ local function BuildWrite(tab)
     self:SetText("Delete")
     Q:Delete(id)
     tab:Load(nil)
-    tab:Say("Deleted. Anyone already on it keeps their copy.")
+    tab:Say(Loc["Deleted. Anyone already on it keeps their copy."])
   end)
-  UI.Tooltip(tab.del, "Delete", "Remove this quest from your library. Copies in journals stay.")
+  UI.Tooltip(tab.del, "Delete", Loc["Remove this quest from your library. Copies in journals stay."])
 
   -- The editor card (scrolls)
   local ed = UI.Panel(tab)
@@ -430,7 +431,7 @@ local function BuildWrite(tab)
   tab.body = body
 
   local function changed() tab:Changed() end
-  tab.title = UI.Field(body, "Quest title", IW - 52, Q.MAX.title, function(v) tab.draft.title = v; changed() end)
+  tab.title = UI.Field(body, Loc["Quest title"], IW - 52, Q.MAX.title, function(v) tab.draft.title = v; changed() end)
   tab.title:SetPoint("TOPLEFT", 0, 0)
 
   local ib = CreateFrame("Button", nil, body)
@@ -450,8 +451,8 @@ local function BuildWrite(tab)
   ib:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.12, paintIcon)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Quest icon", 1, 0.82, 0)
-    GameTooltip:AddLine("Click to choose an icon.", 1, 1, 1)
+    GameTooltip:SetText(Loc["Quest icon"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["Click to choose an icon."], 1, 1, 1)
     GameTooltip:Show()
   end)
   ib:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.15, paintIcon); GameTooltip:Hide() end)
@@ -462,17 +463,17 @@ local function BuildWrite(tab)
   tab.iconBtn = ib
 
   local half = math.floor((IW - 10) / 2)
-  tab.giver = UI.Field(body, "Quest giver", half, Q.MAX.giver, function(v) tab.draft.giver = v; changed() end)
+  tab.giver = UI.Field(body, Loc["Quest giver"], half, Q.MAX.giver, function(v) tab.draft.giver = v; changed() end)
   tab.giver:SetPoint("TOPLEFT", 0, -50)
-  tab.campaign = UI.Field(body, "Campaign (optional)", half, Q.MAX.campaign, function(v) tab.draft.campaign = v; changed() end)
+  tab.campaign = UI.Field(body, Loc["Campaign (optional)"], half, Q.MAX.campaign, function(v) tab.draft.campaign = v; changed() end)
   tab.campaign:SetPoint("TOPLEFT", half + 10, -50)
 
-  local dl = UI.Text(body, "The story", "Label", "subtle")
+  local dl = UI.Text(body, Loc["The story"], "Label", "subtle")
   dl:SetPoint("TOPLEFT", 1, -98)
   tab.desc = UI.TextArea(body, IW, 110, Q.MAX.desc, function(v) tab.draft.description = v; changed() end)
   tab.desc:SetPoint("TOPLEFT", 0, -112)
 
-  local ol = UI.Text(body, "Objectives", "Label", "subtle")
+  local ol = UI.Text(body, Loc["Objectives"], "Label", "subtle")
   ol:SetPoint("TOPLEFT", 1, -232)
   tab.objectives = {}
   for i = 1, Q.MAX.objectives do
@@ -501,7 +502,7 @@ local function BuildWrite(tab)
         return out
       end }
       here.others()
-      K.QuestAuto:Edit(tab, here, text ~= "" and text or ("Objective " .. i),
+      K.QuestAuto:Edit(tab, here, text ~= "" and text or (Loc["Objective "] .. i),
         function() return r.auto, r.opts end,
         function(rule, opts)
           r.auto = rule
@@ -512,7 +513,7 @@ local function BuildWrite(tab)
         end)
     end)
     r.rule:SetPoint("RIGHT", -28, 0)
-    r.pin = PinButton(r, "Where for this objective", function() return r.marker end, function(mk)
+    r.pin = PinButton(r, Loc["Where for this objective"], function() return r.marker end, function(mk)
       r.marker = mk
       tab:ReadObjectives()
       tab:Changed()
@@ -527,7 +528,7 @@ local function BuildWrite(tab)
     tab.objectives[i] = r
   end
 
-  tab.reward = UI.Field(body, "Reward (optional)", IW - 150, Q.MAX.reward, function(v) tab.draft.reward = v; changed() end)
+  tab.reward = UI.Field(body, Loc["Reward (optional)"], IW - 150, Q.MAX.reward, function(v) tab.draft.reward = v; changed() end)
 
   -- Kinship items as rewards: made from your designs, sent when players finish (QuestRewards.lua)
   local ir = CreateFrame("Frame", nil, body)
@@ -551,10 +552,10 @@ local function BuildWrite(tab)
       UI.Menu(self, function(root)
         root:CreateTitle(K.Items:Label(K.Items:Get(it.d)))
         for _, n in ipairs({ 1, 2, 3, 5, 10, 20 }) do
-          root:CreateRadio(n == 1 and "One" or (n .. " of them"), function() return it.n == n end,
+          root:CreateRadio(n == 1 and Loc["One"] or (n .. Loc[" of them"]), function() return it.n == n end,
             function() it.n = n; tab:PaintItems(); changed() end)
         end
-        root:CreateButton("Remove", function()
+        root:CreateButton(Loc["Remove"], function()
           table.remove(list, j)
           if #list == 0 then tab.draft.items = nil end
           tab:PaintItems()
@@ -564,12 +565,12 @@ local function BuildWrite(tab)
     end)
     ir.slots[j] = sl
   end
-  ir.add = UI.Button(ir, "Add an item", 110, 26)
+  ir.add = UI.Button(ir, Loc["Add an item"], 110, 26)
   ir.add:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Your item designs")
+      root:CreateTitle(Loc["Your item designs"])
       local designs = K.Items:Designs()
-      if #designs == 0 then root:CreateTitle("Design one in Inventory > Workshop first") end
+      if #designs == 0 then root:CreateTitle(Loc["Design one in Inventory > Workshop first"]) end
       local have = {}
       for _, it in ipairs(tab.draft.items or {}) do have[it.d] = true end
       for _, def in ipairs(designs) do
@@ -584,7 +585,7 @@ local function BuildWrite(tab)
       end
     end)
   end)
-  ir.pick = UI.Toggle(ir, "They choose one", nil, function() return tab.draft and tab.draft.pick and true or false end,
+  ir.pick = UI.Toggle(ir, Loc["They choose one"], nil, function() return tab.draft and tab.draft.pick and true or false end,
     function(v) tab.draft.pick = v or nil; changed() end, 160, true)
   function tab:PaintItems()
     local list = self.draft.items or {}
@@ -609,17 +610,17 @@ local function BuildWrite(tab)
   end
   -- Level, or a range
   local function lvl(field) return function(v) tab.draft[field] = tonumber(v); changed() end end
-  tab.levelMin = UI.Field(body, "Level", 56, 3, lvl("level"))
+  tab.levelMin = UI.Field(body, Loc["Level"], 56, 3, lvl("level"))
   tab.levelMin.edit:SetNumeric(true)
-  tab.levelMax = UI.Field(body, "to (optional)", 78, 3, lvl("levelMax"))
+  tab.levelMax = UI.Field(body, Loc["to (optional)"], 78, 3, lvl("levelMax"))
   tab.levelMax.edit:SetNumeric(true)
-  UI.Tooltip(tab.levelMin.edit, "Level", "The level this quest is meant for. Shown in the colour the game uses for quests at that level.")
+  UI.Tooltip(tab.levelMin.edit, Loc["Level"], Loc["The level this quest is meant for. Shown in the colour the game uses for quests at that level."])
   -- Where it happens
   tab.whereRow = CreateFrame("Frame", nil, body)
   tab.whereRow:SetSize(IW, 40)
-  local wl = UI.Text(tab.whereRow, "Where it happens (optional)", "Label", "subtle")
+  local wl = UI.Text(tab.whereRow, Loc["Where it happens (optional)"], "Label", "subtle")
   wl:SetPoint("TOPLEFT", 1, 0)
-  tab.wherePin = PinButton(tab.whereRow, "Where it happens", function() return tab.draft and tab.draft.marker end, function(mk)
+  tab.wherePin = PinButton(tab.whereRow, Loc["Where it happens"], function() return tab.draft and tab.draft.marker end, function(mk)
     tab.draft.marker = mk
     changed()
   end)
@@ -627,14 +628,14 @@ local function BuildWrite(tab)
   tab.whereText = UI.Text(tab.whereRow, "", "Small", "text", IW - 34)
   tab.whereText:SetPoint("LEFT", tab.wherePin, "RIGHT", 8, 0)
   tab.whereText:SetWordWrap(false)
-  tab.st = UI.Toggle(body, "Storyteller mode", "Only you tick objectives. Everyone who accepted sees your progress as it happens.",
+  tab.st = UI.Toggle(body, Loc["Storyteller mode"], Loc["Only you tick objectives. Everyone who accepted sees your progress as it happens."],
     function() return tab.draft ~= nil and tab.draft.st ~= false end,
     function(v) tab.draft.st = v; changed() end, IW, true)
-  tab.au = UI.Toggle(body, "Let objectives complete themselves",
-    "Objectives with a rule tick when a player meets it, for everyone. Off: only you tick them, and you're told when someone meets one.",
+  tab.au = UI.Toggle(body, Loc["Let objectives complete themselves"],
+    Loc["Objectives with a rule tick when a player meets it, for everyone. Off: only you tick them, and you're told when someone meets one."],
     function() return tab.draft ~= nil and tab.draft.au ~= false end,
     function(v) tab.draft.au = v; changed() end, IW, true)
-  tab.seq = UI.Toggle(body, "In order", "One objective at a time: each opens when the one before is done.",
+  tab.seq = UI.Toggle(body, Loc["In order"], Loc["One objective at a time: each opens when the one before is done."],
     function() return tab.draft and tab.draft.seq and true or false end,
     function(v) tab.draft.seq = v or nil; changed() end, IW, true)
 
@@ -687,7 +688,7 @@ local function BuildWrite(tab)
     self.whereRow:SetPoint("TOPLEFT", 0, y)
     local QM = K.QuestMarkers
     local mk = self.draft.marker
-    self.whereText:SetText(mk and QM and QM.Label(mk) or "|cff8a8a8aNo marker: click the pin to mark where you stand or pick a spot on the map.|r")
+    self.whereText:SetText(mk and QM and QM.Label(mk) or Loc["|cff8a8a8aNo marker: click the pin to mark where you stand or pick a spot on the map.|r"])
     y = y - 40 - 6
     self.st:ClearAllPoints()
     self.st:SetPoint("TOPLEFT", 0, y)
@@ -722,7 +723,7 @@ local function BuildWrite(tab)
       p.objectives[i] = { text = o.text, done = false, marker = o.marker, auto = o.auto, opt = o.opt, hid = o.hid, fl = o.fl }
     end
     self.preview:SetQuest(p, { keepScroll = true })
-    self.preview.chip:Set("Preview", K:Theme().accent)
+    self.preview.chip:Set(Loc["Preview"], K:Theme().accent)
     self.iconBtn.icon:SetTexture(p.icon)
   end
 
@@ -735,7 +736,7 @@ local function BuildWrite(tab)
 
   function tab:Changed()
     self.dirty = true
-    self:Say("Unsaved changes")
+    self:Say(Loc["Unsaved changes"])
     self:Layout()
     self:Preview()
   end
@@ -766,8 +767,8 @@ local function BuildWrite(tab)
     self.wherePin:Paint(0)
     self:Layout()
     self:Preview()
-    self:Say(q and ("Editing " .. (q.edited and UI.Ago(q.edited) or "")) or "A fresh page")
-    self.pick:SetText(q and Clean(q.title) or "Your quests...")
+    self:Say(q and (Loc["Editing "] .. (q.edited and UI.Ago(q.edited) or "")) or Loc["A fresh page"])
+    self.pick:SetText(q and Clean(q.title) or Loc["Your quests..."])
     sf:SetVerticalScroll(0)
     UI.FadeIn(self.preview, 0.2)
   end
@@ -779,7 +780,7 @@ local function BuildWrite(tab)
     if not q then self:Say(err, true) return nil end
     self.draft.id = q.id
     self.dirty = false
-    self:Say("Saved")
+    self:Say(Loc["Saved"])
     self.pick:SetText(Clean(q.title))
     if SOUNDKIT and SOUNDKIT.IG_QUEST_LOG_CLOSE then PlaySound(SOUNDKIT.IG_QUEST_LOG_CLOSE) end
     return q
@@ -792,7 +793,7 @@ local function RefreshWrite(tab)
   local id = tab.draft.id
   if id and not Q:Library()[id] then tab.draft.id = nil end
   local any = next(Q:Library()) ~= nil
-  if not tab.draft.id then tab.pick:SetText(any and "Your quests..." or "No quests yet") end
+  if not tab.draft.id then tab.pick:SetText(any and Loc["Your quests..."] or Loc["No quests yet"]) end
 end
 
 ---------------------------------------------------------------------------
@@ -805,7 +806,7 @@ local function Campaigns()
     local key = name ~= "" and name:lower() or ""
     local g = groups[key]
     if not g then
-      g = { key = key, name = name ~= "" and name or "Standalone quests", quests = {}, done = 0, authors = {}, mine = false }
+      g = { key = key, name = name ~= "" and name or Loc["Standalone quests"], quests = {}, done = 0, authors = {}, mine = false }
       groups[key] = g
       order[#order + 1] = g
     end
@@ -830,15 +831,15 @@ local function By(g)
   local names = {}
   for n in pairs(g.authors) do names[#names + 1] = n end
   table.sort(names)
-  if g.mine then table.insert(names, 1, "you") end
+  if g.mine then table.insert(names, 1, Loc["you"]) end
   if #names == 0 then return "" end
-  if #names > 3 then return "By " .. table.concat(names, ", ", 1, 3) .. " and others" end
-  return "By " .. table.concat(names, ", ")
+  if #names > 3 then return Loc["By "] .. table.concat(names, ", ", 1, 3) .. Loc[" and others"] end
+  return Loc["By "] .. table.concat(names, ", ")
 end
 
 local function BuildCampaigns(tab, c)
   tab.list = UI.List(tab, LIST_W, BODY_H, 60,
-    "No campaigns yet. Give your quests a campaign name under Write and they'll gather here.",
+    Loc["No campaigns yet. Give your quests a campaign name under Write and they'll gather here."],
     function(row)
       row.medal = Medal(row, 36)
       row.medal.ring:SetPoint("LEFT", 10, 0)
@@ -866,7 +867,7 @@ local function BuildCampaigns(tab, c)
   tab.detail = d
   d.medal = Medal(d, 58)
   d.medal.ring:SetPoint("TOPLEFT", 18, -18)
-  d.kicker = UI.Text(d, "CAMPAIGN", "Label", "accent")
+  d.kicker = UI.Text(d, Loc["CAMPAIGN"], "Label", "accent")
   d.kicker:SetPoint("TOPLEFT", d.medal.ring, "TOPRIGHT", 12, -4)
   d.name = UI.Text(d, "", "Huge", "heading", DW - 18 - 58 - 12 - 18)
   d.name:SetPoint("TOPLEFT", d.kicker, "BOTTOMLEFT", 0, -5)
@@ -878,10 +879,10 @@ local function BuildCampaigns(tab, c)
   d.progress:SetPoint("TOPLEFT", 18, -92)
   d.bar = Bar(d, DW - 36, 6)
   d.bar:SetPoint("TOPLEFT", 18, -110)
-  local qs = UI.Section(d, "Quests")
+  local qs = UI.Section(d, Loc["Quests"])
   qs:SetPoint("TOPLEFT", 25, -134)
 
-  d.quests = UI.List(d, DW - 24, BODY_H - 156 - 12, 46, "No quests in this campaign.", function(row)
+  d.quests = UI.List(d, DW - 24, BODY_H - 156 - 12, 46, Loc["No quests in this campaign."], function(row)
     row.medal = Medal(row, 30)
     row.medal.ring:SetPoint("LEFT", 6, 0)
     row.title = UI.Text(row, "", "Body", "heading", DW - 24 - 12 - 46 - 100)
@@ -907,13 +908,13 @@ local function BuildCampaigns(tab, c)
     row.onEnter = function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetText(Clean(self.item.q.title), 1, 0.82, 0)
-      GameTooltip:AddLine(self.item.inLog and "Click to read it in your journal." or "Click to open it in the editor.", 1, 1, 1)
+      GameTooltip:AddLine(self.item.inLog and Loc["Click to read it in your journal."] or Loc["Click to open it in the editor."], 1, 1, 1)
       GameTooltip:Show()
     end
   end, { bare = true })
   d.quests:SetPoint("TOPLEFT", 12, -156)
 
-  tab.empty = EmptyState(card, "IconPlace", "Choose a campaign to see how far along it is.")
+  tab.empty = EmptyState(card, "IconPlace", Loc["Choose a campaign to see how far along it is."])
 end
 
 local function RefreshCampaigns(tab)
@@ -922,7 +923,7 @@ local function RefreshCampaigns(tab)
     row.medal:Set(g.icon, g.key == "" and K:Theme().subtle or K:Theme().ui)
     row.name:SetText(Clean(g.name))
     local n = #g.quests
-    row.sub:SetText(("%d quest%s%s"):format(n, n == 1 and "" or "s", g.mine and "  ·  yours" or ""))
+    row.sub:SetText(("%d quest%s%s"):format(n, n == 1 and "" or "s", g.mine and Loc["  ·  yours"] or ""))
     local p = n > 0 and g.done / n or 0
     row.pct:SetText(("%d%%"):format(math.floor(p * 100 + 0.5)))
     row.bar:SetValue(p, g.done == n and n > 0 and Q.DONE or nil)
@@ -940,7 +941,7 @@ local function RefreshCampaigns(tab)
 
   local d = tab.detail
   d.medal:Set(g.icon, g.key == "" and K:Theme().subtle or K:Theme().ui)
-  d.kicker:SetText(g.key == "" and "NO CAMPAIGN" or "CAMPAIGN")
+  d.kicker:SetText(g.key == "" and Loc["NO CAMPAIGN"] or Loc["CAMPAIGN"])
   d.name:SetText(Clean(g.name))
   d.by:SetText(By(g))
   local n = #g.quests
@@ -963,12 +964,12 @@ local function RefreshCampaigns(tab)
     row.title:SetText(Clean(q.title))
     if it.inLog then
       local done, total = Q.Progress(q)
-      row.sub:SetText(total > 0 and ("%d/%d objectives"):format(done, total)
-        or (q.ext and "A Total RP 3: Extended campaign" or (Q:IsMine(q) and "Your own story" or ("From " .. Short(q.author)))))
-      row.chip:Set(Q:IsMine(q) and q.state == "active" and "Storyteller" or st.label, st.color)
+      row.sub:SetText(total > 0 and (Loc["%d/%d objectives"]):format(done, total)
+        or (q.ext and "A Total RP 3: Extended campaign" or (Q:IsMine(q) and Loc["Your own story"] or (Loc["From "] .. Short(q.author)))))
+      row.chip:Set(Q:IsMine(q) and q.state == "active" and Loc["Storyteller"] or st.label, st.color)
     else
-      row.sub:SetText("In your library, not yet begun")
-      row.chip:Set("Draft", K:Theme().subtle)
+      row.sub:SetText(Loc["In your library, not yet begun"])
+      row.chip:Set(Loc["Draft"], K:Theme().subtle)
     end
   end)
 end
@@ -977,14 +978,14 @@ end
 -- The page
 ---------------------------------------------------------------------------
 K:RegisterPage({
-  id = "quests", title = "Quests", heading = "Quests",
-  subtitle = "Stories you follow, and the ones you write for others.",
+  id = "quests", title = Loc["Quests"], heading = Loc["Quests"],
+  subtitle = Loc["Stories you follow, and the ones you write for others."],
   enabled = function() return K:ExtOn("campaigns") end,
   group = "Stories", icon = { "Interface\\Icons\\INV_Scroll_03", round = true },
 
   build = function(c)
     c.tab = 1
-    c.tabs = UI.TabBar(c, { "Journal", "Write", "Campaigns" }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
+    c.tabs = UI.TabBar(c, { Loc["Journal"], Loc["Write"], Loc["Campaigns"] }, function(i) c.tab = i; K.Journal:RefreshCurrent() end, true)
     c.tabs:SetPoint("TOPLEFT", -10, 2)
     c.count = UI.Chip(c, "Small", true)
     c.count:SetPoint("TOPRIGHT", 0, -4)
@@ -1026,7 +1027,7 @@ K:RegisterPage({
     end
     local n = 0
     for _, e in pairs(Q:Log()) do if e.state == "active" then n = n + 1 end end
-    c.count:Set(n > 0 and (n .. " active") or nil, K:Theme().ui)
+    c.count:Set(n > 0 and (n .. Loc[" active"]) or nil, K:Theme().ui)
     if c.tab == 1 then RefreshJournal(c.frames[1], c)
     elseif c.tab == 2 then RefreshWrite(c.frames[2])
     else RefreshCampaigns(c.frames[3]) end

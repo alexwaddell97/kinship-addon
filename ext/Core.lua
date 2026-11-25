@@ -8,6 +8,7 @@
 -- them with E.Write, which keeps the shape a field already has.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local E = { registry = {}, source = {} }
 K.Ext = E
@@ -18,16 +19,16 @@ E.SEP = " "                    -- full IDs: "root inner inner"
 
 -- Type codes, their labels and the module that plays them.
 E.TYPES = {
-  IT = { label = "Item",      plural = "Items",      module = "inventory", icon = "INV_Misc_Bag_08" },
-  DO = { label = "Document",  plural = "Documents",  module = "documents", icon = "INV_Misc_Book_09" },
-  CA = { label = "Campaign",  plural = "Campaigns",  module = "campaigns", icon = "INV_Scroll_03" },
-  QU = { label = "Quest",     plural = "Quests",     module = "campaigns", icon = "INV_Scroll_03" },
-  ST = { label = "Step",      plural = "Steps",      module = "campaigns", icon = "INV_Scroll_03" },
-  DI = { label = "Cutscene",  plural = "Cutscenes",  module = "dialogues", icon = "INV_Misc_Note_01" },
-  AU = { label = "Aura",      plural = "Auras",      module = "auras",     icon = "Spell_Holy_MagicalSentry" },
+  IT = { label = Loc["Item"],      plural = Loc["Items"],      module = "inventory", icon = "INV_Misc_Bag_08" },
+  DO = { label = Loc["Document"],  plural = Loc["Documents"],  module = "documents", icon = "INV_Misc_Book_09" },
+  CA = { label = Loc["Campaign"],  plural = Loc["Campaigns"],  module = "campaigns", icon = "INV_Scroll_03" },
+  QU = { label = Loc["Quest"],     plural = Loc["Quests"],     module = "campaigns", icon = "INV_Scroll_03" },
+  ST = { label = Loc["Step"],      plural = Loc["Steps"],      module = "campaigns", icon = "INV_Scroll_03" },
+  DI = { label = Loc["Cutscene"],  plural = Loc["Cutscenes"],  module = "dialogues", icon = "INV_Misc_Note_01" },
+  AU = { label = Loc["Aura"],      plural = Loc["Auras"],      module = "auras",     icon = "Spell_Holy_MagicalSentry" },
 }
 E.TYPE_ORDER = { "IT", "DO", "CA", "DI", "AU", "QU", "ST" }
-E.MODES = { QU = "Quick", NO = "Normal", EX = "Expert" }
+E.MODES = { QU = Loc["Quick"], NO = Loc["Normal"], EX = Loc["Expert"] }
 E.ELEMENTS = { list = true, branch = true, delay = true }
 
 -- Containers of inner objects that Extended registers by full ID.
@@ -239,31 +240,31 @@ E.LIMITS = {
 local function Copy(v, depth, budget)
   local tv = type(v)
   if tv == "string" then
-    if #v > E.LIMITS.stringLen then return nil, "a text is too long" end
+    if #v > E.LIMITS.stringLen then return nil, Loc["a text is too long"] end
     budget.bytes = budget.bytes + #v
-    if budget.bytes > E.LIMITS.bytes then return nil, "it holds too much text" end
+    if budget.bytes > E.LIMITS.bytes then return nil, Loc["it holds too much text"] end
     return v
   elseif tv == "number" then
-    if v ~= v or v == math.huge or v == -math.huge then return nil, "it holds a number that isn't one" end
+    if v ~= v or v == math.huge or v == -math.huge then return nil, Loc["it holds a number that isn't one"] end
     return v
   elseif tv == "boolean" then
     return v
   elseif tv ~= "table" then
-    return nil, "it holds a " .. tv
+    return nil, Loc["it holds a "] .. tv
   end
-  if depth > E.LIMITS.depth then return nil, "it is nested too deeply" end
+  if depth > E.LIMITS.depth then return nil, Loc["it is nested too deeply"] end
   local out = {}
   for k, val in pairs(v) do
     budget.nodes = budget.nodes + 1
-    if budget.nodes > E.LIMITS.nodes then return nil, "it is too large" end
+    if budget.nodes > E.LIMITS.nodes then return nil, Loc["it is too large"] end
     local tk = type(k)
     if tk == "string" then
-      if #k > E.LIMITS.keyLen then return nil, "a field name is too long" end
+      if #k > E.LIMITS.keyLen then return nil, Loc["a field name is too long"] end
       budget.bytes = budget.bytes + #k
     elseif tk == "number" then
-      if k ~= k or k == math.huge or k == -math.huge then return nil, "a field name isn't one" end
+      if k ~= k or k == math.huge or k == -math.huge then return nil, Loc["a field name isn't one"] end
     else
-      return nil, "a field name is a " .. tk
+      return nil, Loc["a field name is a "] .. tk
     end
     local copy, why = Copy(val, depth + 1, budget)
     if copy == nil then return nil, why end
@@ -275,7 +276,7 @@ end
 -- Copy any value within the limits (for message payloads too).
 function E.SanitizeValue(v)
   local copy, why = Copy(v, 0, { nodes = 0, bytes = 0 })
-  if copy == nil then return nil, why or "it is empty" end
+  if copy == nil then return nil, why or Loc["it is empty"] end
   return copy
 end
 
@@ -283,11 +284,11 @@ end
 -- Extended's internal flags removed. Security fields are recomputed by
 -- E:Store, never kept from the data.
 function E.Sanitize(obj)
-  if type(obj) ~= "table" then return nil, "it isn't an Extended object" end
+  if type(obj) ~= "table" then return nil, Loc["it isn't an Extended object"] end
   local copy, why = E.SanitizeValue(obj)
   if not copy then return nil, why end
-  if type(copy.TY) ~= "string" or not E.TYPES[copy.TY] then return nil, "it isn't an Extended object (no known type)" end
-  if copy.MD ~= nil and type(copy.MD) ~= "table" then return nil, "its details are damaged" end
+  if type(copy.TY) ~= "string" or not E.TYPES[copy.TY] then return nil, Loc["it isn't an Extended object (no known type)"] end
+  if copy.MD ~= nil and type(copy.MD) ~= "table" then return nil, Loc["its details are damaged"] end
   copy.MD = copy.MD or {}
   copy.missing = nil
   return copy
@@ -422,9 +423,9 @@ E.IsMine = IsMine
 -- sender = who it came from; false when there's no telling (an import).
 -- Returns the stored object and where it went, or nil and a reason.
 function E:Store(rootID, obj, sender, received)
-  if not E.ValidRootID(rootID) then return nil, "its ID is damaged" end
+  if not E.ValidRootID(rootID) then return nil, Loc["its ID is damaged"] end
   local db = self:DB()
-  if not db then return nil, "Kinship isn't ready yet" end
+  if not db then return nil, Loc["Kinship isn't ready yet"] end
   local clean, why = E.Sanitize(obj)
   if not clean then return nil, why end
   local src = (not received and IsMine(clean)) and "my" or "exchange"

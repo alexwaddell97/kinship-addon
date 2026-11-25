@@ -5,6 +5,7 @@
 -- it back out. Each character has their own vault, reachable only at a bank.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -34,12 +35,12 @@ function V:TryDeposit(bagSlot)
   local def = s and I:Get(s.def)
   if not def then return true end
   local n = math.min(s.count, I:Available(def.id))
-  if n < 1 then I.Error("That item is promised in a trade.") return true end
+  if n < 1 then I.Error(Loc["That item is promised in a trade."]) return true end
   local copy = {}
   for i, e in pairs(self:Slots()) do copy[i] = { def = e.def, count = e.count } end
   local left = I.Fill(copy, def.id, n, def.stack, SLOTS)
   local moved = n - left
-  if moved < 1 then I.Error("Your Kinship vault is full.") return true end
+  if moved < 1 then I.Error(Loc["Your Kinship vault is full."]) return true end
   if not I:Remove(def.id, moved, bagSlot) then return true end
   I.Fill(self:Slots(), def.id, moved, def.stack, SLOTS)
   if SOUNDKIT and SOUNDKIT.IG_BACKPACK_COIN_SELECT then PlaySound(SOUNDKIT.IG_BACKPACK_COIN_SELECT) end
@@ -53,10 +54,10 @@ function V:Withdraw(i)
   local s = slots[i]
   local def = s and I:Get(s.def)
   if not s then return end
-  if not def then I.Error("That item's design never reached you.") return end
+  if not def then I.Error(Loc["That item's design never reached you."]) return end
   local left = I:Add(def.id, s.count)
   local moved = s.count - left
-  if moved < 1 then I.Error("There's no room in your Kinship bags.") return end
+  if moved < 1 then I.Error(Loc["There's no room in your Kinship bags."]) return end
   s.count = left
   if s.count <= 0 then slots[i] = nil end
   if SOUNDKIT and SOUNDKIT.IG_BACKPACK_COIN_SELECT then PlaySound(SOUNDKIT.IG_BACKPACK_COIN_SELECT) end
@@ -89,7 +90,7 @@ function V:Build()
   mono:SetTexture(K.ICON)
   mono:SetSize(22, 22)
   mono:SetPoint("TOPLEFT", 14, -12)
-  local head = UI.Text(f, "Kinship vault", "Header", "heading")
+  local head = UI.Text(f, Loc["Kinship vault"], "Header", "heading")
   head:SetPoint("LEFT", mono, "RIGHT", 6, 0)
   f.count = UI.Text(f, "", "Small", "subtle")
   f.count:SetPoint("TOPRIGHT", -14, -18)
@@ -109,11 +110,11 @@ function V:Build()
   end
   local rows = math.ceil(SLOTS / COLS)
   local y = 44 + rows * (CELL + GAP) + 4
-  f.note = UI.Text(f, "Right-click an item in your Kinship bags to keep it here. Click one here to take it back.",
+  f.note = UI.Text(f, Loc["Right-click an item in your Kinship bags to keep it here. Click one here to take it back."],
     "Small", "subtle", f:GetWidth() - 28)
   f.note:SetPoint("TOPLEFT", 14, -y)
   f.note:SetSpacing(2)
-  f.bags = UI.Button(f, "Kinship bags", 120, 22)
+  f.bags = UI.Button(f, Loc["Kinship bags"], 120, 22)
   f.bags:SetPoint("TOPLEFT", f.note, "BOTTOMLEFT", 0, -10)
   f.bags:SetScript("OnClick", function() if K.Satchel then K.Satchel:Open(false) end end)
   f:SetHeight(y + f.note:GetStringHeight() + 10 + 22 + 14)

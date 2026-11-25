@@ -5,6 +5,7 @@
 -- rider's tooltip, for mounts).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -12,8 +13,8 @@ local C = { asked = {} }
 K.Companions = C
 
 C.KINDS = {
-  pet   = { label = "Pet",   icon = "Interface\\Icons\\Ability_Hunter_Pet_Wolf" },
-  mount = { label = "Mount", icon = "Interface\\Icons\\Ability_Mount_RidingHorse" },
+  pet   = { label = Loc["Pet"],   icon = "Interface\\Icons\\Ability_Hunter_Pet_Wolf" },
+  mount = { label = Loc["Mount"], icon = "Interface\\Icons\\Ability_Mount_RidingHorse" },
 }
 C.KIND_ORDER = { "pet", "mount" }
 
@@ -92,11 +93,11 @@ end
 -- Bind a pet or mount name. Returns true, or false and a reason.
 function C:Bind(c, name)
   name = strtrim(name or "")
-  if name == "" then return false, "Type a name first." end
-  if #name > 60 then return false, "That name is too long." end
+  if name == "" then return false, Loc["Type a name first."] end
+  if #name > 60 then return false, Loc["That name is too long."] end
   c.bindings = c.bindings or {}
-  if self:IsBound(c, name) then return false, name .. " is already bound." end
-  if #c.bindings >= self.LIMITS.bindings then return false, "That's as many names as one companion can hold." end
+  if self:IsBound(c, name) then return false, name .. Loc[" is already bound."] end
+  if #c.bindings >= self.LIMITS.bindings then return false, Loc["That's as many names as one companion can hold."] end
   -- A name belongs to one companion at a time
   for _, other in pairs(self:All()) do
     if other ~= c and self:IsBound(other, name) then self:Unbind(other, name, true) end
@@ -456,7 +457,7 @@ local function AddSection(tooltip, c, ownerName, riding, owner)
       tooltip:AddLine(("|T%s:16:16:0:0:64:64:5:59:5:59|t %s"):format(tostring(icon), title), TEAL[1], TEAL[2], TEAL[3])
     end
     if not renamed then
-      tooltip:AddLine(("|T%s:12:12|t %s of %s"):format(K.ICON, c.kind == "mount" and "Mount" or "Companion", ownerName),
+      tooltip:AddLine(("|T%s:12:12|t %s of %s"):format(K.ICON, c.kind == "mount" and Loc["Mount"] or Loc["Companion"], ownerName),
         SOFT[1], SOFT[2], SOFT[3])
     end
   end

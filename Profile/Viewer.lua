@@ -1,6 +1,7 @@
 -- Kinship RP: profile viewer (inspect-style).
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local V = {}
@@ -10,7 +11,7 @@ K.Viewer = V
 K.Registry = K.Registry or {}
 
 -- Nature: personality and traits, kept off About so it stays short.
-local TABS = { "About", "Nature", "Looks", "History", "Chronicle" }
+local TABS = { Loc["About"], Loc["Nature"], Loc["Looks"], Loc["History"], Loc["Chronicle"] }
 local CHRONICLE = 5
 
 -- What the game shows about players you've been near this session, so
@@ -34,7 +35,7 @@ end
 local function WhoLine(info)
   if not info then return nil end
   local parts = {}
-  if info.level then parts[#parts + 1] = "Level " .. info.level end
+  if info.level then parts[#parts + 1] = Loc["Level "] .. info.level end
   if info.race then parts[#parts + 1] = info.race end
   if info.className then
     local r, g, b = UI.ClassColor(info.class)
@@ -97,17 +98,17 @@ end
 ---------------------------------------------------------------------------
 local SCENES = {
   { key = "theme", label = "Kinship" },   -- the theme's own stage colours
-  { key = "night", label = "Night", top = { 0.11, 0.14, 0.27 }, bottom = { 0.02, 0.03, 0.07 }, light = { 0.72, 0.80, 1.00 } },
-  { key = "dusk", label = "Dusk", top = { 0.46, 0.24, 0.36 }, bottom = { 0.11, 0.05, 0.10 }, light = { 1.00, 0.74, 0.55 } },
-  { key = "forest", label = "Forest", top = { 0.15, 0.27, 0.16 }, bottom = { 0.03, 0.07, 0.04 }, light = { 0.86, 1.00, 0.72 } },
-  { key = "ember", label = "Ember", top = { 0.47, 0.18, 0.07 }, bottom = { 0.10, 0.03, 0.02 }, light = { 1.00, 0.70, 0.40 } },
-  { key = "frost", label = "Frost", top = { 0.42, 0.55, 0.66 }, bottom = { 0.08, 0.13, 0.21 }, light = { 0.85, 0.95, 1.00 } },
-  { key = "parchment", label = "Parchment", top = { 0.60, 0.52, 0.38 }, bottom = { 0.25, 0.19, 0.12 }, light = { 1.00, 0.93, 0.76 } },
-  { key = "void", label = "Void", top = { 0.08, 0.08, 0.09 }, bottom = { 0, 0, 0 }, light = { 0.90, 0.90, 0.95 } },
+  { key = "night", label = Loc["Night"], top = { 0.11, 0.14, 0.27 }, bottom = { 0.02, 0.03, 0.07 }, light = { 0.72, 0.80, 1.00 } },
+  { key = "dusk", label = Loc["Dusk"], top = { 0.46, 0.24, 0.36 }, bottom = { 0.11, 0.05, 0.10 }, light = { 1.00, 0.74, 0.55 } },
+  { key = "forest", label = Loc["Forest"], top = { 0.15, 0.27, 0.16 }, bottom = { 0.03, 0.07, 0.04 }, light = { 0.86, 1.00, 0.72 } },
+  { key = "ember", label = Loc["Ember"], top = { 0.47, 0.18, 0.07 }, bottom = { 0.10, 0.03, 0.02 }, light = { 1.00, 0.70, 0.40 } },
+  { key = "frost", label = Loc["Frost"], top = { 0.42, 0.55, 0.66 }, bottom = { 0.08, 0.13, 0.21 }, light = { 0.85, 0.95, 1.00 } },
+  { key = "parchment", label = Loc["Parchment"], top = { 0.60, 0.52, 0.38 }, bottom = { 0.25, 0.19, 0.12 }, light = { 1.00, 0.93, 0.76 } },
+  { key = "void", label = Loc["Void"], top = { 0.08, 0.08, 0.09 }, bottom = { 0, 0, 0 }, light = { 0.90, 0.90, 0.95 } },
 }
 local SCENE = {}
 for _, sc in ipairs(SCENES) do SCENE[sc.key] = sc end
-local FLOORS = { { key = "shadow", label = "Shadow" }, { key = "glow", label = "Pool of light" }, { key = "none", label = "Nothing" } }
+local FLOORS = { { key = "shadow", label = Loc["Shadow"] }, { key = "glow", label = Loc["Pool of light"] }, { key = "none", label = Loc["Nothing"] } }
 local FLOOR = { shadow = true, glow = true, none = true }
 
 -- A profile's stage, with the defaults filled in.
@@ -177,7 +178,7 @@ end
 
 function V:Build()
   if self.frame then return end
-  local f = UI.Window("KinshipRPViewer", "Roleplay profile", 640, 484)
+  local f = UI.Window("KinshipRPViewer", Loc["Roleplay profile"], 640, 484)
   self.frame = f
   local desk = UI.Desk(f)
   desk:SetPoint("TOPLEFT", 1, -35)
@@ -269,8 +270,8 @@ function V:Build()
   pal:SetScript("OnEnter", function(b)
     UI.Tween(b, 1, 0.1, palPaint)
     GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Set the stage", 1, 0.82, 0)
-    GameTooltip:AddLine("The backdrop, light and floor behind your character. Other Kinship users see it too.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Set the stage"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["The backdrop, light and floor behind your character. Other Kinship users see it too."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   pal:SetScript("OnLeave", function(b) UI.Tween(b, 0, 0.12, palPaint); GameTooltip:Hide() end)
@@ -313,7 +314,7 @@ function V:Build()
         -- Where it's worn, when that isn't already the "Worn on" line.
         local where = I.WEAR_LABEL[self.slot]
         if where and where ~= I.WEAR_LABEL[self.def.wear or ""] then
-          GameTooltip:AddLine("Worn: " .. where, 0.55, 0.80, 1)
+          GameTooltip:AddLine(Loc["Worn: "] .. where, 0.55, 0.80, 1)
         end
         GameTooltip:Show()
       end)
@@ -380,7 +381,7 @@ function V:Build()
     V.house:SetTextColor(u[1], u[2], u[3])
     GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
     GameTooltip:SetText(V.house:GetText() or "", 1, 0.82, 0)
-    GameTooltip:AddLine("Click to see the house: its motto, history and members.", 1, 1, 1, true)
+    GameTooltip:AddLine(Loc["Click to see the house: its motto, history and members."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   hb:SetScript("OnLeave", function()
@@ -453,7 +454,7 @@ end
 -- field Kinship keeps appearance in, so for their players it's "Description".
 local function LooksLabel(p)
   local a = p and p.addon
-  return (type(a) == "string" and a ~= "" and not a:find("^KinshipRP")) and "Description" or "Looks"
+  return (type(a) == "string" and a ~= "" and not a:find("^KinshipRP")) and Loc["Description"] or Loc["Looks"]
 end
 
 -- Their in-character guild and rank (Total RP 3 shares these), "Sergeant, the Silver Hand".
@@ -469,9 +470,9 @@ end
 function V:MoreToRead(p)
   local where = {}
   if TabFilled(p, 3) then where[#where + 1] = LooksLabel(p) end
-  if TabFilled(p, 4) then where[#where + 1] = "History" end
+  if TabFilled(p, 4) then where[#where + 1] = Loc["History"] end
   if #where == 0 then return nil end
-  return "|cff" .. UI.Hex(K:Theme().subtle) .. "Their longer writing is under " .. table.concat(where, " and ") .. ", above.|r"
+  return "|cff" .. UI.Hex(K:Theme().subtle) .. Loc["Their longer writing is under "] .. table.concat(where, " and ") .. Loc[", above.|r"]
 end
 
 function V:ShowTab(i)
@@ -487,15 +488,15 @@ function V:ShowTab(i)
     for _, f in ipairs(K.CONSENT) do
       local v = d.profile.consent and d.profile.consent[f.key]
       for _, cv in ipairs(K.CONSENT_VALUES) do
-        if cv.key == v then bounds[#bounds + 1] = ("%s |cff%s%s|r"):format(f.label, UI.CardHex(cv.color), cv.key == "3" and "ask first" or cv.label:lower()) end
+        if cv.key == v then bounds[#bounds + 1] = ("%s |cff%s%s|r"):format(f.label, UI.CardHex(cv.color), cv.key == "3" and Loc["ask first"] or cv.label:lower()) end
       end
     end
     local pr = d.profile
     -- Who they are, on one line: "Human  ·  Paladin  ·  Storm grey eyes  ·  Born in Moonbrook"
     local who = {}
-    for _, f in ipairs({ { "", "race" }, { "", "class" }, { "", "eyes", " eyes" }, { "Born in ", "birthplace" },
-                         { "Known as ", "nickname" }, { "Weighs ", "weight" }, { "", "relationship" },
-                         { "Voice: ", "voice" } }) do
+    for _, f in ipairs({ { "", "race" }, { "", "class" }, { "", "eyes", Loc[" eyes"] }, { Loc["Born in "], "birthplace" },
+                         { Loc["Known as "], "nickname" }, { Loc["Weighs "], "weight" }, { "", "relationship" },
+                         { Loc["Voice: "], "voice" } }) do
       local v = pr[f[2]] and strtrim(pr[f[2]]) or ""
       if v ~= "" and f[2] == "eyes" then v = EyesText(pr, v) end
       if v ~= "" then who[#who + 1] = f[1] .. v .. (f[3] or "") end
@@ -507,7 +508,7 @@ function V:ShowTab(i)
       for _, e in ipairs(K.Auras:Of(d.raw, d.mine)) do
         local c = UI.CardHex(K.Auras.Color(e.kind))
         local nm = other and UI.Clean(e.name) or UI.Escape(e.name)
-        local left = e.expires and (", " .. K.Auras.Left(e.expires) .. " left") or ""
+        local left = e.expires and (", " .. K.Auras.Left(e.expires) .. Loc[" left"]) or ""
         local note = e.note and ("  \"" .. (other and UI.Clean(e.note) or UI.Escape(e.note)) .. "\"") or ""
         lines[#lines + 1] = ("|T%s:16:16:0:0:64:64:5:59:5:59|t |cff%s%s|r%s%s"):format(tostring(e.icon), c, nm, left, note)
       end
@@ -539,23 +540,23 @@ function V:ShowTab(i)
       if role ~= "" then bits[#bits + 1] = role end
       if motto ~= "" then bits[#bits + 1] = '"' .. motto .. '"' end
       if story ~= "" then bits[#bits + 1] = story end
-      groupText = #bits > 0 and table.concat(bits, "\n") or "A member."
+      groupText = #bits > 0 and table.concat(bits, "\n") or Loc["A member."]
     end
-    text = Paragraphs({ { "Right now", effects }, { "At a glance", pr.glance }, { "Identity", table.concat(who, "  \194\183  ") },
-      { "Motto", pr.motto }, { "House " .. (other and houseName or UI.Escape(houseName)), houseText },
+    text = Paragraphs({ { Loc["Right now"], effects }, { "At a glance", pr.glance }, { Loc["Identity"], table.concat(who, "  \194\183  ") },
+      { Loc["Motto"], pr.motto }, { Loc["House "] .. (other and houseName or UI.Escape(houseName)), houseText },
       { other and UI.Clean(groupName) or UI.Escape(groupName), groupText },
-      { "Guild", self:GuildLine(pr, other) },
-      { "Boundaries", table.concat(bounds, "  \194\183  ") }, { "Out of character", pr.ooc },
-      { "More to read", self:MoreToRead(pr) } })
+      { Loc["Guild"], self:GuildLine(pr, other) },
+      { Loc["Boundaries"], table.concat(bounds, "  \194\183  ") }, { Loc["Out of character"], pr.ooc },
+      { Loc["More to read"], self:MoreToRead(pr) } })
   elseif i == 2 then
     local other = not d.mine
-    text = Paragraphs({ { "Personality", Rich(d.profile.personality, other) }, { "Traits", TraitLines(d.profile, other) } })
+    text = Paragraphs({ { Loc["Personality"], Rich(d.profile.personality, other) }, { Loc["Traits"], TraitLines(d.profile, other) } })
   elseif i == 3 then
     text = Rich(d.profile.appearance, not d.mine)
   elseif i == 4 then
     text = Rich(d.profile.history, not d.mine)
   else
-    text = d.mine and self:ChronicleText() or "Shared Chronicle highlights will appear here once profile sharing arrives."
+    text = d.mine and self:ChronicleText() or Loc["Shared Chronicle highlights will appear here once profile sharing arrives."]
   end
   if not text or strtrim(text) == "" then text = "|cff" .. UI.Hex(K:Theme().subtle) .. "Nothing written here yet.|r" end
   self.body:SetText(text)
@@ -567,7 +568,7 @@ function V:ChronicleText()
     local e = entries[i]
     out[#out + 1] = ("%s  %s\n%s"):format(Head(K.FormatDate(e.t)), e.place or "", e.title)
   end
-  return #out > 0 and table.concat(out, "\n\n") or "No Chronicle entries yet."
+  return #out > 0 and table.concat(out, "\n\n") or Loc["No Chronicle entries yet."]
 end
 
 function V:Present(data, unit, keepTab)
@@ -614,7 +615,7 @@ function V:Present(data, unit, keepTab)
     local crest = (not data.mine and p.crest) or (h and h.crest) or "Interface\\Icons\\INV_Shield_05"
     self.crest:SetTexture(crest)
     self.crest:Show()
-    self.house:SetText("of House " .. houseName)
+    self.house:SetText(Loc["of House "] .. houseName)
     self.houseBtn:SetWidth(math.ceil(self.house:GetStringWidth()) + 26)
     self.houseBtn:Show()
   else
@@ -672,7 +673,7 @@ function V:Present(data, unit, keepTab)
       self:ShowModel(unit)
     else
       self.model:Hide(); self.stageEmpty:Show()
-      self.stageNote:SetText("Stand near them to see their appearance.")
+      self.stageNote:SetText(Loc["Stand near them to see their appearance."])
     end
   end
 
@@ -792,12 +793,12 @@ end
 function V:StageMenu(owner)
   local st = StageOf(K:Profile())
   UI.Menu(owner, function(root)
-    root:CreateTitle("Backdrop")
+    root:CreateTitle(Loc["Backdrop"])
     for _, sc in ipairs(SCENES) do
       root:CreateRadio(sc.label, function() return StageOf(K:Profile()).bg == sc.key end,
         function() SetStage(function(x) x.bg, x.c = sc.key, nil end) end)
     end
-    root:CreateRadio("Your own colour...", function() return StageOf(K:Profile()).bg == "custom" end, function()
+    root:CreateRadio(Loc["Your own colour..."], function() return StageOf(K:Profile()).bg == "custom" end, function()
       local before = K:Profile().stage and CopyTable(K:Profile().stage) or nil
       local c = st.c or StageColors(st)
       PickColor(c[1], c[2], c[3], function(r, g, b)
@@ -809,11 +810,11 @@ function V:StageMenu(owner)
       end)
     end)
     root:CreateDivider()
-    root:CreateTitle("Light")
-    root:CreateCheckbox("Spotlight", function() return StageOf(K:Profile()).spot end,
+    root:CreateTitle(Loc["Light"])
+    root:CreateCheckbox(Loc["Spotlight"], function() return StageOf(K:Profile()).spot end,
       function() SetStage(function(x) x.spot = not x.spot end) end)
     root:CreateDivider()
-    root:CreateTitle("Floor")
+    root:CreateTitle(Loc["Floor"])
     for _, fl in ipairs(FLOORS) do
       root:CreateRadio(fl.label, function() return StageOf(K:Profile()).floor == fl.key end,
         function() SetStage(function(x) x.floor = fl.key end) end)
@@ -870,7 +871,7 @@ end
 
 function V:BuildHouse()
   if self.houseFrame then return self.houseFrame end
-  local f = UI.Window("KinshipRPHouseCard", "House", HW, HH)
+  local f = UI.Window("KinshipRPHouseCard", Loc["House"], HW, HH)
   self.houseFrame = f
   local desk = UI.Desk(f)
   desk:SetPoint("TOPLEFT", 1, -35)
@@ -897,14 +898,14 @@ function V:BuildHouse()
 
   local div = UI.Divider(card, IW)
   div:SetPoint("TOPLEFT", 18, -98)
-  local hs = UI.Section(card, "History")
+  local hs = UI.Section(card, Loc["History"])
   hs:SetPoint("TOPLEFT", 25, -112)
   f.history = UI.ReadArea(card, IW, 140, "QuestFont", "text")
   f.history:SetPoint("TOPLEFT", 18, -132)
 
-  local ms = UI.Section(card, "Members you know of")
+  local ms = UI.Section(card, Loc["Members you know of"])
   ms:SetPoint("TOPLEFT", 25, -286)
-  f.members = UI.List(card, IW, 120, 26, "Nobody yet. Members appear as you meet them.", function(row)
+  f.members = UI.List(card, IW, 120, 26, Loc["Nobody yet. Members appear as you meet them."], function(row)
     row.name = UI.Text(row, "", "Body", "heading", 200)
     row.name:SetPoint("LEFT", 10, 0)
     row.name:SetWordWrap(false)
@@ -932,8 +933,8 @@ function V:ShowHouse(name, from)
   local f = self:BuildHouse()
   local members = HouseMembersOf(key)
   local crest, motto, hist, other = HouseDetails(key, from, members)
-  f:SetTitle("House " .. name)
-  f.title:SetText("House " .. name)
+  f:SetTitle(Loc["House "] .. name)
+  f.title:SetText(Loc["House "] .. name)
   f.crest:SetTexture(crest or "Interface\\Icons\\INV_Shield_05")
   motto = strtrim(motto or "")
   f.motto:SetText(motto ~= "" and ("\"" .. (other and motto or UI.Escape(motto)) .. "\"") or "")
@@ -949,12 +950,12 @@ function V:ShowHouse(name, from)
     else
       row.name:SetText(rp ~= "" and rp or m.name)
     end
-    local sub = m.role or (m.claim and "Claims the name") or ""
+    local sub = m.role or (m.claim and Loc["Claims the name"]) or ""
     row.sub:SetText(sub)
     row.name:SetWidth(sub ~= "" and 200 or 320)   -- the whole row when there's nothing beside it
   end)
-  f.note:SetText(other and "Anyone can write a house name into their profile, so these are the people who say they belong."
-    or "Recognise who truly belongs on your Community page.")
+  f.note:SetText(other and Loc["Anyone can write a house name into their profile, so these are the people who say they belong."]
+    or Loc["Recognise who truly belongs on your Community page."])
   f:Show()
   f:Raise()
 end
@@ -968,14 +969,14 @@ local function KinLine(name)
   local e = K:KinFor(name)
   if not e then return nil end
   local m = e.met or {}
-  return ("%s. You met in %s, at level %d."):format(K.RelationLabel(e.rel), m.place or "?", m.level or 0)
+  return (Loc["%s. You met in %s, at level %d."]):format(K.RelationLabel(e.rel), m.place or "?", m.level or 0)
 end
 
 function V:ShowModel(unit)
   self.model:Show(); self.stageEmpty:Hide()
   self.model:SetUnit(unit)
   self.model.facing = 0; self.model:SetFacing(0)
-  self.stageNote:SetText("Drag to turn")
+  self.stageNote:SetText(Loc["Drag to turn"])
 end
 
 -- Everywhere a player near you might be found, so their model shows without

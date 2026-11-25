@@ -10,6 +10,7 @@
 -- Up / Down move through the list; Enter or Tab picks; Esc closes it.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 
@@ -38,17 +39,17 @@ function K:People()
   for _, p in pairs(K.db.profiles or {}) do
     if type(p) == "table" and p.full then
       local prof = p.list and p.list[p.active]
-      Add(p.full, prof and prof.rpName, "Your character")
+      Add(p.full, prof and prof.rpName, Loc["Your character"])
     end
   end
   -- Your Kin, by bond
   for _, e in pairs(K:KinList()) do
-    if type(e) == "table" then Add(e.name, RP(e.name), (e.rel or "") ~= "" and K.RelationLabel(e.rel) or "Kin") end
+    if type(e) == "table" then Add(e.name, RP(e.name), (e.rel or "") ~= "" and K.RelationLabel(e.rel) or Loc["Kin"]) end
   end
   -- Letters, newest first
   for _, l in ipairs(K:LetterBox()) do
     local who = l.dir == "in" and l.from or l.to
-    Add(who, RP(who), "Letters")
+    Add(who, RP(who), Loc["Letters"])
   end
   -- The Directory, most recently seen first
   local reg = {}
@@ -56,7 +57,7 @@ function K:People()
     if type(e) == "table" and e.name then reg[#reg + 1] = e end
   end
   table.sort(reg, function(a, b) return (a.t or 0) > (b.t or 0) end)
-  for _, e in ipairs(reg) do Add(e.name, e.profile and e.profile.rpName, "Directory") end
+  for _, e in ipairs(reg) do Add(e.name, e.profile and e.profile.rpName, Loc["Directory"]) end
   return out
 end
 

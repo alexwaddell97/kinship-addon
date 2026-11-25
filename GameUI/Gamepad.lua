@@ -18,6 +18,7 @@
 -- any of this off.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Pad = { bound = false, held = {} }
@@ -785,7 +786,7 @@ function Pad.StopCapture(chord)
 end
 
 function Pad.Capture(sc)
-  if InCombat() then K:Print("Not during combat.") return end
+  if InCombat() then K:Print(Loc["Not during combat."]) return end
   if not capture then
     capture = CreateFrame("Frame", nil, UIParent)
     capture:SetSize(420, 64)

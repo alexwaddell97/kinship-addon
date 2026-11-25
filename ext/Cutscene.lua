@@ -8,6 +8,7 @@
 --   K.ExtCutscene:ShowDocument(fullID, args)  CloseDocument()
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local E = K.Ext
@@ -109,7 +110,7 @@ local function Build()
   f.text:SetJustifyV("TOP")
   f.text:SetSpacing(3)
 
-  f.next = UI.Button(chat, "Next", 96, 24)
+  f.next = UI.Button(chat, Loc["Next"], 96, 24)
   f.next:SetPoint("BOTTOMRIGHT", -10, 8)
   f.hint = UI.Text(chat, "", "Small", "subtle")
   f.hint:SetPoint("RIGHT", f.next, "LEFT", -10, 0)
@@ -229,7 +230,7 @@ function ShowLine(f)
   f.hint:SetText("")
 
   if f.lines[f.line + 1] then
-    f.next:SetText("Next")
+    f.next:SetText(Loc["Next"])
     f.next:SetScript("OnClick", function() f.line = f.line + 1; ShowLine(f) end)
   elseif type(ds.CH) == "table" then
     local i = 0
@@ -251,19 +252,19 @@ function ShowLine(f)
       f.next:Disable()
       f.hint:SetText("Choose an answer.")
     else
-      f.next:SetText("Close")
+      f.next:SetText(Loc["Close"])
       f.next:SetScript("OnClick", function() C:Finish() end)
     end
   elseif E.Bool(ds.EP) then
-    f.next:SetText("Close")
+    f.next:SetText(Loc["Close"])
     f.next:SetScript("OnClick", function() C:Finish() end)
   else
     local n = tonumber(ds.N) or ds.N or ((tonumber(f.index) or 0) + 1)
     if Step(f.class, n) then
-      f.next:SetText("Next")
+      f.next:SetText(Loc["Next"])
       f.next:SetScript("OnClick", function() f.index = n; Process(f) end)
     else
-      f.next:SetText("Close")
+      f.next:SetText(Loc["Close"])
       f.next:SetScript("OnClick", function() C:Finish() end)
     end
   end
@@ -333,7 +334,7 @@ function C:ShowDocument(fullID, args)
     return
   end
   local D = K.Documents
-  if not (D and K:ExtOn("documents")) then K:Print("Documents are switched off (Settings > Extended features).") return end
+  if not (D and K:ExtOn("documents")) then K:Print(Loc["Documents are switched off (Settings > Extended features)."]) return end
   local pages = {}
   for _, p in ipairs(type(obj.PA) == "table" and obj.PA or EMPTY) do
     local text = type(p) == "table" and E.Str(p.TX) or nil

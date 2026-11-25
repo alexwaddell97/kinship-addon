@@ -4,6 +4,7 @@
 -- loading screens, so Kinship puts your choice back.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local L = { pills = {} }
@@ -141,12 +142,12 @@ local function Pill(eb)
     UI.Tween(self, 1, 0.12, paint)
     local known, cur = L:Known(), L:Current()
     GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-    GameTooltip:SetText("Speaking " .. cur.name, 1, 0.82, 0)
+    GameTooltip:SetText(Loc["Speaking "] .. cur.name, 1, 0.82, 0)
     if #known > 1 then
       local nextName
       for i, l in ipairs(known) do if l.id == cur.id then nextName = known[i % #known + 1].name end end
-      GameTooltip:AddLine("Click: switch to " .. (nextName or known[1].name), 0.85, 0.85, 0.85)
-      GameTooltip:AddLine("Right-click: choose a language", 0.85, 0.85, 0.85)
+      GameTooltip:AddLine(Loc["Click: switch to "] .. (nextName or known[1].name), 0.85, 0.85, 0.85)
+      GameTooltip:AddLine(Loc["Right-click: choose a language"], 0.85, 0.85, 0.85)
     end
     GameTooltip:Show()
   end)
@@ -156,7 +157,7 @@ local function Pill(eb)
   b:SetScript("OnClick", function(self, button)
     if button == "RightButton" then
       UI.Menu(self, function(root)
-        root:CreateTitle("Speak in")
+        root:CreateTitle(Loc["Speak in"])
         for _, l in ipairs(L:Known()) do
           root:CreateRadio(l.name, function() return L:Current().id == l.id end, function() L:Set(l.id) end)
         end
@@ -205,12 +206,12 @@ K:On("LOGIN", function()
   C_Timer.After(1, function() L:Restore(); L:Update() end)
 end)
 
-K:RegisterSettings({ id = "language", title = "Chat languages", order = 12, build = function(card)
-  card:Toggle("Language switcher", "Adds a button to the chat box for changing the language you speak.", {
+K:RegisterSettings({ id = "language", title = Loc["Chat languages"], order = 12, build = function(card)
+  card:Toggle(Loc["Language switcher"], Loc["Adds a button to the chat box for changing the language you speak."], {
     get = function() return S().langSwitcher ~= false end,
     set = function(v) S().langSwitcher = v; L:Update() end,
   })
-  card:Toggle("Keep my language", "The game resets your language after loading screens. This sets it back.", {
+  card:Toggle(Loc["Keep my language"], Loc["The game resets your language after loading screens. This sets it back."], {
     get = function() return S().langRemember ~= false end,
     set = function(v) S().langRemember = v; if v then L:Restore() end end,
   })
@@ -219,7 +220,7 @@ K:RegisterSettings({ id = "language", title = "Chat languages", order = 12, buil
     local known = L:Known()
     local names = {}
     for _, l in ipairs(known) do names[#names + 1] = l.name end
-    note:SetText(#known > 1 and ("You speak " .. table.concat(names, ", ") .. ".")
-      or "This character only knows one language, so the button is hidden.")
+    note:SetText(#known > 1 and (Loc["You speak "] .. table.concat(names, ", ") .. ".")
+      or Loc["This character only knows one language, so the button is hidden."])
   end)
 end })

@@ -4,6 +4,7 @@
 -- no character or player names.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local R = {}
@@ -101,10 +102,10 @@ function R:Build()
     if user and R.text and self:GetText() ~= R.text then self:SetText(R.text); self:HighlightText() end
   end)
 
-  f.done = UI.Button(f, "Done", 100, 28)
+  f.done = UI.Button(f, Loc["Done"], 100, 28)
   f.done:SetPoint("BOTTOMRIGHT", -16, 14)
   f.done:SetScript("OnClick", function() f:Hide() end)
-  f.select = UI.Button(f, "Select all", 110, 28)
+  f.select = UI.Button(f, Loc["Select all"], 110, 28)
   f.select:SetPoint("RIGHT", f.done, "LEFT", -8, 0)
   f.select:SetScript("OnClick", function()
     f.area.edit:SetFocus()

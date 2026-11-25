@@ -8,6 +8,7 @@
 --   L  a letter          A  "it arrived" (sent back by the recipient)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -270,9 +271,9 @@ L.MAX_ENCLOSED = 3
 function L.CanEnclose(id)
   local I = K.Items
   local def = I and I:Get(id)
-  if not def then return nil, "That item isn't in your bags." end
+  if not def then return nil, Loc["That item isn't in your bags."] end
   if def.documentId then
-    return nil, ("%s carries writing, too much for the post. Hand it over with Give instead."):format(def.name)
+    return nil, (Loc["%s carries writing, too much for the post. Hand it over with Give instead."]):format(def.name)
   end
   return def
 end
@@ -294,13 +295,13 @@ function L.EnclosedLine(letter, plain)
   end
   if (letter.purse or 0) > 0 then
     local coins = (C_CurrencyInfo and C_CurrencyInfo.GetCoinText) or rawget(_G, "GetCoinText")
-    parts[#parts + 1] = "a purse of " .. (coins and coins(letter.purse, " ") or (letter.purse .. " copper"))
+    parts[#parts + 1] = Loc["a purse of "] .. (coins and coins(letter.purse, " ") or (letter.purse .. Loc[" copper"]))
   end
   local goods = letter.goods
   if type(goods) == "table" then
     for _, g in ipairs(goods) do parts[#parts + 1] = plain and g or UI.Escape(g) end
   elseif type(goods) == "number" and goods > 0 then
-    parts[#parts + 1] = goods == 1 and "a parcel" or (goods .. " parcels")
+    parts[#parts + 1] = goods == 1 and Loc["a parcel"] or (goods .. Loc[" parcels"])
   end
   return #parts > 0 and table.concat(parts, ", ") or nil
 end
@@ -315,7 +316,7 @@ function L:TakeEnclosed(letter)
     fits[#fits + 1] = { id = e.d.id, n = e.n, stack = known and known.stack or e.d.stack }
   end
   if not I:Fits(fits) then
-    I.Error("There's no room in your bags for what's enclosed.")
+    I.Error(Loc["There's no room in your bags for what's enclosed."])
     return false
   end
   for _, e in ipairs(letter.enclosed) do
@@ -324,7 +325,7 @@ function L:TakeEnclosed(letter)
   end
   letter.taken = true
   if SOUNDKIT and SOUNDKIT.IG_BACKPACK_OPEN then PlaySound(SOUNDKIT.IG_BACKPACK_OPEN) end
-  K:Print(("From the letter: %s."):format(L.EnclosedLine({ enclosed = letter.enclosed })))
+  K:Print((Loc["From the letter: %s."]):format(L.EnclosedLine({ enclosed = letter.enclosed })))
   K:Fire("LETTERS")
   return true
 end
@@ -336,7 +337,7 @@ local function ReturnEnclosed(letter)
   local fits = {}
   for _, e in ipairs(letter.enclosed) do fits[#fits + 1] = { id = e.d.id, n = e.n, stack = e.d.stack } end
   if not I:Fits(fits) then
-    I.Error("Make room in your bags first: what's enclosed comes back to you.")
+    I.Error(Loc["Make room in your bags first: what's enclosed comes back to you."])
     return false
   end
   for _, e in ipairs(letter.enclosed) do
@@ -355,9 +356,9 @@ function L:Send(to, title, body, sign, seal, crest, opts)
   opts = opts or {}
   to = strtrim(to or "")
   body = strtrim(body or "")
-  if to == "" then return nil, "Who is the letter for?" end
-  if body == "" then return nil, "The letter is empty." end
-  if K.NameKey(to) == K.NameKey(K:MyName()) then return nil, "You can't send a letter to yourself." end
+  if to == "" then return nil, Loc["Who is the letter for?"] end
+  if body == "" then return nil, Loc["The letter is empty."] end
+  if K.NameKey(to) == K.NameKey(K:MyName()) then return nil, Loc["You can't send a letter to yourself."] end
   -- Enclosures: check them all before anything leaves your bags
   local I = K.Items
   local enclosed
@@ -366,7 +367,7 @@ function L:Send(to, title, body, sign, seal, crest, opts)
     local def, why = L.CanEnclose(e.id)
     if not def then return nil, why end
     local n = math.floor(tonumber(e.n) or 0)
-    if n < 1 or I:Available(e.id) < n then return nil, ("You don't have %d %s to enclose."):format(n, def.name) end
+    if n < 1 or I:Available(e.id) < n then return nil, (Loc["You don't have %d %s to enclose."]):format(n, def.name) end
     enclosed = enclosed or {}
     enclosed[#enclosed + 1] = { d = I:Pack(e.id), n = n }
   end
@@ -403,11 +404,11 @@ end
 -- Chronicle, and say so.
 function L:Deliver(letter)
   Store(letter)
-  K:AddEntry("letter", "A letter from " .. Short(letter.from), letter.title ~= "" and letter.title or nil)
+  K:AddEntry("letter", Loc["A letter from "] .. Short(letter.from), letter.title ~= "" and letter.title or nil)
   UI.Toast({
     icon = L.CrestTexture(letter.crest) or K.ICON, round = letter.crest ~= nil and letter.crest ~= "monogram",
-    title = "A letter has arrived",
-    text = ("From |cffffffff%s|r%s"):format(Short(letter.from), letter.title ~= "" and (": " .. UI.Escape(letter.title)) or ""),
+    title = Loc["A letter has arrived"],
+    text = (Loc["From |cffffffff%s|r%s"]):format(Short(letter.from), letter.title ~= "" and (": " .. UI.Escape(letter.title)) or ""),
     color = UI.SealColor(letter.seal),
     sound = "TELL_MESSAGE",
     duration = 10,

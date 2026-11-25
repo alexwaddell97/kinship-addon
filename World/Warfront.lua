@@ -9,6 +9,7 @@
 -- Everything here is private to you: nothing is sent to anyone.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -16,16 +17,16 @@ local W = {}
 K.War = W
 
 W.GRUDGES = {
-  { key = "respect", label = "Respect", color = { 0.55, 0.74, 0.86 } },
-  { key = "rival",   label = "Rival",   color = { 0.95, 0.76, 0.36 } },
-  { key = "grudge",  label = "Grudge",  color = { 0.93, 0.52, 0.26 } },
-  { key = "nemesis", label = "Nemesis", color = { 0.90, 0.30, 0.28 } },
+  { key = "respect", label = Loc["Respect"], color = { 0.55, 0.74, 0.86 } },
+  { key = "rival",   label = Loc["Rival"],   color = { 0.95, 0.76, 0.36 } },
+  { key = "grudge",  label = Loc["Grudge"],  color = { 0.93, 0.52, 0.26 } },
+  { key = "nemesis", label = Loc["Nemesis"], color = { 0.90, 0.30, 0.28 } },
 }
 W.OUTCOMES = {
-  win    = { label = "Victory", color = { 0.42, 0.82, 0.50 }, verb = "Victory over %s" },
-  loss   = { label = "Defeat",  color = { 0.90, 0.36, 0.30 }, verb = "Fell to %s" },
-  draw   = { label = "Draw",    color = { 0.80, 0.80, 0.80 }, verb = "Fought %s to a standstill" },
-  parley = { label = "Parley",  color = { 0.55, 0.74, 0.86 }, verb = "Parleyed with %s" },
+  win    = { label = Loc["Victory"], color = { 0.42, 0.82, 0.50 }, verb = Loc["Victory over %s"] },
+  loss   = { label = "Defeat",  color = { 0.90, 0.36, 0.30 }, verb = Loc["Fell to %s"] },
+  draw   = { label = Loc["Draw"],    color = { 0.80, 0.80, 0.80 }, verb = Loc["Fought %s to a standstill"] },
+  parley = { label = Loc["Parley"],  color = { 0.55, 0.74, 0.86 }, verb = Loc["Parleyed with %s"] },
 }
 
 local LOG_MAX, RECENT_WINDOW = 30, 40
@@ -224,13 +225,13 @@ local function OnDeath()
   local cr, cg, cb = UI.ClassColor(info.class)
   UI.Toast({
     icon = K.Art("IconDungeon"),
-    title = "You have fallen",
-    text = ("Was it |cff%s%s|r who brought you down?"):format(UI.Hex({ cr, cg, cb }), Short(foe)),
+    title = Loc["You have fallen"],
+    text = (Loc["Was it |cff%s%s|r who brought you down?"]):format(UI.Hex({ cr, cg, cb }), Short(foe)),
     color = W.OUTCOMES.loss.color,
     duration = 25,
     actions = {
-      { label = "Not them", fn = function() end },
-      { label = "Record defeat", fn = function() W:Record(foe, "loss", "Fell in battle", info) end },
+      { label = Loc["Not them"], fn = function() end },
+      { label = Loc["Record defeat"], fn = function() W:Record(foe, "loss", Loc["Fell in battle"], info) end },
     },
   })
 end
@@ -269,7 +270,7 @@ local function OnHonor(msg)
   for _, fmt in ipairs({ _G.COMBATLOG_HONORGAIN, _G.COMBATLOG_HONORGAIN_NO_RANK }) do
     local m = Match(msg, fmt)
     if m and m[1] then
-      W:Record(m[1], "win", "Honourable kill", nil, nil, "kill")
+      W:Record(m[1], "win", Loc["Honourable kill"], nil, nil, "kill")
       return
     end
   end
@@ -278,11 +279,11 @@ end
 local function OnSystem(msg)
   local m = Match(msg, _G.DUEL_WINNER_KNOCKOUT)
   local how = "Duel"
-  if not m then m = Match(msg, _G.DUEL_WINNER_RETREAT); how = "Duel (they fled)" end
+  if not m then m = Match(msg, _G.DUEL_WINNER_RETREAT); how = Loc["Duel (they fled)"] end
   if not m or not m[1] or not m[2] then return end
   local winner, loser = m[1], m[2]
   if IsMe(winner) then W:Record(loser, "win", how, nil, nil, "duel")
-  elseif IsMe(loser) then W:Record(winner, "loss", how == "Duel" and "Duel" or "Duel (you fled)", nil, nil, "duel") end
+  elseif IsMe(loser) then W:Record(winner, "loss", how == "Duel" and "Duel" or Loc["Duel (you fled)"], nil, nil, "duel") end
 end
 
 ---------------------------------------------------------------------------

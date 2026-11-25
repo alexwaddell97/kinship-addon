@@ -6,6 +6,7 @@
 --   Effects - timed wounds, boons and states (AurasTab.lua)
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local P   -- K.Persona, picked up when the page is built
@@ -102,14 +103,14 @@ local function SavePreset(name)
   if name == "" then return end
   local existed = K.db.glancePresets[name] ~= nil
   if K.Persona:SavePreset(name) then
-    UI.Toast({ icon = K.Art("IconNote"), title = existed and "Set updated" or "Set saved",
-      text = ("\"%s\" keeps these glances for any of your characters."):format(name), duration = 4 })
+    UI.Toast({ icon = K.Art("IconNote"), title = existed and Loc["Set updated"] or Loc["Set saved"],
+      text = (Loc["\"%s\" keeps these glances for any of your characters."]):format(name), duration = 4 })
   end
 end
 
 StaticPopupDialogs["KINSHIPRP_GLANCE_PRESET"] = {
-  text = "Name this set of glances:",
-  button1 = SAVE or "Save", button2 = CANCEL or "Cancel",
+  text = Loc["Name this set of glances:"],
+  button1 = SAVE or Loc["Save"], button2 = CANCEL or Loc["Cancel"],
   hasEditBox = true, maxLetters = 32,
   OnAccept = function(self)
     local eb = self.editBox or self.EditBox or (self.GetEditBox and self:GetEditBox())
@@ -124,17 +125,17 @@ local function SaveGlance(g)
   local ok, replaced = P:SaveToLibrary(g)
   if ok then
     Refresh()
-    UI.Toast({ icon = K.Art("IconNote"), title = replaced and "Saved glance updated" or "Glance saved",
-      text = "Add it to any profile, on any character, from Saved glances.", duration = 4 })
+    UI.Toast({ icon = K.Art("IconNote"), title = replaced and Loc["Saved glance updated"] or Loc["Glance saved"],
+      text = Loc["Add it to any profile, on any character, from Saved glances."], duration = 4 })
   elseif g and P.HasContent(g) then
-    K:Print(("Your saved glances are full (%d). Remove one to make room."):format(P.MAX_LIBRARY))
+    K:Print((Loc["Your saved glances are full (%d). Remove one to make room."]):format(P.MAX_LIBRARY))
   end
 end
 
 -- Adds a saved glance and selects it; false when all five are taken.
 local function UseSaved(c, e)
   local i = P:AddFromLibrary(e)
-  if not i then K:Print(("You already have %d glances. Remove one to make room."):format(P.MAX_GLANCES)) return false end
+  if not i then K:Print((Loc["You already have %d glances. Remove one to make room."]):format(P.MAX_GLANCES)) return false end
   c.gsel = i
   Refresh()
   return true
@@ -142,47 +143,47 @@ end
 
 local function SavedLabel(e)
   local t = strtrim(e.title or "")
-  return P.IconMarkup(e.icon, 16) .. "  " .. (t ~= "" and t or "Untitled")
+  return P.IconMarkup(e.icon, 16) .. "  " .. (t ~= "" and t or Loc["Untitled"])
 end
 
 local function PresetMenu(owner, c)
   UI.Menu(owner, function(root)
     -- Single glances, kept to reuse
-    root:CreateTitle("Saved glances")
+    root:CreateTitle(Loc["Saved glances"])
     local g = c.gsel and P:MyGlances()[c.gsel]
-    if g and P.HasContent(g) then root:CreateButton("Save this glance for reuse", function() SaveGlance(g) end) end
+    if g and P.HasContent(g) then root:CreateButton(Loc["Save this glance for reuse"], function() SaveGlance(g) end) end
     local lib = P:Library()
     if #lib == 0 then
-      root:CreateTitle("None saved yet")
+      root:CreateTitle(Loc["None saved yet"])
     else
       local full = #P:MyGlances() >= P.MAX_GLANCES
-      local add = root:CreateButton(full and "Add a saved glance (all five in use)" or "Add a saved glance")
+      local add = root:CreateButton(full and Loc["Add a saved glance (all five in use)"] or Loc["Add a saved glance"])
       for _, e in ipairs(lib) do add:CreateButton(SavedLabel(e), function() UseSaved(c, e) end) end
-      local del = root:CreateButton("Forget a saved glance")
+      local del = root:CreateButton(Loc["Forget a saved glance"])
       for _, e in ipairs(lib) do del:CreateButton(SavedLabel(e), function() P:RemoveFromLibrary(e); Refresh() end) end
     end
 
     -- Whole sets
     root:CreateDivider()
-    root:CreateTitle("Glance sets")
-    root:CreateButton("Save these glances as a set...", function() StaticPopup_Show("KINSHIPRP_GLANCE_PRESET") end)
+    root:CreateTitle(Loc["Glance sets"])
+    root:CreateButton(Loc["Save these glances as a set..."], function() StaticPopup_Show("KINSHIPRP_GLANCE_PRESET") end)
     local names = P:PresetNames()
     if #names == 0 then
-      root:CreateTitle("No sets saved yet")
+      root:CreateTitle(Loc["No sets saved yet"])
       return
     end
-    root:CreateTitle("Load a set (replaces your glances)")
+    root:CreateTitle(Loc["Load a set (replaces your glances)"])
     for _, name in ipairs(names) do
       root:CreateButton(name, function()
         if P:LoadPreset(name) then
           c.gsel = 1
-          UI.Toast({ icon = K.Art("IconNote"), title = "Glances loaded", text = ("From the set \"%s\"."):format(name), duration = 3 })
+          UI.Toast({ icon = K.Art("IconNote"), title = Loc["Glances loaded"], text = (Loc["From the set \"%s\"."]):format(name), duration = 3 })
           Refresh()
         end
       end)
     end
     root:CreateDivider()
-    local del = root:CreateButton("Delete a set")
+    local del = root:CreateButton(Loc["Delete a set"])
     for _, name in ipairs(names) do del:CreateButton(name, function() P:DeletePreset(name) end) end
   end)
 end
@@ -247,9 +248,9 @@ local function BuildSlot(tab, c, i)
       self.med:SetAlpha(on and 1 or 0.55)
       for _, l in ipairs(self.plus) do l:Hide() end
       local title = strtrim(g.title or "")
-      self.title:SetText(title ~= "" and title or "Untitled")
+      self.title:SetText(title ~= "" and title or Loc["Untitled"])
       self.title:SetTextColor(unpack(title ~= "" and t.heading or t.subtle))
-      self.chip:Set(not on and "Hidden" or nil, t.subtle)
+      self.chip:Set(not on and Loc["Hidden"] or nil, t.subtle)
     else
       local first = i == #P:MyGlances() + 1
       self.med:Show()
@@ -257,7 +258,7 @@ local function BuildSlot(tab, c, i)
       self.med.icon:SetTexture(nil)
       self.med:SetAlpha(1)
       for _, l in ipairs(self.plus) do l:Show(); l:SetVertexColor(a[1], a[2], a[3], (first and 0.7 or 0.35) + 0.3 * p) end
-      self.title:SetText(first and "Add a glance" or "Empty")
+      self.title:SetText(first and Loc["Add a glance"] or Loc["Empty"])
       self.title:SetTextColor(unpack(t.subtle))
       self.chip:Set(nil)
     end
@@ -292,9 +293,9 @@ local function BuildGlances(tab, c)
   tab.editor = e
   local function G() return tab.loaded end
 
-  e.head = UI.Section(e, "Glance")
+  e.head = UI.Section(e, Loc["Glance"])
   e.head:SetPoint("TOPLEFT", 21, -15)
-  e.active = UI.Toggle(e, "Show to others", nil,
+  e.active = UI.Toggle(e, Loc["Show to others"], nil,
     function() local g = G(); return g ~= nil and g.active ~= false end,
     function(v) local g = G(); if g then g.active = v; K:Fire("PROFILE") end end, 150, true)
   e.active:SetPoint("TOPRIGHT", -16, -12)
@@ -312,8 +313,8 @@ local function BuildGlances(tab, c)
   e.iconBtn:SetScript("OnEnter", function(self)
     UI.Tween(self, 1, 0.12, paintIcon)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Choose an icon", 1, 0.82, 0)
-    GameTooltip:AddLine("It shows on your target bar and in tooltips.", 1, 1, 1, true)
+    GameTooltip:SetText(Loc["Choose an icon"], 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["It shows on your target bar and in tooltips."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   e.iconBtn:SetScript("OnLeave", function(self) UI.Tween(self, 0, 0.15, paintIcon); GameTooltip:Hide() end)
@@ -324,15 +325,15 @@ local function BuildGlances(tab, c)
   end)
   UI:OnTheme(function() paintIcon(UI.Progress(e.iconBtn)) end)
 
-  e.title = UI.Field(e, "Title", EDIT_W - 100, P.MAX_TITLE, function(text)
+  e.title = UI.Field(e, Loc["Title"], EDIT_W - 100, P.MAX_TITLE, function(text)
     local g = G(); if g then g.title = text; K:Fire("PROFILE") end
   end)
   e.title:SetPoint("TOPLEFT", 84, -46)
-  e.titleHint = UI.Text(e, "A few words: \"Scarred hands\", \"Smells of pipe smoke\".", "Small", "subtle", EDIT_W - 100)
+  e.titleHint = UI.Text(e, Loc["A few words: \"Scarred hands\", \"Smells of pipe smoke\"."], "Small", "subtle", EDIT_W - 100)
   e.titleHint:SetPoint("TOPLEFT", 85, -90)
   e.titleHint:SetWordWrap(false)
 
-  local dl = UI.Text(e, "What people notice", "Label", "subtle")
+  local dl = UI.Text(e, Loc["What people notice"], "Label", "subtle")
   dl:SetPoint("TOPLEFT", 17, -118)
   e.count = UI.Text(e, "", "Label", "subtle")
   e.count:SetPoint("TOPRIGHT", -17, -118)
@@ -340,18 +341,18 @@ local function BuildGlances(tab, c)
     local g = G(); if g then g.text = text; K:Fire("PROFILE") end
   end)
   e.text:SetPoint("TOPLEFT", 16, -132)
-  e.textHint = UI.Text(e, "A sentence or two reads best: it's what someone sees in a moment, on a tooltip.",
+  e.textHint = UI.Text(e, Loc["A sentence or two reads best: it's what someone sees in a moment, on a tooltip."],
     "Small", "subtle", EDIT_W - 34)
   e.textHint:SetPoint("TOPLEFT", 17, -242)
   e.text.edit:HookScript("OnTextChanged", function(self) e.count:SetText(("%d / %d"):format(self:GetNumLetters(), P.MAX_TEXT)) end)
 
-  e.left = UI.Button(e, "Move left", 92, 24)
+  e.left = UI.Button(e, Loc["Move left"], 92, 24)
   e.left:SetPoint("BOTTOMLEFT", 16, 14)
   e.left:SetScript("OnClick", function() if c.gsel then c.gsel = P:MoveGlance(c.gsel, -1) end end)
-  e.right = UI.Button(e, "Move right", 96, 24)
+  e.right = UI.Button(e, Loc["Move right"], 96, 24)
   e.right:SetPoint("LEFT", e.left, "RIGHT", 6, 0)
   e.right:SetScript("OnClick", function() if c.gsel then c.gsel = P:MoveGlance(c.gsel, 1) end end)
-  e.remove = UI.Button(e, "Remove", 84, 24)
+  e.remove = UI.Button(e, Loc["Remove"], 84, 24)
   e.remove:SetPoint("BOTTOMRIGHT", -16, 14)
   e.remove:SetScript("OnClick", function()
     if not c.gsel then return end
@@ -359,17 +360,17 @@ local function BuildGlances(tab, c)
     c.gsel = math.max(1, i - 1)
     P:RemoveGlance(i)
   end)
-  UI.Tooltip(e.remove, "Remove this glance", "The others move along to fill the gap.")
-  e.save = UI.Button(e, "Save for reuse", 104, 24)
+  UI.Tooltip(e.remove, Loc["Remove this glance"], Loc["The others move along to fill the gap."])
+  e.save = UI.Button(e, Loc["Save for reuse"], 104, 24)
   e.save:SetPoint("RIGHT", e.remove, "LEFT", -6, 0)
   e.save:SetScript("OnClick", function() SaveGlance(G()) end)
-  UI.Tooltip(e.save, "Save for reuse", "Keeps a copy in Saved glances, so you can add it to any profile on any character.")
+  UI.Tooltip(e.save, Loc["Save for reuse"], Loc["Keeps a copy in Saved glances, so you can add it to any profile on any character."])
 
   e.body = { e.head, e.active, e.iconBtn, e.title, e.titleHint, dl, e.count, e.text, e.textHint,
     e.left, e.right, e.save, e.remove }
   e.empty = EmptyState(e, "IconNote",
-    "Add your first glance: something people notice the moment they see you. A scar, a scent, a sigil.", 320, 40)
-  e.add = UI.Button(e.empty, "Add a glance", 130, 26)
+    Loc["Add your first glance: something people notice the moment they see you. A scar, a scent, a sigil."], 320, 40)
+  e.add = UI.Button(e.empty, Loc["Add a glance"], 130, 26)
   e.add:SetPoint("TOP", e.empty.text, "BOTTOM", 0, -14)
   e.add:SetScript("OnClick", function()
     c.gsel = #P:MyGlances() + 1
@@ -377,11 +378,11 @@ local function BuildGlances(tab, c)
     Refresh()
     tab.editor.title.edit:SetFocus()
   end)
-  e.fromSaved = UI.Button(e.empty, "Add a saved glance", 150, 26)
+  e.fromSaved = UI.Button(e.empty, Loc["Add a saved glance"], 150, 26)
   e.fromSaved:SetPoint("TOP", e.add, "BOTTOM", 0, -6)
   e.fromSaved:SetScript("OnClick", function(self)
     UI.Menu(self, function(root)
-      root:CreateTitle("Saved glances")
+      root:CreateTitle(Loc["Saved glances"])
       for _, x in ipairs(P:Library()) do root:CreateButton(SavedLabel(x), function() UseSaved(c, x) end) end
     end)
   end)
@@ -391,7 +392,7 @@ local function BuildGlances(tab, c)
   pv:SetPoint("TOPLEFT", EDIT_W + 10, -(SLOT_H + 10))
   pv:SetSize(PREV_W, EDIT_H)
   tab.preview = pv
-  local ph = UI.Section(pv, "On the target bar")
+  local ph = UI.Section(pv, Loc["On the target bar"])
   ph:SetPoint("TOPLEFT", 21, -15)
 
   local bar = CreateFrame("Frame", nil, pv)
@@ -409,7 +410,7 @@ local function BuildGlances(tab, c)
     bar.edge:SetColor(unpack(t.chromeEdge))
     bar.line:SetVertexColor(t.ui[1], t.ui[2], t.ui[3], 0.45)
   end)
-  bar.none = UI.Text(bar, "Nothing showing yet", "Small", "deskSubtle")
+  bar.none = UI.Text(bar, Loc["Nothing showing yet"], "Small", "deskSubtle")
   bar.none:SetPoint("CENTER")
   bar.icons = {}
   for i = 1, 5 do
@@ -431,7 +432,7 @@ local function BuildGlances(tab, c)
   end
   tab.bar = bar
 
-  local th = UI.Section(pv, "When someone hovers")
+  local th = UI.Section(pv, Loc["When someone hovers"])
   th:SetPoint("TOPLEFT", 21, -102)
   local tip = TooltipBox(pv, PREV_W - 32)
   tip:SetPoint("TOPLEFT", 16, -124)
@@ -448,10 +449,10 @@ local function BuildGlances(tab, c)
   tip.text:SetSpacing(2)
   if tip.text.SetMaxLines then tip.text:SetMaxLines(7) end
   tab.tip = tip
-  tab.tipNone = UI.Text(pv, "Choose a glance to preview it.", "Small", "subtle", PREV_W - 32)
+  tab.tipNone = UI.Text(pv, Loc["Choose a glance to preview it."], "Small", "subtle", PREV_W - 32)
   tab.tipNone:SetPoint("TOPLEFT", 16, -126)
 
-  local foot = UI.Text(pv, "Total RP 3 and other roleplay addons show your glances too.", "Small", "subtle", PREV_W - 32)
+  local foot = UI.Text(pv, Loc["Total RP 3 and other roleplay addons show your glances too."], "Small", "subtle", PREV_W - 32)
   foot:SetPoint("BOTTOMLEFT", 16, 14)
   foot:SetSpacing(2)
 end
@@ -480,7 +481,7 @@ local function RefreshGlances(tab, c)
     if g then UI.FadeIn(e, 0.2) end
   end
   if g then
-    e.head:SetText(("Glance %d"):format(c.gsel))
+    e.head:SetText((Loc["Glance %d"]):format(c.gsel))
     e.head.bg:SetPoint("BOTTOMRIGHT", e.head, "BOTTOMRIGHT", 7, -4)
     P.SetIcon(e.med.icon, g.icon)
     if not e.title.edit:HasFocus() then e.title.edit:SetText(g.title or ""); e.title.edit:SetCursorPosition(0) end
@@ -512,9 +513,9 @@ local function RefreshGlances(tab, c)
   if g then
     P.SetIcon(tip.icon, g.icon)
     local title = strtrim(g.title or "")
-    tip.title:SetText(title ~= "" and title or "At first glance")
+    tip.title:SetText(title ~= "" and title or Loc["At first glance"])
     local text = strtrim(g.text or "")
-    tip.text:SetText(text ~= "" and text or "|cff8c8c8c(no description)|r")
+    tip.text:SetText(text ~= "" and text or Loc["|cff8c8c8c(no description)|r"])
     tip:SetHeight(math.min(150, math.ceil(40 + tip.text:GetStringHeight() + 12)))
     tip:SetAlpha(g.active == false and 0.55 or 1)
   end
@@ -545,8 +546,8 @@ local function SideButton(row, side)
   b:SetScript("OnEnter", function(self)
     self.ring:SetSize(28, 28)
     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-    GameTooltip:SetText((side == "left" and "Left" or "Right") .. " colour", 1, 0.82, 0)
-    GameTooltip:AddLine("Click to choose a colour. Right-click to go back to the default.", 1, 1, 1, true)
+    GameTooltip:SetText((side == "left" and Loc["Left"] or Loc["Right"]) .. " colour", 1, 0.82, 0)
+    GameTooltip:AddLine(Loc["Click to choose a colour. Right-click to go back to the default."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function(self) self.ring:SetSize(26, 26); GameTooltip:Hide() end)
@@ -712,7 +713,7 @@ local function BuildTraitRow(parent, _, i)
   row.remove = UI.CloseButton(row, true, 20)
   row.remove:SetPoint("LEFT", row.down, "RIGHT", 6, 0)
   row.remove:SetScript("OnClick", function() P:RemoveTrait(row.index) end)
-  UI.Tooltip(row.remove, "Remove this trait")
+  UI.Tooltip(row.remove, Loc["Remove this trait"])
   UI:OnTheme(function() if row.trait then PaintTraitRow(row, P.TraitValue(row.trait)) end end)
   row:Hide()
   return row
@@ -750,7 +751,7 @@ local function BuildPresetRow(parent, i, w)
     UI.Tween(self, 1, 0.1, paint)
     if self.taken then
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText(self.full and "You have ten traits" or "Already in your list", 1, 0.82, 0)
+      GameTooltip:SetText(self.full and Loc["You have ten traits"] or Loc["Already in your list"], 1, 0.82, 0)
       GameTooltip:Show()
     end
   end)
@@ -780,11 +781,11 @@ local function BuildTraits(tab, c)
   local L = UI.Panel(tab)
   L:SetPoint("TOPLEFT")
   L:SetSize(LIST_W, BODY_H)
-  local lh = UI.Section(L, "Your traits")
+  local lh = UI.Section(L, Loc["Your traits"])
   lh:SetPoint("TOPLEFT", 21, -15)
   tab.count = UI.Chip(L)
   tab.count:SetPoint("TOPRIGHT", -16, -12)
-  local hint = UI.Text(L, "Drag each slider toward the side that fits. Click a side's icon to change its colour.",
+  local hint = UI.Text(L, Loc["Drag each slider toward the side that fits. Click a side's icon to change its colour."],
     "Small", "subtle", LIST_W - 32)
   hint:SetPoint("TOPLEFT", 16, -40)
   hint:SetSpacing(2)
@@ -799,13 +800,13 @@ local function BuildTraits(tab, c)
   tab.rows = {}
   for i = 1, P.MAX_TRAITS do tab.rows[i] = BuildTraitRow(child, c, i) end
   tab.scroll = UI.ScrollBar(sf, false, ROW_H)
-  tab.empty = EmptyState(sf, "IconKin", "No traits yet. Pick a pair on the right, or make up your own.", 300, 34)
+  tab.empty = EmptyState(sf, "IconKin", Loc["No traits yet. Pick a pair on the right, or make up your own."], 300, 34)
 
   -- Adding -------------------------------------------------------------------
   local A = UI.Panel(tab)
   A:SetPoint("TOPLEFT", LIST_W + 10, 0)
   A:SetSize(ADD_W, BODY_H)
-  local ah = UI.Section(A, "Add a trait")
+  local ah = UI.Section(A, Loc["Add a trait"])
   ah:SetPoint("TOPLEFT", 21, -15)
   tab.presets = {}
   for i = 1, #P.TRAIT_PRESETS do
@@ -813,12 +814,12 @@ local function BuildTraits(tab, c)
     b:SetPoint("TOPLEFT", 16, -40 - (i - 1) * 24)
     tab.presets[i] = b
   end
-  local ch = UI.Section(A, "Your own pair")
+  local ch = UI.Section(A, Loc["Your own pair"])
   ch:SetPoint("TOPLEFT", 21, -320)
   local half = math.floor((ADD_W - 32 - 6) / 2)
-  tab.customL = HintEdit(A, half, "Left", 30)
+  tab.customL = HintEdit(A, half, Loc["Left"], 30)
   tab.customL:SetPoint("TOPLEFT", 16, -342)
-  tab.customR = HintEdit(A, half, "Right", 30)
+  tab.customR = HintEdit(A, half, Loc["Right"], 30)
   tab.customR:SetPoint("TOPLEFT", 16 + half + 6, -342)
   local function addCustom()
     if P:AddTrait(tab.customL:GetText(), tab.customR:GetText()) then
@@ -828,7 +829,7 @@ local function BuildTraits(tab, c)
   end
   tab.customL:SetScript("OnEnterPressed", function() tab.customR:SetFocus() end)
   tab.customR:SetScript("OnEnterPressed", addCustom)
-  tab.addCustom = UI.Button(A, "Add this pair", ADD_W - 32, 24)
+  tab.addCustom = UI.Button(A, Loc["Add this pair"], ADD_W - 32, 24)
   tab.addCustom:SetPoint("TOPLEFT", 16, -374)
   tab.addCustom:SetScript("OnClick", addCustom)
 end
@@ -836,7 +837,7 @@ end
 local function RefreshTraits(tab)
   local list = P:MyTraits()
   local n = math.min(#list, P.MAX_TRAITS)
-  tab.count:Set(("%d of %d"):format(n, P.MAX_TRAITS), K:Theme().accent)
+  tab.count:Set((Loc["%d of %d"]):format(n, P.MAX_TRAITS), K:Theme().accent)
   tab.child:SetHeight(math.max(1, n * ROW_H))
   for i, row in ipairs(tab.rows) do
     local trait = list[i]
@@ -891,7 +892,7 @@ local function BuildLook(tab)
   lc:SetPoint("TOPLEFT")
   lc:SetSize(LOOK_L, BODY_H)
   local IW = LOOK_L - 32
-  local h1 = UI.Section(lc, "Profile icon")
+  local h1 = UI.Section(lc, Loc["Profile icon"])
   h1:SetPoint("TOPLEFT", 21, -15)
 
   local ib = CreateFrame("Button", nil, lc)
@@ -912,19 +913,19 @@ local function BuildLook(tab)
   ib:SetScript("OnClick", function(self) pick(self) end)
   UI:OnTheme(function() paintIcon(UI.Progress(ib)) end)
   tab.iconBtn = ib
-  local it = UI.Text(lc, "Your emblem", "Header", "heading")
+  local it = UI.Text(lc, Loc["Your emblem"], "Header", "heading")
   it:SetPoint("TOPLEFT", 92, -44)
-  local idesc = UI.Text(lc, "Shown beside your name in tooltips, and to Total RP 3 users.", "Small", "subtle", IW - 76)
+  local idesc = UI.Text(lc, Loc["Shown beside your name in tooltips, and to Total RP 3 users."], "Small", "subtle", IW - 76)
   idesc:SetPoint("TOPLEFT", it, "BOTTOMLEFT", 0, -4)
   idesc:SetSpacing(2)
-  local change = UI.Button(lc, "Change...", 96, 24)
+  local change = UI.Button(lc, Loc["Change..."], 96, 24)
   change:SetPoint("TOPLEFT", 92, -98)
   change:SetScript("OnClick", function(self) pick(self) end)
-  tab.resetIcon = UI.Button(lc, "Reset", 70, 24)
+  tab.resetIcon = UI.Button(lc, Loc["Reset"], 70, 24)
   tab.resetIcon:SetPoint("LEFT", change, "RIGHT", 6, 0)
   tab.resetIcon:SetScript("OnClick", function() K:SetField("icon", nil) end)
 
-  local h2 = UI.Section(lc, "Name colour")
+  local h2 = UI.Section(lc, Loc["Name colour"])
   h2:SetPoint("TOPLEFT", 21, -140)
   tab.swatches = {}
   for i, col in ipairs(P.NAME_COLORS) do
@@ -952,7 +953,7 @@ local function BuildLook(tab)
     UI:OnTheme(function() s:Paint() end)
     tab.swatches[i] = s
   end
-  local custom = UI.Button(lc, "Custom...", 112, 24)
+  local custom = UI.Button(lc, Loc["Custom..."], 112, 24)
   custom:SetPoint("TOPLEFT", 196, -163)
   custom:SetScript("OnClick", function()
     local p = K:Profile()
@@ -961,12 +962,12 @@ local function BuildLook(tab)
     if not r then r, g, b = UI.ClassColor(select(2, UnitClass("player"))) end
     PickColor(r, g, b, function(nr, ng, nb) SetNameColor({ nr, ng, nb }) end, function() SetNameColor(old) end)
   end)
-  tab.noColor = UI.Button(lc, "Game colour", 112, 24)
+  tab.noColor = UI.Button(lc, Loc["Game colour"], 112, 24)
   tab.noColor:SetPoint("TOPLEFT", 196, -191)
   tab.noColor:SetScript("OnClick", function() SetNameColor(nil) end)
-  UI.Tooltip(tab.noColor, "Game colour", "Use the colour the game gives your name.")
+  UI.Tooltip(tab.noColor, Loc["Game colour"], Loc["Use the colour the game gives your name."])
 
-  local tl = UI.Text(lc, "In a tooltip", "Label", "subtle")
+  local tl = UI.Text(lc, Loc["In a tooltip"], "Label", "subtle")
   tl:SetPoint("TOPLEFT", 17, -228)
   local tip = TooltipBox(lc, IW)
   tip:SetPoint("TOPLEFT", 16, -244)
@@ -980,7 +981,7 @@ local function BuildLook(tab)
   tip.who:SetTextColor(0.75, 0.75, 0.75)
   tip.glances = UI.Text(tip, "", "Small", "plain", IW - 20)
   tab.tip = tip
-  local note = UI.Text(lc, "Your target bar and Total RP 3 users show your name in this colour too.", "Small", "subtle", IW)
+  local note = UI.Text(lc, Loc["Your target bar and Total RP 3 users show your name in this colour too."], "Small", "subtle", IW)
   note:SetPoint("BOTTOMLEFT", 16, 14)
   note:SetSpacing(2)
 
@@ -989,38 +990,38 @@ local function BuildLook(tab)
   rc:SetPoint("TOPLEFT", LOOK_L + 10, 0)
   rc:SetSize(LOOK_R, BODY_H)
   local RW = LOOK_R - 32
-  local h3 = UI.Section(rc, "Theme music")
+  local h3 = UI.Section(rc, Loc["Theme music"])
   h3:SetPoint("TOPLEFT", 21, -15)
-  local mdesc = UI.Text(rc, "A tune others can play from your target bar. Pick one below, search all the game's music, or enter a file ID.",
+  local mdesc = UI.Text(rc, Loc["A tune others can play from your target bar. Pick one below, search all the game's music, or enter a file ID."],
     "Small", "subtle", RW)
   mdesc:SetPoint("TOPLEFT", 16, -40)
   mdesc:SetSpacing(2)
-  tab.music = UI.Field(rc, "Music file ID", 130, 10, function(text)
+  tab.music = UI.Field(rc, Loc["Music file ID"], 130, 10, function(text)
     local n = tonumber(text)
     K:Profile().music = (n and n > 0) and math.floor(n) or nil
     K:Fire("PROFILE")
   end)
   tab.music:SetPoint("TOPLEFT", 16, -86)
-  tab.play = UI.Button(rc, "Play", 72, 24)
+  tab.play = UI.Button(rc, Loc["Play"], 72, 24)
   tab.play:SetPoint("TOPLEFT", 156, -99)
   tab.play:SetScript("OnClick", function() P:PlayMusic(P.Music(K:Profile())) end)
-  tab.stop = UI.Button(rc, "Stop", 72, 24)
+  tab.stop = UI.Button(rc, Loc["Stop"], 72, 24)
   tab.stop:SetPoint("LEFT", tab.play, "RIGHT", 6, 0)
   tab.stop:SetScript("OnClick", function() P:StopMusic() end)
   tab.status = UI.Text(rc, "", "Small", "accent", RW)
   tab.status:SetPoint("TOPLEFT", 16, -134)
   tab.status:SetWordWrap(false)
 
-  local h4 = UI.Section(rc, "Suggestions")
+  local h4 = UI.Section(rc, Loc["Suggestions"])
   h4:SetPoint("TOPLEFT", 21, -164)
   tab.musicHead = h4
-  tab.musicSearch = UI.Search(rc, 150, "Search all music", function(text)
+  tab.musicSearch = UI.Search(rc, 150, Loc["Search all music"], function(text)
     tab.musicQuery = text ~= "" and text or nil
     RefreshMusic(tab)
   end)
   tab.musicSearch:SetPoint("TOPRIGHT", -16, -158)
-  UI.Tooltip(tab.musicSearch, "Search all music", "Type part of a name, like " .. '"tavern", "forest" or "darkmoon"' .. ", to search every track in the game.")
-  tab.list = UI.List(rc, RW, BODY_H - 186 - 14, 38, "No suggestions are available on this client. A file ID still works.",
+  UI.Tooltip(tab.musicSearch, Loc["Search all music"], "Type part of a name, like " .. '"tavern", "forest" or "darkmoon"' .. ", to search every track in the game.")
+  tab.list = UI.List(rc, RW, BODY_H - 186 - 14, 38, Loc["No suggestions are available on this client. A file ID still works."],
     function(row)
       row.med = Medallion(row, 22, 2)
       row.med:SetPoint("LEFT", 6, 0)
@@ -1031,7 +1032,7 @@ local function BuildLook(tab)
       row.sub = UI.Text(row, "", "Small", "subtle", 150)
       row.sub:SetPoint("TOPLEFT", row.name, "BOTTOMLEFT", 0, -2)
       row.sub:SetWordWrap(false)
-      row.play = UI.Button(row, "Play", 54, 22)
+      row.play = UI.Button(row, Loc["Play"], 54, 22)
       row.play:SetPoint("RIGHT", -6, 0)
       row.play:SetScript("OnClick", function(self) P:ToggleMusic(self:GetParent().item.id) end)
       row.chip = UI.Chip(row)
@@ -1043,7 +1044,7 @@ local function BuildLook(tab)
       row.onEnter = function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(self.item.name, 1, 0.82, 0)
-        GameTooltip:AddLine(("Music file %d. Click to make it your theme."):format(self.item.id), 1, 1, 1, true)
+        GameTooltip:AddLine((Loc["Music file %d. Click to make it your theme."]):format(self.item.id), 1, 1, 1, true)
         GameTooltip:Show()
       end
     end, { bare = true, emptyIcon = K.Art("IconFire") })
@@ -1092,9 +1093,9 @@ local function RefreshLook(tab)
   tab.play:SetEnabled(mu ~= nil)
   tab.stop:SetEnabled(P.playing ~= nil)
   if P.playing then
-    tab.status:SetText("Now playing: " .. P.MusicLabel(P.playing))
+    tab.status:SetText(Loc["Now playing: "] .. P.MusicLabel(P.playing))
   elseif mu then
-    tab.status:SetText("Your theme: " .. P.MusicLabel(mu))
+    tab.status:SetText(Loc["Your theme: "] .. P.MusicLabel(mu))
   else
     tab.status:SetText("|cff" .. UI.Hex(t.subtle) .. "No theme yet.|r")
   end
@@ -1107,15 +1108,15 @@ function RefreshMusic(tab)
   local mu = P.Music(p)
   local q = tab.musicQuery
   local items = q and P.SearchMusic(q) or P.MUSIC
-  tab.musicHead:SetText(q and ((#items == 1 and "1 track" or (#items .. " tracks")) .. " found") or "Suggestions")
-  tab.list.empty:SetText(q and "No music matches that. Try a shorter word."
-    or "No suggestions are available on this client. A file ID still works.")
+  tab.musicHead:SetText(q and ((#items == 1 and "1 track" or (#items .. " tracks")) .. " found") or Loc["Suggestions"])
+  tab.list.empty:SetText(q and Loc["No music matches that. Try a shorter word."]
+    or Loc["No suggestions are available on this client. A file ID still works."])
   tab.list:SetItems(items, function(row, m)
     row.name:SetText(m.name)
-    row.sub:SetText(P.FormatTime(m.time) .. "  ·  file " .. m.id)
+    row.sub:SetText(P.FormatTime(m.time) .. Loc["  ·  file "] .. m.id)
     local mine = mu == m.id
-    row.chip:Set(mine and "Your theme" or nil, t.accent)
-    row.play:SetText(P.playing == m.id and "Stop" or "Play")
+    row.chip:Set(mine and Loc["Your theme"] or nil, t.accent)
+    row.play:SetText(P.playing == m.id and Loc["Stop"] or Loc["Play"])
     row.sel:SetShown(mine)
     -- The name and its line stop short of the buttons (and the chip, when shown).
     local rw = row:GetWidth()
@@ -1130,35 +1131,36 @@ end
 -- The page
 ---------------------------------------------------------------------------
 K:RegisterPage({
-  id = "persona", title = "Persona", heading = "Persona", group = "You",
+  id = "persona", title = Loc["Persona"], heading = Loc["Persona"], group = "You",
   guide = function(c)
     if c.tab == c.compTab and K.Guide and K.Guide.PageGuide then return K.Guide.PageGuide("companions"), c.frames[c.compTab] end
   end,
-  subtitle = "Glances, traits, effects and the look of your character at first sight.",
+  subtitle = Loc["Glances, traits, effects and the look of your character at first sight."],
   icon = { "Interface\\Icons\\Ability_Hunter_EagleEye", round = true },
 
   build = function(c)
     P = K.Persona
     c.tab = 1
-    local names, keys = { "Glances", "Traits", "Look" }, { "glances", "traits", "look" }
-    if K.Auras then names[4], keys[4] = "Effects", "effects" end
-    names[#names + 1], keys[#keys + 1] = "Companions", "companions"
+    local names, keys = { Loc["Glances"], Loc["Traits"], Loc["Look"] }, { "glances", "traits", "look" }
+    if K.Auras then names[4], keys[4] = Loc["Effects"], "effects" end
+    names[#names + 1], keys[#keys + 1] = Loc["Companions"], "companions"
     c.compTab, c.tabKeys = #names, keys
     c.tabs = UI.TabBar(c, names, function(i) c.tab = i; Refresh() end, true)
     c.tabs:SetPoint("TOPLEFT", -10, 2)
-    c.preview = UI.Button(c, "Preview profile", 130, 24)
+    c.tabs.maxWidth = CW + 10 - 2 * 130 - 6 - 12   -- clear of the two buttons on the right
+    c.preview = UI.Button(c, Loc["Preview profile"], 130, 24)
     c.preview:SetPoint("TOPRIGHT", 0, 0)
     c.preview:SetScript("OnClick", function() K.Viewer:ShowSelf() end)
     if K:Compat() then
-      c.preview:SetText("Kinship preview")
-      UI.Tooltip(c.preview, "Kinship preview", "Your stage, what you wear and your effects, the way other Kinship users see them.")
+      c.preview:SetText(Loc["Kinship preview"])
+      UI.Tooltip(c.preview, Loc["Kinship preview"], Loc["Your stage, what you wear and your effects, the way other Kinship users see them."])
     else
-      UI.Tooltip(c.preview, "Preview", "See your profile the way other players will.")
+      UI.Tooltip(c.preview, Loc["Preview"], Loc["See your profile the way other players will."])
     end
-    c.presets = UI.Button(c, "Saved glances", 130, 24)
+    c.presets = UI.Button(c, Loc["Saved glances"], 130, 24)
     c.presets:SetPoint("RIGHT", c.preview, "LEFT", -6, 0)
     c.presets:SetScript("OnClick", function(self) PresetMenu(self, c) end)
-    UI.Tooltip(c.presets, "Saved glances", "Keep single glances to add to any profile, or save all five as a set "
+    UI.Tooltip(c.presets, Loc["Saved glances"], "Keep single glances to add to any profile, or save all five as a set "
       .. "and swap between sets, on any character.")
     c.frames = {}
     for i = 1, #names do

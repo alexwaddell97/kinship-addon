@@ -1,6 +1,7 @@
 -- Kinship RP: tooltips, right-click menus and the status button.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -59,7 +60,7 @@ local function IsDeveloper(name)
   return key ~= nil and DEVELOPERS[(key:gsub("%-.*$", ""))] == true
 end
 local function AddDeveloperLine(tooltip, name)
-  if IsDeveloper(name) then tooltip:AddLine(("|T%s:14:14|t Kinship developer"):format(K.ICON), 0.62, 0.90, 0.84) end
+  if IsDeveloper(name) then tooltip:AddLine((Loc["|T%s:14:14|t Kinship developer"]):format(K.ICON), 0.62, 0.90, 0.84) end
 end
 
 local function AddProfileLines(tooltip, name, p, other)
@@ -116,7 +117,7 @@ local function AddProfileLines(tooltip, name, p, other)
     local h = K.db.houses[strtrim(p.house):lower()]
     local crest = p.crest or (h and h.crest) or "Interface\\Icons\\INV_Shield_05"
     local family = other and K:HouseKey() == strtrim(p.house):lower() and K:HouseState(name) == "recognised"
-    tooltip:AddLine(("|T%s:14:14|t of House %s%s"):format(crest, strtrim(UI.Clean(p.house)), family and "  |cff5fd35f(your house)|r" or ""),
+    tooltip:AddLine((Loc["|T%s:14:14|t of House %s%s"]):format(crest, strtrim(UI.Clean(p.house)), family and Loc["  |cff5fd35f(your house)|r"] or ""),
       0.94, 0.82, 0.54)
   end
   local group = strtrim(C(p.group))
@@ -126,12 +127,12 @@ local function AddProfileLines(tooltip, name, p, other)
     local role = strtrim(C(p.groupRole))
     local ours = other and K:GroupKey() == group:lower() and K:GroupState(name) == "recognised"
     tooltip:AddLine(("|T%s:14:14|t %s%s%s"):format(crest, role ~= "" and (role .. ", ") or "", group,
-      ours and "  |cff5fd35f(your group)|r" or ""), 0.94, 0.82, 0.54)
+      ours and Loc["  |cff5fd35f(your group)|r"] or ""), 0.94, 0.82, 0.54)
   end
   if hasConsent then tooltip:AddLine(table.concat(words, "  ·  ")) end
   if currently ~= "" or ooc ~= "" then tooltip:AddLine(" ") end
   if currently ~= "" then tooltip:AddLine("\"" .. currently .. "\"", 0.85, 0.85, 0.85, true) end
-  if ooc ~= "" then tooltip:AddLine("|cff8c8c8cOOC:|r " .. ooc, 0.65, 0.65, 0.65, true) end
+  if ooc ~= "" then tooltip:AddLine(Loc["|cff8c8c8cOOC:|r "] .. ooc, 0.65, 0.65, 0.65, true) end
 end
 
 local function OnUnitTooltip(tooltip)
@@ -147,7 +148,7 @@ local function OnUnitTooltip(tooltip)
     if tip.full then
       if tooltip.SetMinimumWidth then tooltip:SetMinimumWidth(FULL_WIDTH); tip.widened = true end
     elseif tip.more then
-      tooltip:AddLine("Hold Shift for more", 0.50, 0.50, 0.50)
+      tooltip:AddLine(Loc["Hold Shift for more"], 0.50, 0.50, 0.50)
     end
     tooltip:Show()
   end
@@ -168,7 +169,7 @@ local function OnUnitTooltip(tooltip)
     tip.more = true
   elseif e then
     local m = e.met or {}
-    tooltip:AddLine(("|T%s:14:14|t %s - met in %s, level %d"):format(K.ICON, K.RelationLabel(e.rel), m.place or "?", m.level or 0),
+    tooltip:AddLine((Loc["|T%s:14:14|t %s - met in %s, level %d"]):format(K.ICON, K.RelationLabel(e.rel), m.place or "?", m.level or 0),
       0.80, 0.71, 0.51)
   end
   -- Your history with them (works for the other faction too: it's your own record)
@@ -179,7 +180,7 @@ local function OnUnitTooltip(tooltip)
       local g = W.Grudge(r.grudge)
       local gc = g and g.color or { 0.85, 0.85, 0.85 }
       local fought = (r.wins or 0) + (r.losses or 0) > 0
-      tooltip:AddLine(("|T%s:14:14|t |cff%s%s|r%s"):format(K.Art("IconDungeon"), UI.Hex(gc), g and g.label or "Rival",
+      tooltip:AddLine(("|T%s:14:14|t |cff%s%s|r%s"):format(K.Art("IconDungeon"), UI.Hex(gc), g and g.label or Loc["Rival"],
         fought and ("   " .. W:Tally(r)) or ""), 0.85, 0.85, 0.85)
     end
   end
@@ -243,24 +244,24 @@ local function SetupMenus()
 
     root:CreateDivider()
     root:CreateTitle(("|T%s:14:14|t Kinship"):format(K.ICON))
-    root:CreateButton(isMe and "View my profile" or "View roleplay profile", function()
+    root:CreateButton(isMe and Loc["View my profile"] or Loc["View roleplay profile"], function()
       if isMe then K:ViewProfile() else K:ViewProfile(name, ctx.unit) end
     end)
     if not isMe then
-      root:CreateButton("Write a letter", function() K.Letters:Compose(name) end)
-      if K.Relations then K.Relations:FillMenu(root:CreateButton("Relationship"), name) end
+      root:CreateButton(Loc["Write a letter"], function() K.Letters:Compose(name) end)
+      if K.Relations then K.Relations:FillMenu(root:CreateButton(Loc["Relationship"]), name) end
       if K.Safety and not K:IsIgnored(name) then
-        root:CreateButton("Ignore profile...", function() K.Safety:ConfirmIgnore(name) end)
+        root:CreateButton(Loc["Ignore profile..."], function() K.Safety:ConfirmIgnore(name) end)
       end
       local e = K:KinFor(name)
       if e then
         if not K.Relations then
-          root:CreateButton("Bond: " .. K.RelationLabel(e.rel) .. "...", function() K.Journal:Open("kin") end)
+          root:CreateButton(Loc["Bond: "] .. K.RelationLabel(e.rel) .. "...", function() K.Journal:Open("kin") end)
         end
       else
-        root:CreateButton("Add to Kin", function()
+        root:CreateButton(Loc["Add to Kin"], function()
           if ctx.unit and UnitExists(ctx.unit) then K:MeetUnit(ctx.unit, "manual") else K:AddKinByName(name) end
-          K:Print("Added " .. name .. " to your Kin.")
+          K:Print(Loc["Added "] .. name .. Loc[" to your Kin."])
         end)
       end
     end
@@ -330,9 +331,9 @@ function SB:Build()
     GameTooltip:SetText(("|T%s:14:14|t Kinship"):format(K.ICON))
     GameTooltip:AddLine(s.label, unpack(s.color))
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine("Click: change status", 0.8, 0.8, 0.8)
-    GameTooltip:AddLine("Right-click: open your journal", 0.8, 0.8, 0.8)
-    GameTooltip:AddLine("Shift+drag: move", 0.8, 0.8, 0.8)
+    GameTooltip:AddLine(Loc["Click: change status"], 0.8, 0.8, 0.8)
+    GameTooltip:AddLine(Loc["Right-click: open your journal"], 0.8, 0.8, 0.8)
+    GameTooltip:AddLine(Loc["Shift+drag: move"], 0.8, 0.8, 0.8)
     GameTooltip:Show()
   end)
   b:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -370,8 +371,8 @@ local function MinimapButton()
     end,
     OnTooltipShow = function(tt)
       tt:AddLine("Kinship", 1, 0.82, 0)
-      tt:AddLine("Click to open your journal.", 1, 1, 1)
-      tt:AddLine("Right-click for Settings.", 0.62, 0.62, 0.62)
+      tt:AddLine(Loc["Click to open your journal."], 1, 1, 1)
+      tt:AddLine(Loc["Right-click for Settings."], 0.62, 0.62, 0.62)
     end,
   })
   if obj then icon:Register("KinshipRP", obj, K.db.minimap) end
@@ -435,14 +436,14 @@ K:On("PROFILE", function() SB:Update() end)
 function KinshipRP_DiceKey() if K.Dice then K.Dice:Toggle() end end
 function KinshipRP_StatusKey()
   K:CycleStatus()
-  K:Print("Status: " .. K.STATUS[K:Profile().status].label)
+  K:Print(Loc["Status: "] .. K.STATUS[K:Profile().status].label)
 end
 function KinshipRP_ViewKey()
   K:ViewUnitProfile("target")
 end
-_G["BINDING_NAME_KINSHIPRP_DICE"] = "Dice tray"
-_G["BINDING_NAME_KINSHIPRP_STATUS"] = "Cycle IC / LFRP / OOC"
-_G["BINDING_NAME_KINSHIPRP_VIEW"] = "View your target's profile"
+_G["BINDING_NAME_KINSHIPRP_DICE"] = Loc["Dice tray"]
+_G["BINDING_NAME_KINSHIPRP_STATUS"] = Loc["Cycle IC / LFRP / OOC"]
+_G["BINDING_NAME_KINSHIPRP_VIEW"] = Loc["View your target's profile"]
 
 -- Getting round Kinship's windows from the keyboard (or a controller set up
 -- outside the game): each acts on the Kinship window in front. With a
@@ -480,21 +481,21 @@ function KinshipRP_CloseKey()
   local win = K.UI.FrontWindow()
   if win then win:Hide() end
 end
-_G["BINDING_NAME_KINSHIPRP_PAGENEXT"] = "Journal: next page"
-_G["BINDING_NAME_KINSHIPRP_PAGEPREV"] = "Journal: previous page"
-_G["BINDING_NAME_KINSHIPRP_TABNEXT"] = "Next tab"
-_G["BINDING_NAME_KINSHIPRP_TABPREV"] = "Previous tab"
-_G["BINDING_NAME_KINSHIPRP_SCROLLDOWN"] = "Scroll down"
-_G["BINDING_NAME_KINSHIPRP_SCROLLUP"] = "Scroll up"
-_G["BINDING_NAME_KINSHIPRP_CLOSE"] = "Close the Kinship window in front"
+_G["BINDING_NAME_KINSHIPRP_PAGENEXT"] = Loc["Journal: next page"]
+_G["BINDING_NAME_KINSHIPRP_PAGEPREV"] = Loc["Journal: previous page"]
+_G["BINDING_NAME_KINSHIPRP_TABNEXT"] = Loc["Next tab"]
+_G["BINDING_NAME_KINSHIPRP_TABPREV"] = Loc["Previous tab"]
+_G["BINDING_NAME_KINSHIPRP_SCROLLDOWN"] = Loc["Scroll down"]
+_G["BINDING_NAME_KINSHIPRP_SCROLLUP"] = Loc["Scroll up"]
+_G["BINDING_NAME_KINSHIPRP_CLOSE"] = Loc["Close the Kinship window in front"]
 
 ---------------------------------------------------------------------------
 -- Settings
 ---------------------------------------------------------------------------
-K:RegisterSettings({ id = "menus", title = "Right-click menus", order = 14,
+K:RegisterSettings({ id = "menus", title = Loc["Right-click menus"], order = 14,
   keywords = "context menu right click gamepad controller handheld steam deck freeze", build = function(card)
-  card:Segments("Kinship in players' right-click menus", {
-    { key = "auto", label = "Auto" }, { key = "on", label = "On" }, { key = "off", label = "Off" },
+  card:Segments(Loc["Kinship in players' right-click menus"], {
+    { key = "auto", label = Loc["Auto"] }, { key = "on", label = Loc["On"] }, { key = "off", label = Loc["Off"] },
   }, function() return K:MenusMode() end,
   function(v) K.db.settings.playerMenus = v ~= "auto" and v or nil end, 70)
   card:Note("Auto leaves Kinship out of the menu while a gamepad is turned on, because the gamepad interface can freeze "
@@ -502,12 +503,12 @@ K:RegisterSettings({ id = "menus", title = "Right-click menus", order = 14,
     .. "Key Bindings > AddOns > Kinship RP.")
 end })
 
-K:RegisterSettings({ id = "tooltips", trp3 = "hide", title = "Tooltips", order = 13,
+K:RegisterSettings({ id = "tooltips", trp3 = "hide", title = Loc["Tooltips"], order = 13,
   keywords = "mouseover hover shift short full detail crowded", build = function(card)
-  card:Segments("When you mouse over a player", {
-    { key = "short", label = "Short" },
-    { key = "full", label = "Everything" },
+  card:Segments(Loc["When you mouse over a player"], {
+    { key = "short", label = Loc["Short"] },
+    { key = "full", label = Loc["Everything"] },
   }, function() return K.Settings().tooltipDetail == "full" and "full" or "short" end,
   function(v) K.Settings().tooltipDetail = v == "full" and "full" or nil end, 100)
-  card:Note("Short shows a player's name, status and what they're doing. Hold Shift to see the rest, such as house, group, consent, OOC notes, effects and your own notes.")
+  card:Note(Loc["Short shows a player's name, status and what they're doing. Hold Shift to see the rest, such as house, group, consent, OOC notes, effects and your own notes."])
 end })

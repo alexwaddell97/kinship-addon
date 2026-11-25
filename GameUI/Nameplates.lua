@@ -10,6 +10,7 @@
 -- dungeons and raids, where plates are protected and profiles can't travel.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local Safe = K.Safe
@@ -535,9 +536,9 @@ function P:Preview()
     f:SetScript("OnDragStart", f.StartMoving)
     f:SetScript("OnDragStop", f.StopMovingOrSizing)
     self.preview = f
-    local head = UI.Text(f, "Nameplate preview", "Header", "heading")
+    local head = UI.Text(f, Loc["Nameplate preview"], "Header", "heading")
     head:SetPoint("TOPLEFT", 14, -12)
-    local note = UI.Text(f, "Samples drawn the way real plates are, with your settings. Change them in Settings > Nameplates.",
+    local note = UI.Text(f, Loc["Samples drawn the way real plates are, with your settings. Change them in Settings > Nameplates."],
       "Small", "subtle", 520)
     note:SetPoint("BOTTOMLEFT", 14, 10)
     local close = UI.CloseButton(f, true)
@@ -566,13 +567,13 @@ function P:Preview()
     local kin = Badge(f, K.Art("IconKin"))
     kin.ring:SetVertexColor(KIN_COLOR[1], KIN_COLOR[2], KIN_COLOR[3], 0.95)
     kin:Show()
-    item(kin, "Kin (ring: your bond)")
+    item(kin, Loc["Kin (ring: your bond)"])
     local rival = Badge(f, K.Art("IconDungeon"))
     local g = K.War and K.War.Grudge("rival")
     local gc = g and g.color or { 0.95, 0.76, 0.36 }
     rival.ring:SetVertexColor(gc[1], gc[2], gc[3], 0.95)
     rival:Show()
-    item(rival, "Rival (ring: your standing)")
+    item(rival, Loc["Rival (ring: your standing)"])
   end
   f:Show()
   self:PaintPreview()
@@ -690,7 +691,7 @@ function P:Describe()
   local ok = UI.Hex(K:Theme().accent)
   local warn = UI.CardHex and UI.CardHex({ 0.92, 0.56, 0.30 }) or "b0602a"
   if not s or not s.plates then
-    return "Off. Every nameplate is left as the game draws it."
+    return Loc["Off. Every nameplate is left as the game draws it."]
   end
   local mode, label = self:DetectMode()
   self.mode, self.modeLabel = mode, label
@@ -699,41 +700,41 @@ function P:Describe()
     text = ("|cff%s%s is drawing friendly nameplates,|r so Kinship stays out of its way. "
       .. "Switch off its friendly player plates to see roleplay names here."):format(warn, label)
   else
-    local which = mode == "ellesmere" and ("|cff%sOn, with %s.|r "):format(ok, label)
-      or ("|cff%sOn, with the game's own nameplates.|r "):format(ok)
-    local under = s.platesBrackets ~= false and "the character's name becomes \"(Name)\" where the plate had it"
-      or "the plate's own name stays underneath"
-    text = which .. "The roleplay name sits above and " .. under .. "."
-    if mode == "ellesmere" then text = text .. " EllesmereUI's sizes, bars and colours stay as you set them." end
+    local which = mode == "ellesmere" and (Loc["|cff%sOn, with %s.|r "]):format(ok, label)
+      or (Loc["|cff%sOn, with the game's own nameplates.|r "]):format(ok)
+    local under = s.platesBrackets ~= false and Loc["the character's name becomes \"(Name)\" where the plate had it"]
+      or Loc["the plate's own name stays underneath"]
+    text = which .. Loc["The roleplay name sits above and "] .. under .. "."
+    if mode == "ellesmere" then text = text .. Loc[" EllesmereUI's sizes, bars and colours stay as you set them."] end
     local okC, shown = pcall(function() return C_CVar.GetCVarBool("nameplateShowFriends") end)
     if okC and shown == false then
-      text = text .. (" |cff%sFriendly player nameplates are off in the game: Ctrl+Shift+V shows them.|r"):format(warn)
+      text = text .. (Loc[" |cff%sFriendly player nameplates are off in the game: Ctrl+Shift+V shows them.|r"]):format(warn)
     end
   end
-  return text .. " Names step aside in dungeons and raids, where profiles can't travel."
+  return text .. Loc[" Names step aside in dungeons and raids, where profiles can't travel."]
 end
 
-K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = "Nameplates", order = 15, build = function(card)
+K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = Loc["Nameplates"], order = 15, build = function(card)
   local function opt(key)
     return {
       get = function() return S()[key] and true or false end,
       set = function(v) S()[key] = v; P:RefreshAll() end,
     }
   end
-  card:Toggle("Roleplay nameplates", "Shows roleplay names on nameplates, with a dot for IC, LFRP or OOC and the options below. When off, nameplates look as normal.", opt("plates"))
-  card:Toggle("Players' own name colours", "Shows each roleplay name in the colour its player picked, on nameplates, unit frames and in chat. Very dark colours are lightened. When off, all roleplay names are gold.", {
+  card:Toggle(Loc["Roleplay nameplates"], Loc["Shows roleplay names on nameplates, with a dot for IC, LFRP or OOC and the options below. When off, nameplates look as normal."], opt("plates"))
+  card:Toggle(Loc["Players' own name colours"], "Shows each roleplay name in the colour its player picked, on nameplates, unit frames and in chat. Very dark colours are lightened. When off, all roleplay names are gold.", {
     get = function() return S().ownNameColors ~= false end,
     set = function(v)
       S().ownNameColors = v; P:RefreshAll()
       if K.UnitNames then K.UnitNames:Refresh() end
     end,
   })
-  card:Toggle("Character name in brackets", "Shows the character name in grey brackets under the roleplay name.", opt("platesBrackets"))
-  card:Toggle("Kin and rival marks", "Adds a small icon after the names of your Kin and rivals. Rivals are marked on enemy nameplates too.", opt("platesIcons"))
-  card:Toggle("Show epithets", "Shows epithets, like \"the Wandering Blade\", under the name. Titles like \"Lord\" always show.", opt("platesTitles"))
-  card:Toggle("Show out-of-character players", "When off, players set to OOC show their normal name.", opt("platesOOC"))
-  card:Toggle("Hide in combat", "Shows normal names while you're in combat.", opt("platesCombat"))
-  card:Toggle("Colour by relationship", "Colours the ring around the status dot by your relationship with them.", opt("platesRelation"))
+  card:Toggle(Loc["Character name in brackets"], Loc["Shows the character name in grey brackets under the roleplay name."], opt("platesBrackets"))
+  card:Toggle(Loc["Kin and rival marks"], Loc["Adds a small icon after the names of your Kin and rivals. Rivals are marked on enemy nameplates too."], opt("platesIcons"))
+  card:Toggle(Loc["Show epithets"], Loc["Shows epithets, like \"the Wandering Blade\", under the name. Titles like \"Lord\" always show."], opt("platesTitles"))
+  card:Toggle(Loc["Show out-of-character players"], Loc["When off, players set to OOC show their normal name."], opt("platesOOC"))
+  card:Toggle(Loc["Hide in combat"], Loc["Shows normal names while you're in combat."], opt("platesCombat"))
+  card:Toggle(Loc["Colour by relationship"], Loc["Colours the ring around the status dot by your relationship with them."], opt("platesRelation"))
   local note = card:Note("", 70)
   card:OnRefresh(function()
     note:SetText(P:Describe())

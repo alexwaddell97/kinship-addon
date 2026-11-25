@@ -7,6 +7,7 @@
 --   profile.rpExp = "new" | "casual" | "experienced" | "mentor" | nil
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local X = {}
@@ -14,18 +15,18 @@ K.Experience = X
 
 X.ORDER = { "new", "casual", "experienced", "mentor" }
 X.LEVELS = {
-  new = { label = "New to roleplay", short = "New to RP", icon = "Interface\\Icons\\INV_Misc_Flower_02",
-          color = { 0.55, 0.85, 0.45 }, fr = "1", tip = "New to roleplay: be welcoming",
-          desc = "Still finding your feet. Others will know to be patient and kind." },
-  casual = { label = "Casual roleplayer", short = "Casual", icon = "Interface\\Icons\\INV_Drink_05",
+  new = { label = Loc["New to roleplay"], short = Loc["New to RP"], icon = "Interface\\Icons\\INV_Misc_Flower_02",
+          color = { 0.55, 0.85, 0.45 }, fr = "1", tip = Loc["New to roleplay: be welcoming"],
+          desc = Loc["Still finding your feet. Others will know to be patient and kind."] },
+  casual = { label = Loc["Casual roleplayer"], short = Loc["Casual"], icon = "Interface\\Icons\\INV_Drink_05",
           color = { 0.80, 0.76, 0.62 }, fr = "2",
-          desc = "You roleplay now and then, when the mood takes you." },
-  experienced = { label = "Experienced roleplayer", short = "Experienced", icon = "Interface\\Icons\\INV_Misc_Book_09",
+          desc = Loc["You roleplay now and then, when the mood takes you."] },
+  experienced = { label = Loc["Experienced roleplayer"], short = Loc["Experienced"], icon = "Interface\\Icons\\INV_Misc_Book_09",
           color = { 0.62, 0.76, 0.96 }, fr = "3",
-          desc = "At home in long scenes, plots and making it up as you go." },
-  mentor = { label = "Happy to help newcomers", short = "Helper", icon = "Interface\\Icons\\Spell_Holy_SealOfWisdom",
-          color = { 0.95, 0.80, 0.40 }, fr = "4", tip = "Happy to help new roleplayers",
-          desc = "Experienced, and glad to show new roleplayers the ropes. They can find you." },
+          desc = Loc["At home in long scenes, plots and making it up as you go."] },
+  mentor = { label = Loc["Happy to help newcomers"], short = Loc["Helper"], icon = "Interface\\Icons\\Spell_Holy_SealOfWisdom",
+          color = { 0.95, 0.80, 0.40 }, fr = "4", tip = Loc["Happy to help new roleplayers"],
+          desc = Loc["Experienced, and glad to show new roleplayers the ropes. They can find you."] },
 }
 -- FR as Total RP 3 (and MyRolePlay, it notes) use it: 1 newcomer, 2 casual,
 -- 3 veteran, 4 newcomer guide (happy to help).
@@ -69,14 +70,14 @@ end
 local function Welcome(key)
   if key == "new" then
     UI.Toast({ icon = X.LEVELS.new.icon, round = true, duration = 10, color = X.LEVELS.new.color,
-      title = "Welcome to roleplay!",
+      title = Loc["Welcome to roleplay!"],
       text = "Players marked \"Happy to help newcomers\" (a gold seal in their tooltip) are glad to show you around. "
         .. "Find them in the Directory under RP help.",
       onClick = function() K.Journal:Open("directory") end })
   elseif key == "mentor" then
     UI.Toast({ icon = X.LEVELS.mentor.icon, round = true, duration = 8, color = X.LEVELS.mentor.color,
-      title = "Thank you!",
-      text = "New roleplayers show a green sprout in their tooltip, and can find you in the Directory under RP help." })
+      title = Loc["Thank you!"],
+      text = Loc["New roleplayers show a green sprout in their tooltip, and can find you in the Directory under RP help."] })
   end
 end
 
@@ -86,9 +87,9 @@ local function Build(host)
   local m = UI.Modal(host, 540, 340, function() X.asker:Done(nil) end)
   X.asker = m
   local card = m.card
-  local head = UI.Section(card, "One quick question")
+  local head = UI.Section(card, Loc["One quick question"])
   head:SetPoint("TOPLEFT", 21, -15)
-  local title = UI.Text(card, "How much have you roleplayed?", "Title", "text", 500)
+  local title = UI.Text(card, Loc["How much have you roleplayed?"], "Title", "text", 500)
   title:SetPoint("TOPLEFT", 20, -42)
   local sub = UI.Text(card, "It shows on your profile, so others know what to expect. There's no wrong answer, "
     .. "and you can change it any time on your Profile page.", "Small", "subtle", 500)
@@ -137,10 +138,10 @@ local function Build(host)
     m.cards[i] = b
   end
 
-  local skip = UI.Button(card, "Skip for now", 120, 26)
+  local skip = UI.Button(card, Loc["Skip for now"], 120, 26)
   skip:SetPoint("BOTTOMRIGHT", -16, 14)
   skip:SetScript("OnClick", function() m:Done(nil) end)
-  local note = UI.Text(card, "New here? Pick the first one: people will know to take it gently.", "Small", "subtle", 360)
+  local note = UI.Text(card, Loc["New here? Pick the first one: people will know to take it gently."], "Small", "subtle", 360)
   note:SetPoint("BOTTOMLEFT", 20, 22)
 
   function m:Done(key)
@@ -166,17 +167,17 @@ end
 ---------------------------------------------------------------------------
 function X:Menu(owner)
   UI.Menu(owner, function(root)
-    root:CreateTitle("Roleplay experience")
+    root:CreateTitle(Loc["Roleplay experience"])
     for _, key in ipairs(X.ORDER) do
       root:CreateRadio(X.LEVELS[key].label, function() return K:Profile().rpExp == key end, function() X:Set(key) end)
     end
-    root:CreateRadio("Rather not say", function() return K:Profile().rpExp == nil end, function() X:Set(nil) end)
+    root:CreateRadio(Loc["Rather not say"], function() return K:Profile().rpExp == nil end, function() X:Set(nil) end)
   end)
 end
 
 -- "|T..|t New to RP" for a button, or a prompt when there's no answer yet.
 function X.ButtonText(p)
   local lv = X.Of(p)
-  if not lv then return "RP experience..." end
+  if not lv then return Loc["RP experience..."] end
   return ("|T%s:16:16:0:0:64:64:5:59:5:59|t %s"):format(lv.icon, lv.short)
 end

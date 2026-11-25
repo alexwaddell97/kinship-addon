@@ -8,6 +8,7 @@
 -- Kinship users see it too. Other addons ignore the field.
 
 local _, ns = ...
+local Loc = ns.L
 local K = ns.K
 local UI = K.UI
 local I = K.Items
@@ -60,8 +61,8 @@ function W:Wear(bagIndex)
   local def = s and I:Get(s.def)
   if not def then return false end
   local slot = def.wear
-  if not (slot and I.WEAR_LABEL[slot]) then I.Error(UI.Escape(def.name) .. " isn't something you wear.") return false end
-  if I:Available(def.id) < 1 then I.Error("That item is promised in a trade.") return false end
+  if not (slot and I.WEAR_LABEL[slot]) then I.Error(UI.Escape(def.name) .. Loc[" isn't something you wear."]) return false end
+  if I:Available(def.id) < 1 then I.Error(Loc["That item is promised in a trade."]) return false end
   local worn = self:Table()
   local old = worn[slot]
   -- Room for what comes off: the bag slot it frees, or a spare one.
@@ -72,7 +73,7 @@ function W:Wear(bagIndex)
       local b = bag[i]
       if b and b.def == old.def and oldDef and b.count < oldDef.stack then stacks = true end
     end
-    if not stacks then I.Error("There's no room in your bags for what you're wearing there.") return false end
+    if not stacks then I.Error(Loc["There's no room in your bags for what you're wearing there."]) return false end
   end
   s.count = s.count - 1
   if s.count <= 0 then bag[bagIndex] = nil end
@@ -101,7 +102,7 @@ function W:TakeOff(slot, toIndex)
   end
   if toIndex and toIndex >= 1 and toIndex <= I.SLOTS and not there then
     bag[toIndex] = { def = e.def, count = 1 }
-  elseif I:Add(e.def, 1) > 0 then I.Error("There's no room in your bags to take it off.") return false end
+  elseif I:Add(e.def, 1) > 0 then I.Error(Loc["There's no room in your bags to take it off."]) return false end
   worn[slot] = nil
   Sound(false)
   Changed()
@@ -166,11 +167,11 @@ end
 -- already called that. Returns the outfit, or nil and why not.
 function W:SaveOutfit(name)
   name = CleanName(name)
-  if name == "" then return nil, "Give the outfit a name." end
+  if name == "" then return nil, Loc["Give the outfit a name."] end
   local o = self:FindOutfit(name)
   local list = self:Outfits()
   if not o then
-    if #list >= W.OUTFIT_MAX then return nil, ("You can keep up to %d outfits."):format(W.OUTFIT_MAX) end
+    if #list >= W.OUTFIT_MAX then return nil, (Loc["You can keep up to %d outfits."]):format(W.OUTFIT_MAX) end
     o = { name = name }
     list[#list + 1] = o
   end
@@ -181,9 +182,9 @@ end
 
 function W:RenameOutfit(o, name)
   name = CleanName(name)
-  if name == "" then return false, "Give the outfit a name." end
+  if name == "" then return false, Loc["Give the outfit a name."] end
   local other = self:FindOutfit(name)
-  if other and other ~= o then return false, "You already have an outfit called that." end
+  if other and other ~= o then return false, Loc["You already have an outfit called that."] end
   o.name = name
   K:Fire("WORN")
   return true
@@ -233,7 +234,7 @@ function W:PutOn(o)
         local idx = I:Available(want) > 0 and BagIndexOf(want)
         local def = I:Get(want)
         if not (idx and def and def.wear == w.key and self:Wear(idx)) then
-          missing[#missing + 1] = def and UI.Escape(def.name) or "something you no longer have"
+          missing[#missing + 1] = def and UI.Escape(def.name) or Loc["something you no longer have"]
         end
       end
     end
@@ -276,9 +277,9 @@ end
 function W:ChangeInto(o)
   local missing = self:PutOn(o)
   if #missing == 0 then
-    K:Print(("You change into %s."):format(UI.Escape(o.name)))
+    K:Print((Loc["You change into %s."]):format(UI.Escape(o.name)))
   else
-    K:Print(("You change into %s, without %s (not in your bags)."):format(UI.Escape(o.name),
+    K:Print((Loc["You change into %s, without %s (not in your bags)."]):format(UI.Escape(o.name),
       table.concat(missing, ", ")))
   end
 end
@@ -392,9 +393,9 @@ function W:DropFromBag(index)
   if not def then return true end
   if def.wear ~= b.slot then
     if def.wear and I.WEAR_LABEL[def.wear] then
-      I.Error(("%s goes in the %s slot."):format(UI.Escape(def.name), I.WEAR_LABEL[def.wear]:lower()))
+      I.Error((Loc["%s goes in the %s slot."]):format(UI.Escape(def.name), I.WEAR_LABEL[def.wear]:lower()))
     else
-      I.Error(UI.Escape(def.name) .. " isn't something you wear. Choose \"Worn on\" in the Workshop.")
+      I.Error(UI.Escape(def.name) .. Loc[" isn't something you wear. Choose \"Worn on\" in the Workshop."])
     end
     return true
   end
@@ -413,15 +414,15 @@ local function SlotMenu(b)
   UI.Menu(b, function(root)
     root:CreateTitle(I.WEAR_LABEL[slot])
     if def then
-      root:CreateButton("Take off " .. UI.Escape(def.name), function() W:TakeOff(slot) end)
+      root:CreateButton(Loc["Take off "] .. UI.Escape(def.name), function() W:TakeOff(slot) end)
     end
     local fit = W:Fitting(slot)
     for _, f in ipairs(fit) do
-      local label = (def and "Swap for " or "Wear ") .. UI.Escape(f.def.name)
+      local label = (def and Loc["Swap for "] or Loc["Wear "]) .. UI.Escape(f.def.name)
       root:CreateButton(label, function() W:Wear(f.index) end)
     end
     if not def and #fit == 0 then
-      root:CreateButton("|cff9a9a9aNothing in your bags fits here. Choose \"Worn on\" in the Workshop.|r", function() end)
+      root:CreateButton(Loc["|cff9a9a9aNothing in your bags fits here. Choose \"Worn on\" in the Workshop.|r"], function() end)
     end
   end)
 end
@@ -450,12 +451,12 @@ function W.SlotButton(parent, size, slot, mine)
   b:HookScript("OnEnter", function(self)
     if self.def then
       GameTooltip:AddLine(I.WEAR_LABEL[self.slot], 0.55, 0.80, 1)
-      if self.mine then GameTooltip:AddLine("Right-click or drag it to your bags to take it off. Click to swap.", 0.62, 0.62, 0.62, true) end
+      if self.mine then GameTooltip:AddLine(Loc["Right-click or drag it to your bags to take it off. Click to swap."], 0.62, 0.62, 0.62, true) end
       GameTooltip:Show()
     elseif self.mine then
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
       GameTooltip:SetText(I.WEAR_LABEL[self.slot], 1, 0.82, 0)
-      GameTooltip:AddLine("Nothing worn here. Click to put something on, or drag it here from your bags.", 1, 1, 1, true)
+      GameTooltip:AddLine(Loc["Nothing worn here. Click to put something on, or drag it here from your bags."], 1, 1, 1, true)
       GameTooltip:Show()
     end
   end)
