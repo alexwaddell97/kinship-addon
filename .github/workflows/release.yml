@@ -6,10 +6,11 @@
 # CurseForge needs, under Settings > Secrets and variables > Actions:
 #   secret   CF_API_KEY       an API token from your CurseForge account
 #   variable CF_PROJECT_ID    the project's ID (on its CurseForge page)
-#   variable CF_GAME_VERSION  the game versions to file it under, comma-separated:
-#                             each one's name as CurseForge shows it, or its ID.
-#                             One zip serves every client (each loads its own .toc),
-#                             so list Forever's and retail's to release for both.
+#   variable CF_GAME_VERSION  optional: more game versions to file it under,
+#                             comma-separated, each one's name as CurseForge shows
+#                             it or its ID. The versions in the .toc files' Interface
+#                             lines are filed under on their own (120107 is 12.1.7),
+#                             so a new patch only needs its number added to a .toc.
 # Without CF_PROJECT_ID the CurseForge step is skipped.
 name: Release
 
@@ -82,11 +83,24 @@ jobs:
           v="${GITHUB_REF_NAME#v}"
           api="https://wow.curseforge.com/api"
           [ -n "$CF_API_KEY" ] || { echo "::error::Add the CF_API_KEY secret (an API token from your CurseForge account)."; exit 1; }
-          [ -n "$CF_GAME_VERSION" ] || { echo "::error::Add the CF_GAME_VERSION variable: the game versions to file it under."; exit 1; }
-
-          # The game versions, comma-separated: IDs as given, names looked up
-          versions=""
+          versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
           ids="[]"
+
+          # The versions the .toc files are for: Interface 120107 is 12.1.7.
+          # One CurseForge doesn't list yet is skipped with a warning.
+          tocs=$(sed -n 's/^## Interface://p' *.toc | tr ',' '\n' | tr -d ' \r' | grep -E '^[0-9]+$' \
+            | awk '{ printf "%d.%d.%d\n", int($1 / 10000), int($1 / 100) % 100, $1 % 100 }' | sort -u)
+          for name in $tocs; do
+            found=$(echo "$versions" | jq -c --arg n "$name" '[.[] | select(.name == $n) | .id]')
+            if [ "$found" = "[]" ]; then
+              echo "::warning::CurseForge has no game version called $name yet, so this release isn't filed under it."
+            else
+              echo "Filing under $name (from the .toc files)."
+              ids=$(jq -cn --argjson a "$ids" --argjson b "$found" '$a + $b | unique')
+            fi
+          done
+
+          # Any more named in CF_GAME_VERSION, comma-separated: IDs as given, names looked up
           missing=""
           IFS=',' read -ra wanted <<< "$CF_GAME_VERSION"
           for item in "${wanted[@]}"; do
@@ -95,21 +109,19 @@ jobs:
             if echo "$item" | grep -qE '^[0-9]+$'; then
               found="[$item]"
             else
-              [ -n "$versions" ] || versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
               found=$(echo "$versions" | jq -c --arg n "$item" '[.[] | select(.name == $n) | .id]')
               [ "$found" = "[]" ] && missing="$missing \"$item\""
             fi
             ids=$(jq -cn --argjson a "$ids" --argjson b "$found" '$a + $b | unique')
           done
           if [ -n "$missing" ]; then
-            [ -n "$versions" ] || versions=$(curl -sS --fail-with-body -H "X-Api-Token: $CF_API_KEY" "$api/game/versions")
-            echo "::error::CurseForge has no game version called$missing. The names it knows are listed above."
+            echo "::error::CurseForge has no game version called$missing (from CF_GAME_VERSION). The names it knows are listed below."
             echo "::group::CurseForge game versions (name, then ID)"
             echo "$versions" | jq -r '.[] | "\(.name)  \(.id)"' | sort -u
             echo "::endgroup::"
             exit 1
           fi
-          [ "$ids" != "[]" ] || { echo "::error::CF_GAME_VERSION names no game version."; exit 1; }
+          [ "$ids" != "[]" ] || { echo "::error::None of the game versions in the .toc files or CF_GAME_VERSION are on CurseForge."; exit 1; }
 
           meta=$(jq -n --rawfile cl changelog.md --arg name "Kinship RP $v" --argjson gv "$ids" \
             '{changelog: $cl, changelogType: "markdown", displayName: $name, gameVersions: $gv, releaseType: "release"}')
