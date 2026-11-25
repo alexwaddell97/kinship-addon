@@ -1,6 +1,8 @@
 # Kinship RP changelog
 
-## Unreleased
+## 1.4.14
+
+Ready for retail 12.1.7. No files were added, so a /reload is enough.
 
 ### Changed
 - Up to date for retail 12.1.7.
