@@ -61,6 +61,11 @@ function J:Build()
   if self.frame then return end
   local f = UI.Window("KinshipRPJournal", "Kinship", self.W, self.H, { bare = true })
   self.frame = f
+  -- Pages are laid out for a fixed size, so resizing scales the whole window.
+  -- The size is kept for every character on the account.
+  f.grip = UI.ScaleGrip(f, function() return K.db.settings.journalScale end,
+    function(s) K.db.settings.journalScale = s end)
+  f.grip:Restore()
 
   -- Sidebar --------------------------------------------------------------
   local side = CreateFrame("Frame", nil, f)

@@ -1139,6 +1139,77 @@ function UI.Window(name, title, w, h, opts)
   return f
 end
 
+-- A grip in a window's bottom-right corner that makes the whole window bigger
+-- or smaller. It changes the window's scale, so everything inside keeps its
+-- layout. The window's top-left corner stays put while you drag. get() and
+-- set(scale) keep the scale between sessions (set(nil) for the normal size);
+-- right-click puts it back to normal. Call grip:Restore() once at start.
+function UI.ScaleGrip(f, get, set, lo, hi)
+  lo, hi = lo or 0.7, hi or 1.6
+  local g = CreateFrame("Button", nil, f)
+  g:SetSize(14, 14)
+  g:SetPoint("BOTTOMRIGHT", -1, 1)
+  g:SetFrameLevel(f:GetFrameLevel() + 60)
+  g:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+  g:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+  g:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+  g:RegisterForClicks("RightButtonUp")
+
+  -- Never smaller than lo, never bigger than hi or the screen.
+  local function Fit(s)
+    local w, h = f:GetWidth(), f:GetHeight()
+    local most = hi
+    if w > 0 and h > 0 then most = math.min(hi, UIParent:GetWidth() / w, UIParent:GetHeight() / h) end
+    return math.max(lo, math.min(most, s))
+  end
+  -- Scale to s with the top-left corner where it is (in UIParent's units).
+  local function ScaleAt(s, left, top)
+    f:SetScale(s)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left / s, top / s)
+  end
+  local function Cursor()
+    local x, y = GetCursorPosition()
+    local e = UIParent:GetEffectiveScale()
+    return x / e, y / e
+  end
+
+  local drag
+  g:SetScript("OnMouseDown", function(_, button)
+    if button ~= "LeftButton" or not f:GetLeft() then return end
+    local s = f:GetScale()
+    local cx, cy = Cursor()
+    drag = { s = s, left = f:GetLeft() * s, top = f:GetTop() * s, cx = cx, cy = cy }
+    drag.w, drag.h = math.max(cx - drag.left, 1), math.max(drag.top - cy, 1)
+    GameTooltip:Hide()
+    g:SetScript("OnUpdate", function()
+      local x, y = Cursor()
+      local grow = math.max((x - drag.left) / drag.w, (drag.top - y) / drag.h)
+      ScaleAt(Fit(drag.s * grow), drag.left, drag.top)
+    end)
+  end)
+  g:SetScript("OnMouseUp", function(_, button)
+    if button ~= "LeftButton" or not drag then return end
+    g:SetScript("OnUpdate", nil)
+    drag = nil
+    local s = f:GetScale()
+    set(math.abs(s - 1) > 0.01 and s or nil)
+  end)
+  g:SetScript("OnClick", function()
+    if not f:GetLeft() then return end
+    local s = f:GetScale()
+    ScaleAt(1, f:GetLeft() * s, f:GetTop() * s)
+    set(nil)
+  end)
+  UI.Tooltip(g, Loc["Window size"], Loc["Drag to make the window bigger or smaller. Right-click to go back to the normal size."])
+
+  function g:Restore()
+    local s = tonumber(get())
+    if s and s > 0 then f:SetScale(Fit(s)) end
+  end
+  return g
+end
+
 ---------------------------------------------------------------------------
 -- Content pieces
 ---------------------------------------------------------------------------
