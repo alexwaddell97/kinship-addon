@@ -1,4 +1,4 @@
-## Interface: 120105, 120007
+## Interface: 120107, 120105, 120007
 ## Title: Kinship RP
 ## Notes: A roleplay addon: profiles, houses, quests you write yourself, items and RP-PvP. Works with Total RP 3 users.
 ## Author: Vaxorus

@@ -1,5 +1,10 @@
 # Kinship RP changelog
 
+## Unreleased
+
+### Changed
+- Up to date for retail 12.1.7.
+
 ## 1.4.13
 
 Dark paper for letters, and game mail you can keep with them. No files were
