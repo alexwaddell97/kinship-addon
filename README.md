@@ -47,7 +47,7 @@ Kinship never loads or depends on Total RP 3. It only notices when it's there.
 
 ## Installing
 
-Kinship works on retail and on Forever. The easiest way is to install it from CurseForge with the CurseForge app, which puts it in the right folder for your game.
+Kinship works on retail and on Forever. The easiest way is to install it from CurseForge or [Wago](https://addons.wago.io/addons/kinship-addon) with their apps, which put it in the right folder for your game.
 
 To install it by hand, download the zip from the latest [release](https://github.com/alexwaddell97/kinship-addon/releases/latest) and unzip it into your game's AddOns folder. The same zip works for both:
 
