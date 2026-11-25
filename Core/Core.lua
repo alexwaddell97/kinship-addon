@@ -479,8 +479,9 @@ end
 
 -- Out in the world (tooltips, nameplates, unit frames, chat) a roleplay name
 -- is in the colour its player chose for it, or in the colour the game would
--- give the name when they didn't, and always has the character's own name
--- beside it in grey: the name whispers, invites, /who and the friends list go by.
+-- give the name when they didn't, and has the character's own name beside it
+-- in grey (the name whispers, invites, /who and the friends list go by)
+-- unless you turn that off.
 K.CHAR_NAME_COLOR = { 0.62, 0.62, 0.62 }
 K.CHAR_NAME_HEX = "9d9d9d"
 
@@ -492,18 +493,30 @@ function K:CharacterName(name)
   return Ambiguate and Ambiguate(name, "none") or name
 end
 
+-- Whether the character's name goes after a roleplay name ("Aldric Vane
+-- (Leeroy Jenkins)") or the roleplay name stands alone. Settings > Names.
+function K.CharNameBeside()
+  local s = K.db and K.db.settings
+  return not (s and s.charNameBeside == false)
+end
+
+-- " (Leeroy Jenkins)" in grey to go after a roleplay name, or "" when that's
+-- switched off, there's no character name, or the roleplay name already holds
+-- it ("Gorwan Ironwill, Son of Smith" for Gorwan Ironwill).
+function K.CharNameTail(rp, char)
+  rp, char = rp or "", char or ""
+  if char == "" or not K.CharNameBeside() or rp:lower():find(char:lower(), 1, true) then return "" end
+  return " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r"
+end
+
 -- "Aldric Vane (Leeroy Jenkins)": the roleplay name in colour hex (left as
--- the surrounding text when nil) and the character's name after it in grey. Just the
--- character name when there's no roleplay name, and no repeat when they're
--- the same.
+-- the surrounding text when nil) and the character's name after it in grey.
+-- Just the character name when there's no roleplay name.
 function K.BothNames(rp, char, hex)
   rp, char = rp or "", char or ""
   if rp == "" then return char end
   local out = hex and ("|cff" .. hex .. rp .. "|r") or rp
-  -- No copy beside it when the roleplay name already holds the character's
-  -- ("Gorwan Ironwill, Son of Smith" for Gorwan Ironwill).
-  if char ~= "" and not rp:lower():find(char:lower(), 1, true) then out = out .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r" end
-  return out
+  return out .. K.CharNameTail(rp, char)
 end
 
 -- The colour a profile's name is shown in: the one its player chose (in

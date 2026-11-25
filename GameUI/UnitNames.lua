@@ -174,23 +174,24 @@ end
 -- Repaint the frames: theirs redraw the game's names, and our hooks swap them.
 function N:Refresh()
   self:Scan()
+  -- Put the game's names back by hand first (the game's own frames don't
+  -- repaint when asked). With roleplay names on, the hooks swap them again
+  -- straight away, with the current name settings.
+  for fs in pairs(hooked) do
+    local seg, game = fs.kinshipSeg, fs.kinshipGame
+    if seg and game and not fs.kinshipBusy then
+      fs.kinshipSeg, fs.kinshipGame = nil, nil
+      local ok, text = pcall(fs.GetText, fs)
+      if ok and type(text) == "string" then
+        local i, j = text:find(seg, 1, true)
+        if i then fs:SetText(text:sub(1, i - 1) .. game .. text:sub(j + 1)) end
+      end
+    end
+  end
   local repaint = rawget(_G, "_EUF_RefreshUnitNames")
   if type(repaint) == "function" then pcall(repaint) end
   if S().rpUnitNames ~= false then
     for fs in pairs(hooked) do Relabel(fs) end
-  elseif type(repaint) ~= "function" then
-    -- The game's own frames: put their names back by hand.
-    for fs in pairs(hooked) do
-      local seg, game = fs.kinshipSeg, fs.kinshipGame
-      if seg and game and not fs.kinshipBusy then
-        local ok, text = pcall(fs.GetText, fs)
-        if ok and type(text) == "string" then
-          local i, j = text:find(seg, 1, true)
-          if i then fs:SetText(text:sub(1, i - 1) .. game .. text:sub(j + 1)) end
-        end
-        fs.kinshipSeg, fs.kinshipGame = nil, nil
-      end
-    end
   end
 end
 
@@ -281,13 +282,13 @@ K:On("REGISTRY", function(key)
 end)
 
 K:RegisterSettings({ id = "unitNames", title = Loc["Unit frames"], order = 41, build = function(card)
-  card:Toggle(Loc["Roleplay names on unit frames"], "Shows your roleplay name on your player frame, followed by your character name, and your pet's companion name on your pet frame.", {
+  card:Toggle(Loc["Roleplay names on unit frames"], Loc["Shows your roleplay name on your player frame and your pet's companion name on your pet frame."], {
     get = function() return S().rpUnitNames ~= false end,
     set = function(v) K.db.settings.rpUnitNames = v; N:Refresh() end,
   })
-  card:Toggle(Loc["Include target and focus"], "Shows roleplay names on your target and focus frames once Kinship has their profile. Pets with a companion profile show its name.", {
+  card:Toggle(Loc["Include target and focus"], Loc["Shows roleplay names on your target and focus frames once Kinship has their profile. Pets with a companion profile show its name."], {
     get = function() return S().rpUnitNamesOthers ~= false end,
     set = function(v) K.db.settings.rpUnitNamesOthers = v; N:Refresh() end,
   })
-  card:Note(Loc["Works with the game's unit frames and EllesmereUI's. The character name always stays visible, so you know who to whisper or invite."])
+  card:Note(Loc["Works with the game's unit frames and EllesmereUI's."])
 end })

@@ -736,13 +736,6 @@ K:RegisterSettings({ id = "nameplates", trp3 = "hide", title = Loc["Nameplates"]
     }
   end
   card:Toggle(Loc["Roleplay nameplates"], Loc["Shows roleplay names on nameplates, with a dot for IC, LFRP or OOC and the options below. When off, nameplates look as normal."], opt("plates"))
-  card:Toggle(Loc["Players' own name colours"], "Shows each roleplay name in the colour its player picked, on nameplates, unit frames and in chat. Very dark colours are lightened. When off, names keep the game's colours.", {
-    get = function() return S().ownNameColors ~= false end,
-    set = function(v)
-      S().ownNameColors = v; P:RefreshAll()
-      if K.UnitNames then K.UnitNames:Refresh() end
-    end,
-  })
   card:Toggle(Loc["Character name in brackets"], Loc["Shows the character name in grey brackets under the roleplay name."], opt("platesBrackets"))
   card:Toggle(Loc["Kin and rival marks"], Loc["Adds a small icon after the names of your Kin and rivals. Rivals are marked on enemy nameplates too."], opt("platesIcons"))
   card:Toggle(Loc["Show epithets"], Loc["Shows epithets, like \"the Wandering Blade\", under the name. Titles like \"Lord\" always show."], opt("platesTitles"))

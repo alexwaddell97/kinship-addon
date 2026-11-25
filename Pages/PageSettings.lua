@@ -681,8 +681,30 @@ K:RegisterSettings({ id = "look", title = Loc["Look"], order = 3, keywords = "th
   card:Note(Loc["Kinship uses teal and gold with cream pages. Blizzard matches the game's own windows."])
 end })
 
+-- How roleplay names look out in the world: chat, tooltips, nameplates,
+-- unit frames, the target bar and the character window.
+local function RefreshNames()
+  if K.Plates then K.Plates:RefreshAll() end
+  if K.UnitNames then K.UnitNames:Refresh() end
+  if K.TargetBar and K.TargetBar.Update then K.TargetBar:Update() end
+  if K.CharacterPanel and K.CharacterPanel.ApplyTitles then K.CharacterPanel:ApplyTitles() end
+end
+
+K:RegisterSettings({ id = "names", title = Loc["Names"], order = 8, keywords = "name names colour color character brackets",
+    build = function(card)
+  card:Toggle(Loc["Players' own name colours"], Loc["Shows roleplay names in the colour each player picked. Very dark colours are lightened. When off, or when a player picked none, names keep the game's colours."], {
+    get = function() return S().ownNameColors ~= false end,
+    set = function(v) S().ownNameColors = v; RefreshNames() end,
+  })
+  card:Toggle(Loc["Character name after roleplay names"], Loc["Shows the character name in grey brackets after roleplay names in chat, on unit frames, the target bar and the character window."], {
+    get = function() return S().charNameBeside ~= false end,
+    set = function(v) S().charNameBeside = v; RefreshNames() end,
+  })
+  card:Note(Loc["Tooltips always show the character name. Nameplates have their own setting under Nameplates."])
+end })
+
 K:RegisterSettings({ id = "chat", trp3 = "hide", title = Loc["Roleplay chat"], order = 10, build = function(card)
-  card:Toggle(Loc["Roleplay names"], Loc["Shows roleplay names in chat, followed by the character name."], "chatNames")
+  card:Toggle(Loc["Roleplay names"], Loc["Shows roleplay names in chat."], "chatNames")
   card:Toggle(Loc["Colour emotes and speech"], Loc["Colours \"quotes\" in emotes and *actions* in speech."], "chatEmotes")
   card:Toggle(Loc["Dim (( out of character ))"], Loc["Greys out text inside (( double brackets ))."], "chatOOC")
   card:Toggle(Loc["NPC speech"], Loc["Type /e || Guard says: Halt! to speak as someone else."], "chatNPC")

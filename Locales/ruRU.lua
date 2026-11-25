@@ -685,6 +685,7 @@ L["Kinship uses teal and gold with cream pages. Blizzard matches the game's own 
 L["Roleplay chat"] = "Ролевой чат"
 L["Roleplay names"] = "Ролевые имена"
 L["Shows roleplay names in chat, followed by the character name."] = "Показывать ролевые имена в чате с указанием игрового имени персонажа."
+L["Shows roleplay names in chat."] = "Показывать ролевые имена в чате."
 L["Colour emotes and speech"] = "Подсветка эмоций и речи"
 L["Colours \"quotes\" in emotes and *actions* in speech."] = "Выделяет цветом «реплики» в эмоциях и *действия* в обычной речи."
 L["Dim (( out of character ))"] = "Приглушать (( внеролевой текст ))"
@@ -1745,6 +1746,7 @@ L["Shows your roleplay name on your player frame, followed by your character nam
 L["Include target and focus"] = "Также для цели и фокуса"
 L["Shows roleplay names on your target and focus frames once Kinship has their profile."] = "Показывает ролевые имена на рамках цели и фокуса, как только Kinship получит их профиль."
 L["Works with the game's unit frames and EllesmereUI's. The character name always stays visible, so you know who to whisper or invite."] = "Работает со стандартными рамками игры и EllesmereUI. Игровое имя персонажа всегда остаётся видимым, чтобы вы знали, кому написать или кого пригласить."
+L["Works with the game's unit frames and EllesmereUI's."] = "Работает со стандартными рамками игры и EllesmereUI."
 
 -- Обучающие туры — Справочник и Близкие (Guides.lua)
 L["The Directory"] = "Справочник"

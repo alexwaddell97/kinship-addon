@@ -1,7 +1,7 @@
 -- Kinship RP: roleplay chat.
 --   * Roleplay names in chat, for anyone whose profile has arrived: in
 --     their player's colour (else their class colour), with the character's
---     name after it in grey. The name
+--     name after it in grey unless that's turned off. The name
 --     stays a link to the character, so clicking it still whispers them.
 --   * In emotes, "quoted speech" in the say colour
 --   * In say, yell, party and the rest, *actions* and <actions> in the emote colour

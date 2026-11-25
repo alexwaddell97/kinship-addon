@@ -582,8 +582,7 @@ local function MyTitle()
   if not shown then return nil end
   local r, g, b = K.NameColorOf(p)
   local name = UI.Escape(shown)
-  local char = K:CharacterName()
-  local tail = not own and char:lower() ~= name:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
+  local tail = not own and K.CharNameTail(name, K:CharacterName()) or ""
   return (r and Coloured(name, r, g, b) or name) .. tail
 end
 
@@ -599,7 +598,7 @@ local function TheirTitle()
   if not shown then return nil end
   local text = UI.Escape(shown)
   local r, g, b = K.NameColorOf(p)
-  local tail = not own and char:lower() ~= text:lower() and (" |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r") or ""
+  local tail = not own and K.CharNameTail(text, char) or ""
   return (r and Coloured(text, r, g, b) or text) .. tail
 end
 

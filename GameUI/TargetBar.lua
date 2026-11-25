@@ -304,9 +304,7 @@ function B:Update()
     text = (K:ShownName(p, char)) or char
   end
   -- No copy of the character's name when the roleplay name already holds it.
-  if hasRP and char ~= "" and not text:lower():find(char:lower(), 1, true) then
-    text = text .. " |cff" .. K.CHAR_NAME_HEX .. "(" .. char .. ")|r"
-  end
+  if hasRP then text = text .. K.CharNameTail(text, char) end
   f.name:SetText(text)
   local r, g, b
   if p then r, g, b = K.NameColorOf(p) end
