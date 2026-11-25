@@ -10,7 +10,7 @@
 
 # Kinship RP
 
-A roleplay addon for World of Warcraft Forever. It keeps your character's profile, your family, the people you've met, what you carry and the stories you're part of in one journal, and tries to fit in with the game's own interface rather than sit on top of it.
+A roleplay addon for World of Warcraft, on retail and on Forever. It keeps your character's profile, your family, the people you've met, what you carry and the stories you're part of in one journal, and tries to fit in with the game's own interface rather than sit on top of it.
 
 It speaks the same profile protocol as Total RP 3, MyRolePlay and XRP, so players using those addons can read your profile and you can read theirs. It also runs happily alongside Total RP 3 if you'd rather keep it.
 
@@ -32,7 +32,7 @@ It speaks the same profile protocol as Total RP 3, MyRolePlay and XRP, so player
 
 **Houses and groups.** Characters who share a family name can form a house with a crest, motto and history. Groups do the same for companies, orders and RP guilds that aren't families.
 
-**RP-PvP.** For Forever's RP-PvP realms, Kinship adds a war stance, boundaries for injury, death, capture and crime, a record of rivals and battles, and Parley: a wheel of the game's own emotes that the other faction can see.
+**RP-PvP.** For roleplay between the factions, Kinship adds a war stance, boundaries for injury, death, capture and crime, a record of rivals and battles, and Parley: a wheel of the game's own emotes that the other faction can see.
 
 **And the rest.** Letters with wax seals, documents, trading items, stashes hidden in the world, gatherings on the calendar, dice, a satchel next to your bags, a Roleplay tab on the character sheet, and a directory of every roleplayer you've met.
 
@@ -47,9 +47,12 @@ Kinship never loads or depends on Total RP 3. It only notices when it's there.
 
 ## Installing
 
-Download the latest version from CurseForge, or the zip from the latest [release](https://github.com/alexwaddell97/kinship-addon/releases/latest), and unzip it into:
+Kinship works on retail and on Forever. The easiest way is to install it from CurseForge with the CurseForge app, which puts it in the right folder for your game.
+
+To install it by hand, download the zip from the latest [release](https://github.com/alexwaddell97/kinship-addon/releases/latest) and unzip it into your game's AddOns folder. The same zip works for both:
 
 ```
+World of Warcraft\_retail_\Interface\AddOns\KinshipRP
 World of Warcraft\_forever_\Interface\AddOns\KinshipRP
 ```
 
