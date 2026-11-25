@@ -21,6 +21,7 @@ Libs\LibDeflate\lib.xml
 Libs\AceSerializer-3.0\AceSerializer-3.0.xml
 
 Locales\Locales.lua
+Locales\ruRU.lua
 
 Core\Core.lua
 Core\UI.lua

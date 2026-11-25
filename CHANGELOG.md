@@ -1,5 +1,14 @@
 # Kinship RP changelog
 
+## Unreleased
+
+Kinship can now be translated. New files were added, so restart the game
+rather than /reload.
+
+### New
+- Russian. Kinship shows in Russian on a Russian game client. Thanks to
+  gaonestar-dot for the translation.
+
 ## 1.4.14
 
 Ready for retail 12.1.7. No files were added, so a /reload is enough.
