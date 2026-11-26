@@ -1,5 +1,24 @@
 # Kinship RP changelog
 
+## 1.4.17
+
+Theme music that stops on its own, web links you can copy, and a profile
+window that keeps your place. No files were added, so a /reload is enough.
+
+### Changed
+- "Play their theme" on the target bar stops after 10 seconds instead of
+  repeating until you click it again.
+- A theme you preview on the Persona page stops when you close the window or
+  leave the Look tab.
+- Web links in profile text show as a short label instead of the whole
+  address. Hover to see where one goes, and click to copy it. This works
+  for links written for Total RP 3 ({link*url*text} or [text](url)) and for
+  plain addresses.
+
+### Fixed
+- Reading a long profile no longer jumps back to the top when the profile,
+  your auras or your worn items update while it's open.
+
 ## 1.4.16
 
 Name colours that follow the game, a choice about the character name, and a
