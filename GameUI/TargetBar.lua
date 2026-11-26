@@ -471,7 +471,7 @@ K:RegisterTargetButton({
     local p
     if IsMe() then p = K:Profile() else local reg = K:ProfileOf(name); p = reg and reg.profile end
     local id = P and P.Music(p)
-    if id then P:ToggleMusic(id) end
+    if id then P:ToggleMusic(id, 10) end   -- a taste of it, not the whole track on repeat
   end,
 })
 

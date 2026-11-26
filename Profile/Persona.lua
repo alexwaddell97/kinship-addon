@@ -432,12 +432,21 @@ end
 ---------------------------------------------------------------------------
 -- Theme music
 ---------------------------------------------------------------------------
-function P:PlayMusic(id)
+-- The game repeats a music track until told to stop. With seconds, it stops by
+-- itself after that long, unless something else has started playing since.
+function P:PlayMusic(id, seconds)
   id = tonumber(id)
   if not id or id <= 0 then return false end
   if StopMusic then pcall(StopMusic) end
   local ok = PlayMusic and pcall(PlayMusic, math.floor(id))
   self.playing = ok and math.floor(id) or nil
+  self.musicRun = (self.musicRun or 0) + 1
+  if ok and seconds and C_Timer then
+    local run = self.musicRun
+    C_Timer.After(seconds, function()
+      if self.musicRun == run and self.playing then self:StopMusic() end
+    end)
+  end
   K:Fire("PERSONA_MUSIC")
   return ok and true or false
 end
@@ -448,9 +457,9 @@ function P:StopMusic()
   K:Fire("PERSONA_MUSIC")
 end
 
-function P:ToggleMusic(id)
+function P:ToggleMusic(id, seconds)
   id = tonumber(id)
-  if id and self.playing == math.floor(id) then self:StopMusic() else self:PlayMusic(id) end
+  if id and self.playing == math.floor(id) then self:StopMusic() else self:PlayMusic(id, seconds) end
 end
 
 ---------------------------------------------------------------------------
