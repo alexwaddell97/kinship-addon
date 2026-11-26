@@ -1002,9 +1002,18 @@ local function BuildLook(tab)
     K:Fire("PROFILE")
   end)
   tab.music:SetPoint("TOPLEFT", 16, -86)
+  -- A preview started here stops when this tab or the window closes. A theme
+  -- started from the target bar since then is left alone.
+  rc:HookScript("OnHide", function()
+    if tab.previewRun and tab.previewRun == P.musicRun and P.playing then P:StopMusic() end
+    tab.previewRun = nil
+  end)
   tab.play = UI.Button(rc, Loc["Play"], 72, 24)
   tab.play:SetPoint("TOPLEFT", 156, -99)
-  tab.play:SetScript("OnClick", function() P:PlayMusic(P.Music(K:Profile())) end)
+  tab.play:SetScript("OnClick", function()
+    P:PlayMusic(P.Music(K:Profile()))
+    tab.previewRun = P.musicRun
+  end)
   tab.stop = UI.Button(rc, Loc["Stop"], 72, 24)
   tab.stop:SetPoint("LEFT", tab.play, "RIGHT", 6, 0)
   tab.stop:SetScript("OnClick", function() P:StopMusic() end)
@@ -1034,7 +1043,10 @@ local function BuildLook(tab)
       row.sub:SetWordWrap(false)
       row.play = UI.Button(row, Loc["Play"], 54, 22)
       row.play:SetPoint("RIGHT", -6, 0)
-      row.play:SetScript("OnClick", function(self) P:ToggleMusic(self:GetParent().item.id) end)
+      row.play:SetScript("OnClick", function(self)
+        P:ToggleMusic(self:GetParent().item.id)
+        tab.previewRun = P.musicRun
+      end)
       row.chip = UI.Chip(row)
       row.chip:SetPoint("RIGHT", row.play, "LEFT", -8, 0)
       row:SetScript("OnClick", function(self)
