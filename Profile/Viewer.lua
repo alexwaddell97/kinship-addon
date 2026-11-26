@@ -437,7 +437,7 @@ function V:Build()
   if K.Safety then self.cover = K.Safety:Cover(info) end
 
   -- Inline colours are baked into the text, so rebuild it when the look changes.
-  UI:OnTheme(function() if V.data and V.tab then V:ShowTab(V.tab) end end)
+  UI:OnTheme(function() if V.data and V.tab then V:ShowTab(V.tab, true) end end)
 end
 
 -- Which of the writing tabs have something in them.
@@ -475,7 +475,10 @@ function V:MoreToRead(p)
   return "|cff" .. UI.Hex(K:Theme().subtle) .. Loc["Their longer writing is under "] .. table.concat(where, " and ") .. Loc[", above.|r"]
 end
 
-function V:ShowTab(i)
+-- keepScroll: a refresh of the same tab (the profile updated, auras changed)
+-- leaves the reader where they were instead of jumping back to the top.
+function V:ShowTab(i, keepScroll)
+  keepScroll = keepScroll and self.tab == i
   if self.tab ~= i and self.frame:IsShown() then UI.FadeIn(self.body, 0.2) end
   self.tab = i
   self.tabs:Select(i)
@@ -559,7 +562,7 @@ function V:ShowTab(i)
     text = d.mine and self:ChronicleText() or Loc["Shared Chronicle highlights will appear here once profile sharing arrives."]
   end
   if not text or strtrim(text) == "" then text = "|cff" .. UI.Hex(K:Theme().subtle) .. "Nothing written here yet.|r" end
-  self.body:SetText(text)
+  self.body:SetText(text, keepScroll)
 end
 
 function V:ChronicleText()
@@ -705,7 +708,7 @@ function V:Present(data, unit, keepTab)
   self.tabs:Paint()
   local tab = keepTab and self.tab or 1
   if tab == CHRONICLE and not data.mine then tab = 1 end
-  self:ShowTab(tab)
+  self:ShowTab(tab, keepTab)
   if K.Guide then C_Timer.After(0.3, function() if f:IsShown() then K.Guide:Maybe("viewer", V, f) end end) end
 end
 

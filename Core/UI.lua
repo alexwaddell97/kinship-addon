@@ -1548,10 +1548,17 @@ function UI.ReadArea(parent, w, h, font, role)
     end)
   end
   sf.text = fs
-  function sf:SetText(text)
+  -- keepScroll: stay at the same place (as far as the new text allows), for
+  -- refreshes of text someone may be partway through reading.
+  function sf:SetText(text, keepScroll)
+    local y = keepScroll and self:GetVerticalScroll() or 0
     fs:SetText(text or "")
     child:SetHeight(math.max(1, fs:GetStringHeight() + 8))
-    self:SetVerticalScroll(0)
+    if y > 0 then
+      if self.UpdateScrollChildRect then self:UpdateScrollChildRect() end
+      y = math.min(y, self:GetVerticalScrollRange() or 0)
+    end
+    self:SetVerticalScroll(y)
   end
   return sf
 end
