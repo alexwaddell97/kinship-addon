@@ -216,10 +216,40 @@ end
 -- Other players' text: drop links, textures and UI codes (UI.Clean), keep
 -- colours, and show any other "|" literally.
 local function Sanitise(text, other)
-  text = tostring(text or ""):gsub("\r\n?", "\n"):gsub("[\001-\004]", "")
+  text = tostring(text or ""):gsub("\r\n?", "\n"):gsub("[\001-\007]", "")
   -- UI.Clean leaves only colours and |r as codes; every other pipe is escaped.
   if other then text = UI.Clean(text) end
   return text
+end
+
+-- Web links: Total RP 3's {link*url*text}, [text](url) and bare addresses.
+-- The game can't open a browser, so with `found` each becomes a marked span
+-- that Render turns into a link the reading pane offers to copy (UI.ReadArea).
+-- Without `found` only the words are kept.
+local URL = "https?://[^%s|\001-\007%)%]}\"]+"
+local function LinkSpan(found, url, text)
+  if not found or #url > 512 then return text end
+  found.links = found.links or {}
+  found.links[#found.links + 1] = url
+  return "\005" .. #found.links .. "\006" .. text .. "\007"
+end
+
+local function Links(s, found)
+  s = s:gsub("{link%*[^*]*%*({icon:[^}]+})}", "%1")
+  s = s:gsub("{link%*([^*]*)%*([^}]*)}", function(url, text)
+    url = strtrim(url)
+    if url:match("^" .. URL .. "$") then return LinkSpan(found, url, text) end
+    return text
+  end)
+  s = s:gsub("%[([^%]\n]+)%]%(%s*(" .. URL .. ")%s*%)", function(text, url) return LinkSpan(found, url, strtrim(text)) end)
+  -- Bare addresses show as their site's name; a full stop or comma after one
+  -- belongs to the sentence, not the address.
+  s = s:gsub(URL, function(url)
+    local tail = url:match("[%.,;:!%?']+$") or ""
+    url = url:sub(1, #url - #tail)
+    return LinkSpan(found, url, url:match("^https?://([^/%?#]+)") or url) .. tail
+  end)
+  return s
 end
 
 -- Total RP 3 structure tags become Kinship lines. Images ({img:src:w:h[:align]})
@@ -238,8 +268,7 @@ local function Structure(s, found)
     end)
   end
   s = s:gsub("{img[^}]*}", "")
-  s = s:gsub("{link%*[^*]*%*({icon:[^}]+})}", "%1")
-  s = s:gsub("{link%*[^*]*%*([^}]*)}", "%1")
+  s = Links(s, found)
   s = s:gsub("{twitter%*[^*]*%*([^}]*)}", "%1"):gsub("{bsky%*[^*]*%*([^}]*)}", "%1")
   return s
 end
@@ -318,6 +347,11 @@ function M:Render(text, ctx)
   end
   s = table.concat(out, "\n")
   s = s:gsub("\n\n\n+", "\n\n"):gsub("^\n+", ""):gsub("\n+$", "")
+  if found.links then
+    s = s:gsub("\005(%d+)\006", function(n)
+      return "|Hkinshipurl:" .. found.links[tonumber(n)] .. "|h|cff" .. accentHex
+    end):gsub("\007", "|r|h")
+  end
   s = s:gsub("\003", "||")
   return s
 end
@@ -343,6 +377,7 @@ function M:Help(accentHex)
     a .. Loc["{col:c94f4f}words{/col}|r   coloured words"],
     a .. Loc["{icon:INV_Misc_Note_01:18}|r   an icon, 8 to 64 pixels"],
     a .. "{img:Interface\\Path:width:height}|r   an image from the game",
+    a .. Loc["[words](https://...)|r   a web link, for readers to copy"],
     " ",
     Loc["Total RP 3 tags such as {h1}, {p:c} and {col:r} work too."],
   }, "\n")

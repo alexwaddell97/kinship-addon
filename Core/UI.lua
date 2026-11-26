@@ -1526,6 +1526,27 @@ function UI.ReadArea(parent, w, h, font, role)
   fs:SetJustifyV("TOP")
   fs:SetSpacing(4)
   UI.ScrollBar(sf, role and role:find("^ink") ~= nil)
+  -- Web links in the text (K.Markup): hovering shows the address, and a click
+  -- opens it in a box to copy, since the game can't open a browser.
+  if child.SetHyperlinksEnabled then
+    child:SetHyperlinksEnabled(true)
+    child:SetScript("OnHyperlinkClick", function(_, link)
+      local url = tostring(link):match("^kinshipurl:(.+)$")
+      if url then UI:Copy(Loc["Copy link"], url) end
+    end)
+    child:SetScript("OnHyperlinkEnter", function(self, link)
+      local url = tostring(link):match("^kinshipurl:(.+)$")
+      if not url then return end
+      GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
+      GameTooltip:SetText(Loc["Web link"], 1, 0.82, 0)
+      GameTooltip:AddLine(url, 1, 1, 1, true)
+      GameTooltip:AddLine(Loc["Click to copy it, then paste it into your browser."], 0.6, 0.6, 0.6, true)
+      GameTooltip:Show()
+    end)
+    child:SetScript("OnHyperlinkLeave", function(self)
+      if GameTooltip:IsOwned(self) then GameTooltip:Hide() end
+    end)
+  end
   sf.text = fs
   function sf:SetText(text)
     fs:SetText(text or "")
