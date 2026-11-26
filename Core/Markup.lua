@@ -213,12 +213,36 @@ end
 ---------------------------------------------------------------------------
 -- Rendering
 ---------------------------------------------------------------------------
+-- Raw texture codes (|Tpath:height:width...|t) in someone else's text become
+-- {icon:..} and {img:..} tags, so they get the same checks as tags do instead
+-- of being dropped. Total RP 3 sends its {icon:..} tags to other addons this
+-- way, and some players paste codes in directly. The pipes may arrive doubled.
+function M.FromTextures(text)
+  if type(text) ~= "string" or not text:find("|", 1, true) then return text end
+  return (text:gsub("|+T([^|]-)|+t", function(body)
+    local src, h, w = body:match("^([^:]+):?(%d*):?(%d*)")
+    src = src and strtrim(src) or ""
+    if src == "" then return "" end
+    h, w = tonumber(h) or 0, tonumber(w) or 0
+    if h <= 0 then h = w end
+    if w <= 0 then w = h end
+    local low = src:lower():gsub("/", "\\")
+    local icon = tonumber(src) or (low:find("^interface\\icons\\") and src:sub(17):gsub("%.%a+$", ""))
+    if icon and tostring(icon):find("^[%w_%-]+$") and h <= ICON_MAX then
+      return ("{icon:%s:%d}"):format(icon, h > 0 and h or ICON_SIZE)
+    end
+    if h <= 0 then h, w = 64, 64 end
+    return ("{img:%s:%d:%d}"):format(src, w, h)
+  end))
+end
+
 -- Other players' text: drop links, textures and UI codes (UI.Clean), keep
--- colours, and show any other "|" literally.
+-- colours, and show any other "|" literally. Texture codes are turned into
+-- tags first (above), so the pictures they name can still show.
 local function Sanitise(text, other)
   text = tostring(text or ""):gsub("\r\n?", "\n"):gsub("[\001-\007]", "")
   -- UI.Clean leaves only colours and |r as codes; every other pipe is escaped.
-  if other then text = UI.Clean(text) end
+  if other then text = UI.Clean(M.FromTextures(text)) end
   return text
 end
 

@@ -576,10 +576,17 @@ end
 
 function V:Present(data, unit, keepTab)
   self:Build()
-  -- Another player's text keeps its colours but loses links, textures and other codes.
+  -- Another player's text keeps its colours but loses links, textures and other
+  -- codes. In the longer writing, texture codes become image tags first, so
+  -- the markup can still show the pictures after checking them.
   if data.profile and not data.mine then
     local clean = {}
-    for k, v in pairs(data.profile) do clean[k] = type(v) == "string" and UI.Clean(v) or v end
+    for k, v in pairs(data.profile) do
+      if type(v) == "string" and K.Markup and (k == "appearance" or k == "history" or k == "personality") then
+        v = K.Markup.FromTextures(v)
+      end
+      clean[k] = type(v) == "string" and UI.Clean(v) or v
+    end
     data.profile = clean
   end
   self.data = data

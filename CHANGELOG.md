@@ -18,6 +18,10 @@ window that keeps your place. No files were added, so a /reload is enough.
 ### Fixed
 - Reading a long profile no longer jumps back to the top when the profile,
   your auras or your worn items update while it's open.
+- Icons and pictures in Total RP 3 players' descriptions show again, instead
+  of disappearing or showing as a line of code like "|TInterface\...".
+  Kinship checks each one exists and sizes it to fit, as it does for image
+  tags.
 
 ## 1.4.16
 
